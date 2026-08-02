@@ -39,16 +39,23 @@ const evidence = [
   ["Docs", "Privacy model and limitations stay visible"],
 ] as const;
 
+const heroFlow = [
+  ["01", "Challenge", "single use"],
+  ["02", "Scope", "per origin"],
+  ["03", "Verdict", "minimized"],
+] as const;
+
 export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
       <SiteHeader />
       <main>
-        <section className="aperture-field relative isolate overflow-hidden px-5 pb-16 pt-12 lg:px-8 lg:pb-24 lg:pt-16">
+        <section className="aperture-field relative isolate flex min-h-[100dvh] overflow-hidden px-5 pb-14 pt-28 sm:pt-32 lg:items-center lg:px-8 lg:pb-16 lg:pt-28">
           <div aria-hidden="true" className="aperture-ring absolute right-[-11rem] top-[-8rem] size-[34rem] rounded-full opacity-50 blur-[0.2px]" />
-          <div aria-hidden="true" className="absolute bottom-20 left-[5%] h-px w-[42rem] -rotate-6 bg-gradient-to-r from-transparent via-signal-400/40 to-transparent" />
+          <div aria-hidden="true" className="absolute bottom-24 left-[5%] h-px w-[42rem] -rotate-6 bg-gradient-to-r from-transparent via-signal-400/40 to-transparent" />
+          <div aria-hidden="true" className="absolute left-1/2 top-[7rem] h-24 w-px bg-gradient-to-b from-signal-400/45 to-transparent" />
 
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+          <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-12 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
             <Reveal className="max-w-3xl">
               <Badge
                 variant="outline"
@@ -56,7 +63,7 @@ export default function Home() {
               >
                 Stellar testnet private login
               </Badge>
-              <h1 className="mt-6 max-w-4xl text-[clamp(3.25rem,6.4vw,6.2rem)] font-semibold leading-[0.88] tracking-[-0.07em] text-balance">
+              <h1 className="mt-7 max-w-4xl text-[clamp(3.35rem,5.8vw,5.95rem)] font-semibold leading-[0.88] tracking-[-0.07em] text-balance">
                 Prove access. Keep wallets private.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-paper-200">
@@ -86,11 +93,56 @@ export default function Home() {
               </div>
             </Reveal>
 
-            <Reveal delay="medium" className="relative">
-              <div aria-hidden="true" className="absolute inset-6 rounded-[2.5rem] bg-signal-400/10 blur-3xl" />
-              <div className="relative rounded-[2.35rem] border border-paper-50/10 bg-paper-50/[0.045] p-2 shadow-[0_40px_120px_rgba(0,0,0,0.44)]">
-                <div className="rounded-[1.85rem] border border-line-dark/80 bg-ink-950/96 p-2">
-                  <ProofWindow />
+            <Reveal delay="medium" className="relative mx-auto w-full max-w-[43rem] lg:max-w-none">
+              <div aria-hidden="true" className="absolute -inset-8 rounded-[3rem] bg-signal-400/10 blur-3xl" />
+              <div aria-hidden="true" className="absolute -right-10 top-12 hidden h-52 w-52 rounded-full border border-signal-400/20 lg:block" />
+              <div aria-hidden="true" className="absolute -right-1 top-28 hidden h-32 w-32 rounded-full border border-signal-400/30 lg:block" />
+
+              <div className="relative rounded-[2.55rem] border border-paper-50/12 bg-paper-50/[0.045] p-2 shadow-[0_44px_130px_rgba(0,0,0,0.48)]">
+                <div className="absolute -top-4 left-8 hidden rounded-full border border-signal-400/25 bg-ink-950 px-4 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-signal-400 shadow-[0_18px_50px_rgba(0,0,0,0.34)] sm:block">
+                  Private aperture live
+                </div>
+
+                <div className="rounded-[2.05rem] border border-line-dark/80 bg-ink-950/96 p-2">
+                  <div className="grid gap-2 xl:grid-cols-[1fr_10rem]">
+                    <div className="rounded-[1.55rem] border border-paper-50/8 bg-paper-50/[0.025] p-1.5">
+                      <ProofWindow />
+                    </div>
+
+                    <aside className="hidden rounded-[1.55rem] border border-paper-50/10 bg-ink-900/82 p-4 xl:block">
+                      <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-paper-200">
+                        Gate path
+                      </p>
+                      <div className="mt-5 space-y-3">
+                        {heroFlow.map(([step, label, value]) => (
+                          <div key={label} className="rounded-2xl border border-paper-50/10 bg-paper-50/[0.035] p-3">
+                            <span className="font-mono text-[0.64rem] text-signal-400">
+                              {step}
+                            </span>
+                            <p className="mt-3 text-sm font-semibold tracking-[-0.02em] text-paper-50">
+                              {label}
+                            </p>
+                            <p className="mt-1 text-xs text-paper-200">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </aside>
+                  </div>
+
+                  <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                    {[
+                      ["App A", "vp_appA_72f1"],
+                      ["App B", "vp_appB_19c8"],
+                      ["Wallet", "withheld"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-[1.2rem] border border-paper-50/10 bg-paper-50/[0.035] px-4 py-3">
+                        <p className="text-xs text-paper-200">{label}</p>
+                        <p className="mt-1 truncate font-mono text-[0.72rem] text-paper-50">
+                          {value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </Reveal>
