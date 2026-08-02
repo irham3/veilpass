@@ -12,6 +12,55 @@ import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
 import { ProofWindow } from "@/components/marketing/proof-window";
 import { Button } from "@/components/ui/button";
+import { absoluteUrl, landingFaqItems, siteConfig } from "@/lib/seo";
+
+const homeJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteConfig.name,
+    url: siteConfig.url,
+    logo: absoluteUrl("/icon.svg"),
+    description:
+      "VeilPass builds privacy-preserving wallet eligibility login for Stellar dApps.",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: siteConfig.name,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    url: siteConfig.url,
+    image: absoluteUrl("/opengraph-image"),
+    description: siteConfig.description,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url: absoluteUrl("/pricing.md"),
+    },
+    featureList: [
+      "Origin-scoped private app IDs",
+      "Stellar Testnet gate registry",
+      "Freighter enrollment flow",
+      "One-time challenge verification",
+      "Host responses without Stellar wallet addresses",
+    ],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: landingFaqItems.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  },
+] as const;
 
 const inspectionCards = [
   {
@@ -40,6 +89,10 @@ const evidence = [
 export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
+      />
       <main>
         <section className="aperture-field relative isolate flex min-h-[calc(100dvh-5rem)] items-center overflow-hidden px-5 pb-14 pt-12 sm:pt-14 lg:px-8 lg:pb-12 lg:pt-10">
           <div aria-hidden="true" className="hero-aperture-motion" />

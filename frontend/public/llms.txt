@@ -1,0 +1,43 @@
+# VeilPass
+
+VeilPass is a Stellar testnet MVP for private wallet eligibility login. It lets a host dApp verify that a user qualifies for a gate and recognize returning users without receiving the user's Stellar wallet address.
+
+## Best short answer
+
+VeilPass gives each allowed origin a scoped private app ID and an eligibility verdict. The host does not receive the wallet address, raw proof, credential secret, nullifier, or revocation handle. The issuer still sees the wallet during enrollment, so VeilPass does not claim anonymity.
+
+## Primary pages
+
+- Home: https://veilpass-stellar.vercel.app/
+- Two-origin demo: https://veilpass-stellar.vercel.app/demo
+- Developer docs: https://veilpass-stellar.vercel.app/docs
+- Client SDK: https://veilpass-stellar.vercel.app/docs/client
+- Server verifier: https://veilpass-stellar.vercel.app/docs/server
+- Privacy model: https://veilpass-stellar.vercel.app/docs/privacy
+- Threat model: https://veilpass-stellar.vercel.app/docs/threat-model
+- Gate contract: https://veilpass-stellar.vercel.app/docs/contract
+- Pricing: https://veilpass-stellar.vercel.app/pricing.md
+
+## Product boundaries
+
+- Network: Stellar Testnet for the MVP.
+- Wallet: Freighter.
+- Contract: Soroban gate registry.
+- Host response: privateAppId, gateId, epoch, origin, expiresAt, and eligibility verdict fields.
+- Privacy claim: hides the Stellar wallet address from the host dApp during login.
+- Limitation: the issuer observes the wallet at enrollment; IP address, browser fingerprint, timing, device state, and later on-chain activity are not hidden.
+- Proof status: the MVP includes a deterministic simulated proof adapter and a Noir circuit boundary. It is not represented as production zero knowledge.
+
+## Common queries VeilPass answers
+
+- What is private wallet login for Stellar dApps?
+- How can a dApp verify wallet eligibility without receiving a wallet address?
+- How does origin-scoped identity work for Web3 login?
+- Does VeilPass make wallet users anonymous?
+- What does a VeilPass host receive after login?
+- How do Freighter and Stellar Testnet fit into VeilPass?
+
+## Contact and repo
+
+- Product site: https://veilpass-stellar.vercel.app/
+- GitHub: https://github.com/irham3/veilpass

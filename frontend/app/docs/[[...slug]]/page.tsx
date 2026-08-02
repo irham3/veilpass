@@ -1,11 +1,42 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { CodeBlock } from "@/components/docs/code-block";
 import { Reveal } from "@/components/motion/reveal";
 import { docNav, docs } from "@/lib/docs/content";
+import { siteConfig } from "@/lib/seo";
 
 export function generateStaticParams() { return docNav.map(([slug]) => ({ slug: slug ? [slug] : [] })); }
+
+export async function generateMetadata({ params }: { params: Promise<{ slug?: string[] }> }): Promise<Metadata> {
+  const { slug = [] } = await params;
+  const key = slug[0] ?? "";
+  const page = docs[key];
+  if (!page) {
+    return {};
+  }
+
+  const path = `/docs${key ? `/${key}` : ""}`;
+  return {
+    title: page.title,
+    description: page.intro,
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      title: `${page.title} | VeilPass docs`,
+      description: page.intro,
+      url: path,
+      siteName: siteConfig.name,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${page.title} | VeilPass docs`,
+      description: page.intro,
+    },
+  };
+}
 
 export default async function DocsPage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug = [] } = await params;

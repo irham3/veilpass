@@ -1,7 +1,31 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { DemoBench } from "@/components/demo/demo-bench";
 import { Reveal } from "@/components/motion/reveal";
+import { siteConfig } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "Two-origin wallet privacy demo",
+  description:
+    "Run App A and App B to see how VeilPass returns different private IDs for the same Stellar credential while withholding the wallet address.",
+  alternates: {
+    canonical: "/demo",
+  },
+  openGraph: {
+    title: "VeilPass two-origin privacy demo",
+    description:
+      "Inspect the exact host payload for origin-scoped Stellar wallet login.",
+    url: "/demo",
+    siteName: siteConfig.name,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VeilPass two-origin privacy demo",
+    description:
+      "Inspect the exact host payload for origin-scoped Stellar wallet login.",
+  },
+};
 
 export default function DemoPage() {
   return (

@@ -3,37 +3,15 @@
 import { CaretDownIcon } from "@phosphor-icons/react/CaretDown";
 import { useState } from "react";
 
+import { landingFaqItems } from "@/lib/seo";
 import { cn } from "@/lib/utils";
-
-const questions = [
-  {
-    question: "Does VeilPass make the user anonymous?",
-    answer:
-      "No. The issuer still sees the wallet during enrollment. VeilPass keeps the wallet address out of the host response and gives each origin its own private app ID.",
-  },
-  {
-    question: "Can I deploy this from the frontend folder?",
-    answer:
-      "Yes. Vercel should use frontend as the project root. Keep the contract workspace at the repo root and configure production env vars in Vercel.",
-  },
-  {
-    question: "Is the proof already zero knowledge?",
-    answer:
-      "The MVP ships a deterministic proof adapter labeled Simulated proof. The Noir circuit boundary is included for the future ZK path and is not misrepresented as production ZK.",
-  },
-  {
-    question: "What does the host receive?",
-    answer:
-      "The host receives an eligibility verdict, gate ID, epoch, expiry, origin, and a private app ID scoped to that origin. It does not receive the Stellar wallet address.",
-  },
-] as const;
 
 export function LandingFaq() {
   const [open, setOpen] = useState(0);
 
   return (
     <div className="space-y-3">
-      {questions.map((item, index) => {
+      {landingFaqItems.map((item, index) => {
         const expanded = open === index;
 
         return (

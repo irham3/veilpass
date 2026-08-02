@@ -1,7 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { EnrollmentFlow } from "@/components/enrollment/enrollment-flow";
 import { Reveal } from "@/components/motion/reveal";
+
+export const metadata: Metadata = {
+  title: "Enrollment",
+  description:
+    "Create a local VeilPass credential with Freighter on Stellar Testnet.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function EnrollPage() {
   return (

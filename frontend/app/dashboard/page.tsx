@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 
@@ -5,6 +6,16 @@ import { ContractActions } from "@/components/dashboard/contract-actions";
 import { Reveal } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
 import { readGateState } from "@/packages/shared/src/contract";
+
+export const metadata: Metadata = {
+  title: "Operator dashboard",
+  description:
+    "Read VeilPass public gate state and operator status from Stellar Testnet.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function DashboardPage() {
   await connection();
