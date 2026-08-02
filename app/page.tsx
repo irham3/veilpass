@@ -1,65 +1,52 @@
-import Image from "next/image";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import Link from "next/link";
+
+import { PayloadComparison } from "@/components/marketing/payload-comparison";
+import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
+import { ProofWindow } from "@/components/marketing/proof-window";
+import { SiteHeader } from "@/components/site-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-ink-950 text-paper-50">
+      <SiteHeader />
+      <main>
+        <section className="relative overflow-hidden px-5 py-16 lg:min-h-[calc(100svh-4rem)] lg:px-8 lg:py-20">
+          <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(165,255,206,0.12),transparent_30%)]" />
+          <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[5fr_7fr] lg:items-center">
+            <div className="max-w-xl">
+              <Badge variant="outline" className="border-signal-400/40 bg-signal-400/10 text-signal-400">Stellar testnet MVP</Badge>
+              <h1 className="mt-7 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl xl:text-7xl">Prove access.<br /><span className="text-paper-200">Keep your wallet private.</span></h1>
+              <p className="mt-7 max-w-lg text-lg leading-8 text-paper-200">VeilPass lets a Stellar wallet prove it meets an access rule without giving the host dApp its public address.</p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Button asChild size="lg"><Link href="/demo">Try the two-origin demo <ArrowRightIcon /></Link></Button>
+                <Button asChild size="lg" variant="outline"><Link href="/docs">Read developer docs</Link></Button>
+              </div>
+              <p className="mt-6 font-mono text-xs text-paper-200">No wallet address in the host response.</p>
+            </div>
+            <ProofWindow />
+          </div>
+        </section>
+        <PayloadComparison />
+        <PrivacyBoundary />
+        <section className="border-y border-line-dark px-5 py-24 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div><p className="eyebrow">Built for inspection</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em]">A small response surface with hard edges.</h2></div>
+            <pre className="overflow-x-auto rounded-2xl border border-line-dark bg-ink-900 p-6 font-mono text-sm leading-7 text-paper-200 sm:p-8"><code>{`{
+  "ok": true,
+  "privateAppId": "vp_appA_72f1",
+  "gateId": "premium-holder",
+  "epoch": 20391,
+  "origin": "https://app.example",
+  "expiresAt": 1760000000000
+}`}</code></pre>
+          </div>
+        </section>
+        <section className="px-5 py-24 text-center lg:px-8 lg:py-32"><div className="mx-auto max-w-3xl"><p className="eyebrow">See the boundary move</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">One wallet. Two apps. Two unlinkable host identifiers.</h2><p className="mx-auto mt-6 max-w-2xl text-paper-200">Run the controlled test bench, replay a spent challenge, then revoke the gate and watch verification fail.</p><Button asChild size="lg" className="mt-9"><Link href="/demo">Open the demo <ArrowRightIcon /></Link></Button></div></section>
       </main>
+      <footer className="border-t border-line-dark px-5 py-8 text-sm text-paper-200 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row"><span>VeilPass MVP. Stellar testnet only.</span><div className="flex gap-5"><Link href="/docs/security">Security</Link><Link href="/docs/privacy-model">Privacy model</Link><Link href="/docs/limitations">Limitations</Link></div></div></footer>
     </div>
   );
 }
