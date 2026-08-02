@@ -1,0 +1,6 @@
+[package]
+name = "veilpass_membership"
+type = "bin"
+authors = ["VeilPass contributors"]
+
+[dependencies]
