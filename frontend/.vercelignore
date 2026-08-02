@@ -1,0 +1,22 @@
+# Local dependencies and build artifacts
+node_modules
+.next
+.next*
+out
+build
+dist
+
+# Test and coverage artifacts
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+
+# Local-only generated packages
+packages/contract-bindings/dist
+
+# Local secrets/env
+.env*
+!.env.example
+
+# Reference handoff material is kept outside frontend and ignored at repo root.
