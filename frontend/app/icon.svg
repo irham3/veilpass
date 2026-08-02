@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>VeilPass</title>
+  <rect width="64" height="64" rx="12" fill="#0B0F0E"/>
+  <path fill="#F5F2E9" d="M8 10 29 23v18l3 5v9L8 38Z"/>
+  <path fill="#F5F2E9" d="m56 10-21 13v18l-3 5v9l24-17Z"/>
+  <path fill="#B9F5D0" d="m30 32 4-3v14l-2 4-2-4Z"/>
+</svg>
