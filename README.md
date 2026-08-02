@@ -21,18 +21,29 @@ This is not an anonymity system. The enrollment issuer sees the wallet address. 
 Requirements: Node.js 20 or later, npm, Rust/Cargo, and Stellar CLI 26 or later.
 
 ```powershell
+cd frontend
 npm install
-Copy-Item .env.example .env.local
+npm run env:local
 npm run dev
 ```
 
-Open `http://localhost:3000`. The landing page, docs, fixture demo, and dashboard setup state run without credentials. Live enrollment and contract flows stay disabled until the values in `.env.local` are configured.
+Open `http://localhost:3000`. The landing page, docs, fixture demo, dashboard, and live contract read path work with the generated `.env.local`.
+
+For live enrollment, add the generated `VPT` asset in Freighter Testnet using the issuer printed by `npm run env:local`, then fund that wallet:
+
+```powershell
+cd frontend
+npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>
+```
+
+Freighter must create the trustline first; the issuer script will fail with a Stellar trustline error if the wallet has not added the asset.
 
 ## Production configuration
 
 Set exact host and login origins, a PostgreSQL `DATABASE_URL`, a unique simulator key for the visibly simulated integration mode, an issuer Stellar secret, the exact asset rule, a deployed contract ID, RPC URL, and a funded public source account. Apply the database migration:
 
 ```powershell
+cd frontend
 npm run db:migrate
 ```
 
@@ -41,19 +52,21 @@ Production challenge and verification endpoints fail closed without PostgreSQL. 
 ## Contract
 
 ```powershell
+cd frontend
 npm run contract:test
-stellar contract build --manifest-path contracts/veilpass-gate/Cargo.toml --locked
-contracts/veilpass-gate/scripts/deploy-testnet.ps1 -Identity <stellar-cli-identity>
+npm run contract:smoke
+stellar contract build --manifest-path ../contracts/veilpass-gate/Cargo.toml --locked
+../contracts/veilpass-gate/scripts/deploy-testnet.ps1 -Identity <stellar-cli-identity>
 ```
 
-The checked-in Wasm SHA-256 is recorded in `docs/evidence/contract.md`. Deployment requires a funded Stellar Testnet identity and creates real testnet transactions.
+The current MVP deployment is recorded in `frontend/docs/evidence/contract.md`. New deployments require a funded Stellar Testnet identity and create real testnet transactions.
 
 ## Proof toolchain
 
-`packages/proof/circuits/membership` contains the Noir source. The deterministic TypeScript adapter is not a zero-knowledge proof. The official Noir/Barretenberg toolchain does not provide native Windows binaries, so use WSL with Nargo `1.0.0-beta.23` and a compatible Barretenberg backend:
+`frontend/packages/proof/circuits/membership` contains the Noir source. The deterministic TypeScript adapter is not a zero-knowledge proof. The official Noir/Barretenberg toolchain does not provide native Windows binaries, so use WSL with Nargo `1.0.0-beta.23` and a compatible Barretenberg backend:
 
 ```bash
-cd packages/proof/circuits/membership
+cd frontend/packages/proof/circuits/membership
 nargo test
 nargo compile
 ```
@@ -63,6 +76,7 @@ Replace `UnavailableNoirAdapter` only after committing the compiled artifact and
 ## Verification
 
 ```powershell
+cd frontend
 npm run lint
 npm run typecheck
 npm test
@@ -73,4 +87,8 @@ npm run build
 npm audit --omit=dev
 ```
 
-See `docs/evidence` for the local results, visual captures, contract hash, and remaining external setup.
+See `frontend/docs/evidence` for the local results, visual captures, contract hash, and remaining external setup.
+
+## Frontend deployment
+
+Use Vercel's free tier with the project root set to `frontend`. The build command is `npm run build`, install command is `npm install`, and output is the default Next.js output. Configure production environment variables in Vercel instead of committing `.env.local`.
