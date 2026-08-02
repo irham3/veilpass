@@ -74,4 +74,13 @@ export default async function DashboardPage() {
   );
 }
 
-function Data({ label, value }: { label: string; value: string }) { return <div><dt className="text-paper-200">{label}</dt><dd className="mt-1 break-all font-mono text-xs text-paper-50">{value}</dd></div>; }
+function Data({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-paper-200">{label}</dt>
+      <dd className="mt-1 max-w-full font-mono text-xs leading-6 text-paper-50 [overflow-wrap:anywhere]">
+        {value}
+      </dd>
+    </div>
+  );
+}

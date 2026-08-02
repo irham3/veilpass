@@ -68,7 +68,7 @@ export default function Home() {
                   className="group rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                 >
                   <Link href="/demo">
-                    Try Demo
+                    Try demo
                     <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1">
                       <ArrowRightIcon size={16} />
                     </span>

@@ -6,10 +6,10 @@ import { Reveal } from "@/components/motion/reveal";
 export default function DemoPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
-      <main className="aperture-field relative overflow-hidden px-5 py-14 lg:px-8 lg:py-20">
+      <main className="aperture-field relative overflow-hidden px-5 py-12 lg:px-8 lg:py-16">
         <div aria-hidden="true" className="aperture-ring absolute right-[-13rem] top-[-9rem] size-[32rem] rounded-full opacity-35" />
         <div className="relative mx-auto max-w-[90rem]">
-          <Reveal className="mb-10 grid gap-8 lg:grid-cols-[0.74fr_1.26fr] lg:items-end">
+          <Reveal className="mb-8 grid gap-6 lg:grid-cols-[0.74fr_1.26fr] lg:items-end">
             <div>
               <p className="eyebrow">Controlled test bench</p>
               <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-balance sm:text-7xl">
