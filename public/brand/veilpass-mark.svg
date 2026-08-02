@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">VeilPass mark</title>
+  <desc id="desc">Two dark panels form a V around a mint privacy aperture.</desc>
+  <path fill="#121615" d="M6 8 29 22v20l3 5v11L6 40Z"/>
+  <path fill="#121615" d="m58 8-23 14v20l-3 5v11l26-18Z"/>
+  <path fill="#B9F5D0" d="m29.75 33 4.5-3v14L32 48l-2.25-4Z"/>
+</svg>
+

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" role="img" aria-labelledby="title desc">
+  <title id="title">VeilPass</title>
+  <desc id="desc">VeilPass logo for dark backgrounds.</desc>
+  <g transform="translate(0 0)">
+    <path fill="#F5F2E9" d="M6 8 29 22v20l3 5v11L6 40Z"/>
+    <path fill="#F5F2E9" d="m58 8-23 14v20l-3 5v11l26-18Z"/>
+    <path fill="#B9F5D0" d="m29.75 33 4.5-3v14L32 48l-2.25-4Z"/>
+  </g>
+  <text x="82" y="41" fill="#F5F2E9" font-family="Instrument Sans, Arial, sans-serif" font-size="29" font-weight="650" letter-spacing="2">VEILPASS</text>
+</svg>
+

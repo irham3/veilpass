@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+/.veilpass-handoff/
 
 # debug
 npm-debug.log*
