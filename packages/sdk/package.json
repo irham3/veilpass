@@ -1,0 +1,7 @@
+{
+  "name": "@veilpass/sdk",
+  "version": "0.0.0-pre.1",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" }
+}
