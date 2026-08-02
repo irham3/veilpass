@@ -61,14 +61,14 @@ export function ProofWindow() {
         </span>
       </div>
 
-      <div className="grid gap-2 bg-ink-950 p-2 lg:grid-cols-[11rem_1fr]">
-        <div className="flex flex-row gap-2 rounded-[1.15rem] bg-ink-900/86 p-2 lg:flex-col lg:p-3">
+      <div className="bg-ink-950 p-2">
+        <div className="grid gap-2 rounded-[1.15rem] bg-ink-900/86 p-2 sm:grid-cols-2">
           <Button
             type="button"
             variant={mode === "standard" ? "secondary" : "ghost"}
             aria-pressed={mode === "standard"}
             onClick={() => setMode("standard")}
-            className="min-h-11 flex-1 justify-start rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+            className="min-h-11 justify-center rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
             Standard wallet login
           </Button>
@@ -77,18 +77,18 @@ export function ProofWindow() {
             variant={mode === "veilpass" ? "default" : "ghost"}
             aria-pressed={mode === "veilpass"}
             onClick={() => setMode("veilpass")}
-            className="min-h-11 flex-1 justify-start rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+            className="min-h-11 justify-center rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
             VeilPass login
           </Button>
         </div>
 
-        <div className="relative min-h-80 overflow-hidden rounded-[1.15rem] border border-paper-50/[0.07] bg-ink-950 p-5 sm:p-7">
+        <div className="relative mt-2 overflow-hidden rounded-[1.15rem] border border-paper-50/[0.07] bg-ink-950 p-5 sm:p-6">
           <div aria-hidden="true" className="absolute right-[-8rem] top-[-8rem] size-72 rounded-full bg-signal-400/10 blur-3xl" />
           <div aria-hidden="true" className="absolute bottom-[-7rem] left-[22%] size-64 rounded-full bg-signal-400/[0.055] blur-3xl transition-opacity duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]" />
-          <div className="relative flex h-full flex-col justify-between gap-10">
+          <div className="relative">
             <div>
-              <div className="mb-6 flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-paper-50">
                     {mode === "standard" ? "Public account" : "Scoped account"}
@@ -103,16 +103,27 @@ export function ProofWindow() {
                   Stellar testnet
                 </span>
               </div>
-              <pre
+
+              <div
                 data-testid="hero-payload"
                 aria-live="polite"
-                className="min-h-40 overflow-x-auto rounded-2xl border border-paper-50/10 bg-paper-50/[0.035] p-4 font-mono text-[0.75rem] leading-6 text-paper-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="mt-5 grid gap-2 rounded-2xl border border-paper-50/10 bg-paper-50/[0.035] p-3 font-mono text-[0.75rem] text-paper-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
-                <code>{JSON.stringify(payload, null, 2)}</code>
-              </pre>
+                {Object.entries(payload).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="grid min-h-10 gap-2 rounded-xl bg-ink-950/72 px-3 py-2 sm:grid-cols-[9rem_1fr] sm:items-center"
+                  >
+                    <span className="text-paper-200">{key}</span>
+                    <span className="text-paper-50 [overflow-wrap:anywhere]">
+                      {String(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs text-paper-200">
                 <GlobeHemisphereWestIcon
                   aria-hidden="true"

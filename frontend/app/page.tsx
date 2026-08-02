@@ -37,12 +37,6 @@ const evidence = [
   ["Docs", "Privacy model and limitations stay visible"],
 ] as const;
 
-const heroFlow = [
-  ["01", "Challenge", "single use"],
-  ["02", "Scope", "per origin"],
-  ["03", "Verdict", "minimized"],
-] as const;
-
 export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
@@ -85,7 +79,7 @@ export default function Home() {
               </div>
             </Reveal>
 
-            <Reveal delay="medium" className="relative mx-auto w-full max-w-172 lg:max-w-none">
+            <Reveal delay="medium" className="relative mx-auto w-full max-w-160 lg:max-w-none">
               <div aria-hidden="true" className="absolute -inset-8 rounded-[3rem] bg-signal-400/10 blur-3xl" />
               <div aria-hidden="true" className="absolute -right-10 top-12 hidden h-52 w-52 rounded-full border border-signal-400/20 lg:block" />
               <div aria-hidden="true" className="absolute -right-1 top-28 hidden h-32 w-32 rounded-full border border-signal-400/30 lg:block" />
@@ -96,35 +90,14 @@ export default function Home() {
                 </div>
 
                 <div className="rounded-[2.05rem] border border-line-dark/80 bg-ink-950/96 p-2">
-                  <div className="grid gap-2 xl:grid-cols-[1fr_10rem]">
-                    <div className="rounded-[1.55rem] border border-paper-50/8 bg-paper-50/2.5 p-1.5">
-                      <ProofWindow />
-                    </div>
-
-                    <aside className="hidden rounded-[1.55rem] border border-paper-50/10 bg-ink-900/82 p-4 xl:block">
-                      <p className="font-mono text-[0.68rem] uppercase tracking-[0.16em] text-paper-200">
-                        Gate path
-                      </p>
-                      <div className="mt-5 space-y-3">
-                        {heroFlow.map(([step, label, value]) => (
-                          <div key={label} className="rounded-2xl border border-paper-50/10 bg-paper-50/[0.035] p-3">
-                            <span className="font-mono text-[0.64rem] text-signal-400">
-                              {step}
-                            </span>
-                            <p className="mt-3 text-sm font-semibold tracking-[-0.02em] text-paper-50">
-                              {label}
-                            </p>
-                            <p className="mt-1 text-xs text-paper-200">{value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </aside>
+                  <div className="rounded-[1.55rem] border border-paper-50/8 bg-paper-50/2.5 p-1.5">
+                    <ProofWindow />
                   </div>
 
                   <div className="mt-2 grid gap-2 sm:grid-cols-3">
                     {[
-                      ["App A", "vp_appA_72f1"],
-                      ["App B", "vp_appB_19c8"],
+                      ["Challenge", "single use"],
+                      ["Origin", "scoped"],
                       ["Wallet", "withheld"],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-[1.2rem] border border-paper-50/10 bg-paper-50/[0.035] px-4 py-3">
