@@ -5,6 +5,7 @@ import { challengeStore, durableChallengeStoreConfigured } from "@/lib/server/ch
 import { isAllowedGate } from "@/lib/server/gate-policy";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
+import { readJsonLimited } from "@/lib/server/request-body";
 
 const requestSchema = z.object({ gateId: z.string().min(1).max(128) }).strict();
 
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
   let origin: string;
   try { origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }
-  const parsed = requestSchema.safeParse(await request.json().catch(() => null));
+  const parsed = requestSchema.safeParse(await readJsonLimited(request, 4_096).catch(() => null));
   if (!parsed.success || !isAllowedGate(parsed.data.gateId)) return publicError("GATE_MISMATCH", id, 400);
   const challenge = await challengeStore.issue({ gateId: parsed.data.gateId, origin });
   return NextResponse.json(challenge, { status: 201, headers: { "Cache-Control": "no-store" } });

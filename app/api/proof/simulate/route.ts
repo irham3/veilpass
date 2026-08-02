@@ -5,6 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getGatePolicy, isAllowedGate } from "@/lib/server/gate-policy";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
+import { readJsonLimited } from "@/lib/server/request-body";
 import { createSimulatedProof } from "@/packages/proof/src/simulated";
 import { challengeResponseSchema } from "@/packages/shared/src/contracts";
 import { issuedCredentialSchema } from "@/packages/credential/src/schema";
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   const id = requestId();
   try { resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_LOGIN_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const parsed = schema.safeParse(await readJsonLimited(request, 64_000).catch(() => null));
   if (!parsed.success) return publicError("PROOF_INVALID", id, 400);
   const { challenge, credential, derived } = parsed.data;
   if (!isAllowedGate(challenge.gateId) || Date.parse(challenge.expiresAt) <= Date.now()) return publicError("CHALLENGE_EXPIRED", id, 400);

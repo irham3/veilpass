@@ -18,7 +18,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-line-dark/80 bg-ink-950/88 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
         <Link href="/" aria-label="VeilPass home" className="shrink-0">
-          <Image src="/brand/veilpass-lockup-light.svg" alt="VeilPass" width={132} height={28} priority />
+          <Image src="/brand/veilpass-lockup-dark.svg" alt="VeilPass" width={132} height={28} priority />
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex">
           {links.map((link) => <Link key={link.href} href={link.href} className="text-sm text-paper-200 transition-colors hover:text-paper-50">{link.label}</Link>)}
