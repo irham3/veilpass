@@ -1,6 +1,7 @@
 # VeilPass MVP local verification report
 
 Date: 2026-08-02
+Verified implementation revision: `9eb18fc`
 
 ## Automated results
 
