@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="frontend/public/brand/veilpass-mark.svg" width="88" alt="VeilPass">
+  <img src="frontend\public\brand\favicon.svg" width="88" alt="VeilPass">
   <h1>VeilPass</h1>
   <p>Origin-scoped private eligibility login for Stellar Testnet apps.</p>
 
-  <a href="https://veilpass-psi.vercel.app"><img src="https://img.shields.io/badge/demo-live-22c55e.svg" alt="Live demo"></a>
+  <a href="https://veilpass-stellar.vercel.app"><img src="https://img.shields.io/badge/demo-live-22c55e.svg" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/chain-Stellar%20Testnet-7c3aed.svg" alt="Stellar Testnet">
   <img src="https://img.shields.io/badge/contracts-Soroban-111827.svg" alt="Soroban">
   <img src="https://img.shields.io/badge/frontend-Next.js%2016-black.svg" alt="Next.js 16">
@@ -19,29 +19,7 @@ A host dApp can learn that a user passed a policy, such as holding the required 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.
 
-[Live Demo](https://veilpass-psi.vercel.app) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
-
----
-
-## Table of Contents
-
-- [What Is VeilPass?](#what-is-veilpass)
-- [Current Status](#current-status)
-- [Review Path](#review-path)
-- [Core Flow](#core-flow)
-- [Architecture](#architecture)
-- [Features](#features)
-- [API Surface](#api-surface)
-- [Local Development](#local-development)
-- [Environment Variables](#environment-variables)
-- [Contract](#contract)
-- [Proof Toolchain](#proof-toolchain)
-- [Deployment](#deployment)
-- [Verification Checklist](#verification-checklist)
-- [Evidence](#evidence)
-- [Project Structure](#project-structure)
-- [MVP Boundaries](#mvp-boundaries)
-- [Remaining Setup](#remaining-setup)
+[Live Demo](https://veilpass-stellar.vercel.app) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
 
 ---
 
@@ -74,41 +52,11 @@ The product goal is narrow and deliberate: prove the private-login loop, preserv
 
 ---
 
-## Current Status
-
-| Area | Status |
-| --- | --- |
-| Bespoke Private Aperture landing page | Done |
-| App A / App B two-origin demo behavior | Done |
-| Stable same-origin private IDs | Done |
-| Cross-origin ID separation | Done |
-| Replay and revocation rejection coverage | Done |
-| Host SDK popup channel | Done |
-| Exact `origin`, `source`, and state checks | Done |
-| Digest-only five-minute challenges | Done |
-| Atomic PostgreSQL challenge adapter | Done |
-| Minimized verifier response | Done |
-| HTTP-only opaque session adapter | Done |
-| Freighter Testnet enrollment UX | Done |
-| Horizon asset eligibility check | Done |
-| Signed issuer credential flow | Done |
-| IndexedDB subject-secret storage | Done |
-| Soroban gate registry | Done and deployed on Testnet |
-| Dashboard contract read/write surfaces | Done |
-| Developer documentation | Done |
-| Unit, e2e, accessibility, contract, and build verification | Passing |
-| Vercel production deploy | Live |
-| Freighter holder trustline and user-wallet funding | Requires user's Testnet wallet approval |
-| Native Windows Noir/Barretenberg compile | Not available; use WSL |
-| Production PostgreSQL service | Adapter included; provision `DATABASE_URL` for production replay hardening |
-
----
-
 ## Review Path
 
 For a reviewer or demo session, the shortest path is:
 
-1. Open [https://veilpass-psi.vercel.app](https://veilpass-psi.vercel.app).
+1. Open [https://veilpass-stellar.vercel.app](https://veilpass-stellar.vercel.app).
 2. Review the landing page privacy language; it should not claim anonymity.
 3. Open `/demo` and compare App A and App B behavior.
 4. Confirm same-origin IDs stay stable while cross-origin IDs differ.
@@ -377,7 +325,7 @@ npx vercel --prod --yes
 Production URL:
 
 ```text
-https://veilpass-psi.vercel.app
+https://veilpass-stellar.vercel.app
 ```
 
 Configure environment variables in Vercel. Do not commit `frontend/.env.local`.
