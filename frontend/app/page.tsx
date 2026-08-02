@@ -11,8 +11,6 @@ import { LandingFaq } from "@/components/marketing/landing-faq";
 import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
 import { ProofWindow } from "@/components/marketing/proof-window";
-import { SiteHeader } from "@/components/site-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const inspectionCards = [
@@ -48,21 +46,15 @@ const heroFlow = [
 export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
-      <SiteHeader />
       <main>
-        <section className="aperture-field relative isolate flex min-h-[100dvh] overflow-hidden px-5 pb-14 pt-28 sm:pt-32 lg:items-center lg:px-8 lg:pb-16 lg:pt-28">
-          <div aria-hidden="true" className="aperture-ring absolute right-[-11rem] top-[-8rem] size-[34rem] rounded-full opacity-50 blur-[0.2px]" />
-          <div aria-hidden="true" className="absolute bottom-24 left-[5%] h-px w-[42rem] -rotate-6 bg-gradient-to-r from-transparent via-signal-400/40 to-transparent" />
-          <div aria-hidden="true" className="absolute left-1/2 top-[7rem] h-24 w-px bg-gradient-to-b from-signal-400/45 to-transparent" />
+        <section className="aperture-field relative isolate flex min-h-[calc(100dvh-5rem)] items-center overflow-hidden px-5 pb-14 pt-12 sm:pt-14 lg:px-8 lg:pb-12 lg:pt-10">
+          <div aria-hidden="true" className="hero-aperture-motion" />
+          <div aria-hidden="true" className="hero-scanline" />
+          <div aria-hidden="true" className="aperture-ring absolute -right-44 -top-32 size-136 rounded-full opacity-50 blur-[0.2px]" />
+          <div aria-hidden="true" className="absolute bottom-24 left-[5%] h-px w-2xl -rotate-6 bg-linear-to-r from-transparent via-signal-400/40 to-transparent" />
 
-          <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-12 lg:grid-cols-[0.86fr_1.14fr] lg:items-center">
+          <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-12 lg:-translate-y-2 lg:grid-cols-[0.86fr_1.14fr] lg:items-center xl:-translate-y-4">
             <Reveal className="max-w-3xl">
-              <Badge
-                variant="outline"
-                className="rounded-full border-signal-400/35 bg-signal-400/10 px-4 py-1.5 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-signal-400"
-              >
-                Stellar testnet private login
-              </Badge>
               <h1 className="mt-7 max-w-4xl text-[clamp(3.35rem,5.8vw,5.95rem)] font-semibold leading-[0.88] tracking-[-0.07em] text-balance">
                 Prove access. Keep wallets private.
               </h1>
@@ -76,7 +68,7 @@ export default function Home() {
                   className="group rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                 >
                   <Link href="/demo">
-                    Try the two-origin demo
+                    Try Demo
                     <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1">
                       <ArrowRightIcon size={16} />
                     </span>
@@ -93,19 +85,19 @@ export default function Home() {
               </div>
             </Reveal>
 
-            <Reveal delay="medium" className="relative mx-auto w-full max-w-[43rem] lg:max-w-none">
+            <Reveal delay="medium" className="relative mx-auto w-full max-w-172 lg:max-w-none">
               <div aria-hidden="true" className="absolute -inset-8 rounded-[3rem] bg-signal-400/10 blur-3xl" />
               <div aria-hidden="true" className="absolute -right-10 top-12 hidden h-52 w-52 rounded-full border border-signal-400/20 lg:block" />
               <div aria-hidden="true" className="absolute -right-1 top-28 hidden h-32 w-32 rounded-full border border-signal-400/30 lg:block" />
 
-              <div className="relative rounded-[2.55rem] border border-paper-50/12 bg-paper-50/[0.045] p-2 shadow-[0_44px_130px_rgba(0,0,0,0.48)]">
+              <div className="relative rounded-[2.55rem] border border-paper-50/12 bg-paper-50/4.5 p-2 shadow-[0_44px_130px_rgba(0,0,0,0.48)]">
                 <div className="absolute -top-4 left-8 hidden rounded-full border border-signal-400/25 bg-ink-950 px-4 py-2 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-signal-400 shadow-[0_18px_50px_rgba(0,0,0,0.34)] sm:block">
                   Private aperture live
                 </div>
 
                 <div className="rounded-[2.05rem] border border-line-dark/80 bg-ink-950/96 p-2">
                   <div className="grid gap-2 xl:grid-cols-[1fr_10rem]">
-                    <div className="rounded-[1.55rem] border border-paper-50/8 bg-paper-50/[0.025] p-1.5">
+                    <div className="rounded-[1.55rem] border border-paper-50/8 bg-paper-50/2.5 p-1.5">
                       <ProofWindow />
                     </div>
 
@@ -151,13 +143,13 @@ export default function Home() {
 
         <PayloadComparison />
 
-        <section className="relative overflow-hidden px-5 py-24 lg:px-8 lg:py-36">
-          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-400/50 to-transparent" />
+        <section className="section-ink-wash relative overflow-hidden px-5 py-24 lg:px-8 lg:py-36">
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-signal-400/50 to-transparent" />
           <div className="mx-auto max-w-7xl">
             <Reveal className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
               <div>
                 <p className="eyebrow">Reviewer path</p>
-                <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-6xl">
+                <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tighter text-balance sm:text-6xl">
                   Inspect the boundary from three angles.
                 </h2>
               </div>
@@ -188,13 +180,13 @@ export default function Home() {
 
         <PrivacyBoundary />
 
-        <section className="px-5 py-24 lg:px-8 lg:py-36">
+        <section className="section-ink-slab px-5 py-24 lg:px-8 lg:py-36">
           <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
             <Reveal className="rounded-[2.1rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5">
               <div className="flex h-full flex-col justify-between rounded-[1.6rem] bg-ink-900/92 p-7 sm:p-9">
                 <div>
                   <p className="eyebrow">Evidence package</p>
-                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+                  <h2 className="mt-4 text-4xl font-semibold tracking-tighter text-balance sm:text-5xl">
                     Built to be checked, not believed.
                   </h2>
                   <p className="mt-6 max-w-xl text-lg leading-8 text-paper-200">
@@ -230,11 +222,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-y border-line-dark px-5 py-24 lg:px-8 lg:py-32">
+        <section className="section-paper-slit border-y border-line-dark px-5 py-24 lg:px-8 lg:py-32">
           <Reveal className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <p className="eyebrow">Host response</p>
-              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+              <h2 className="mt-4 text-4xl font-semibold tracking-tighter text-balance sm:text-5xl">
                 A small payload with hard edges.
               </h2>
               <p className="mt-6 max-w-xl text-paper-200">
@@ -254,11 +246,11 @@ export default function Home() {
           </Reveal>
         </section>
 
-        <section className="px-5 py-24 lg:px-8 lg:py-36">
+        <section className="section-ink-wash px-5 py-24 lg:px-8 lg:py-36">
           <Reveal className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <p className="eyebrow">FAQ</p>
-              <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+              <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-tighter text-balance sm:text-5xl">
                 Questions reviewers ask first
               </h2>
               <p className="mt-6 max-w-xl text-paper-200">
@@ -269,8 +261,8 @@ export default function Home() {
           </Reveal>
         </section>
 
-        <section className="px-5 pb-24 lg:px-8 lg:pb-36">
-          <Reveal className="mx-auto max-w-7xl rounded-[2.35rem] border border-signal-400/22 bg-signal-400/[0.08] p-2">
+        <section className="bg-[linear-gradient(180deg,#0f1412_0%,#0b0f0e_100%)] px-5 pb-24 lg:px-8 lg:pb-36">
+          <Reveal className="mx-auto max-w-7xl rounded-[2.35rem] border border-signal-400/22 bg-signal-400/8 p-2">
             <div className="rounded-[1.85rem] bg-ink-950 px-6 py-12 text-center sm:px-10 lg:py-16">
               <h2 className="mx-auto max-w-4xl text-4xl font-semibold tracking-[-0.055em] text-balance sm:text-6xl">
                 One wallet. Two apps. Two private host IDs.

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 
 import { CodeBlock } from "@/components/docs/code-block";
 import { Reveal } from "@/components/motion/reveal";
-import { SiteHeader } from "@/components/site-header";
 import { docNav, docs } from "@/lib/docs/content";
 
 export function generateStaticParams() { return docNav.map(([slug]) => ({ slug: slug ? [slug] : [] })); }
@@ -16,7 +15,6 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
   if (!page) notFound();
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
-      <SiteHeader />
       <div className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute right-[-14rem] top-6 size-[32rem] rounded-full opacity-25" />
         <div className="relative mx-auto grid max-w-7xl gap-6 lg:grid-cols-[16rem_1fr]">

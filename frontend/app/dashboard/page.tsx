@@ -3,7 +3,6 @@ import { connection } from "next/server";
 
 import { ContractActions } from "@/components/dashboard/contract-actions";
 import { Reveal } from "@/components/motion/reveal";
-import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { readGateState } from "@/packages/shared/src/contract";
 
@@ -21,7 +20,6 @@ export default async function DashboardPage() {
   }
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
-      <SiteHeader />
       <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute left-[-15rem] top-8 size-[30rem] rounded-full opacity-25" />
         <div className="relative mx-auto grid max-w-[90rem] gap-5 lg:grid-cols-[16rem_1fr]">

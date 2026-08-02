@@ -44,18 +44,25 @@ export function SiteHeader() {
     <header
       data-scrolled={scrolled}
       className={cn(
-        "sticky top-0 z-50 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "sticky top-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
         scrolled ? "px-3 pt-2" : "px-4 pt-4",
       )}
     >
       <div
         className={cn(
-          "mx-auto flex max-w-7xl items-center justify-between rounded-full border px-4 backdrop-blur-xl transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] lg:px-5",
+          "relative mx-auto flex items-center justify-between overflow-hidden rounded-full border px-4 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:px-5",
           scrolled
-            ? "h-14 border-signal-400/18 bg-ink-950/92 shadow-[0_14px_60px_rgba(0,0,0,0.42)]"
-            : "h-16 border-paper-50/10 bg-ink-950/76 shadow-[0_18px_70px_rgba(0,0,0,0.28)]",
+            ? "h-13 max-w-5xl scale-[0.985] border-signal-400/24 bg-ink-950/90 shadow-[0_16px_70px_rgba(0,0,0,0.48),0_0_0_1px_rgba(185,245,208,0.03)]"
+            : "h-16 max-w-7xl border-paper-50/10 bg-ink-950/64 shadow-[0_18px_70px_rgba(0,0,0,0.24)]",
         )}
       >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-x-10 bottom-0 h-px origin-center bg-gradient-to-r from-transparent via-signal-400/75 to-transparent transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+            scrolled ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0",
+          )}
+        />
         <Link
           href="/"
           aria-label="VeilPass home"
@@ -67,10 +74,19 @@ export function SiteHeader() {
             width={132}
             height={28}
             priority
-            className="transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.025]"
+            className={cn(
+              "transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.025]",
+              scrolled && "scale-[0.94]",
+            )}
           />
         </Link>
-        <nav aria-label="Primary navigation" className="hidden items-center gap-7 md:flex">
+        <nav
+          aria-label="Primary navigation"
+          className={cn(
+            "hidden items-center transition-[gap] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex",
+            scrolled ? "gap-5" : "gap-7",
+          )}
+        >
           {links.map((link) => (
             <Link
               key={link.href}

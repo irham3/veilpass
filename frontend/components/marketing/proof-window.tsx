@@ -6,7 +6,6 @@ import { WalletIcon } from "@phosphor-icons/react/Wallet";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type LoginMode = "standard" | "veilpass";
 type DemoApp = "app-a" | "app-b";
@@ -62,8 +61,8 @@ export function ProofWindow() {
         </span>
       </div>
 
-      <div className="grid gap-px bg-paper-50/10 lg:grid-cols-[12rem_1fr]">
-        <div className="flex flex-row gap-2 bg-ink-900 p-3 lg:flex-col lg:p-4">
+      <div className="grid gap-2 bg-ink-950 p-2 lg:grid-cols-[11rem_1fr]">
+        <div className="flex flex-row gap-2 rounded-[1.15rem] bg-ink-900/86 p-2 lg:flex-col lg:p-3">
           <Button
             type="button"
             variant={mode === "standard" ? "secondary" : "ghost"}
@@ -84,15 +83,9 @@ export function ProofWindow() {
           </Button>
         </div>
 
-        <div className="relative min-h-80 overflow-hidden bg-ink-950 p-5 sm:p-7">
+        <div className="relative min-h-80 overflow-hidden rounded-[1.15rem] border border-paper-50/[0.07] bg-ink-950 p-5 sm:p-7">
           <div aria-hidden="true" className="absolute right-[-8rem] top-[-8rem] size-72 rounded-full bg-signal-400/10 blur-3xl" />
-          <div
-            aria-hidden="true"
-            className={cn(
-              "absolute inset-y-0 left-[18%] w-px bg-signal-400/40 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-              mode === "veilpass" ? "translate-x-0 opacity-100" : "-translate-x-10 opacity-40",
-            )}
-          />
+          <div aria-hidden="true" className="absolute bottom-[-7rem] left-[22%] size-64 rounded-full bg-signal-400/[0.055] blur-3xl transition-opacity duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]" />
           <div className="relative flex h-full flex-col justify-between gap-10">
             <div>
               <div className="mb-6 flex items-center justify-between gap-4">

@@ -2,12 +2,10 @@ import Link from "next/link";
 
 import { EnrollmentFlow } from "@/components/enrollment/enrollment-flow";
 import { Reveal } from "@/components/motion/reveal";
-import { SiteHeader } from "@/components/site-header";
 
 export default function EnrollPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
-      <SiteHeader />
       <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute right-[-12rem] top-4 size-[30rem] rounded-full opacity-30" />
         <div className="relative mx-auto max-w-5xl">

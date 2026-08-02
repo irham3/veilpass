@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import { connection } from "next/server";
 
 import { RouteTransition } from "@/components/motion/route-transition";
+import { SiteHeader } from "@/components/site-header";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -58,6 +59,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <TooltipProvider>
+          <SiteHeader />
           <RouteTransition>{children}</RouteTransition>
         </TooltipProvider>
         <Toaster richColors position="bottom-right" />
