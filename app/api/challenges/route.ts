@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { challengeStore } from "@/lib/server/challenge-store";
+import { challengeStore, durableChallengeStoreConfigured } from "@/lib/server/challenge-store";
 import { isAllowedGate } from "@/lib/server/gate-policy";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
@@ -10,6 +10,7 @@ const requestSchema = z.object({ gateId: z.string().min(1).max(128) }).strict();
 
 export async function POST(request: NextRequest) {
   const id = requestId();
+  if (process.env.NODE_ENV === "production" && !durableChallengeStoreConfigured) return publicError("SERVICE_UNAVAILABLE", id, 503);
   let origin: string;
   try { origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }

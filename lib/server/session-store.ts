@@ -1,18 +1,31 @@
 import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
+import postgres from "postgres";
 
 type Session = { privateAppId: string; gateId: string; expiresAtMs: number };
 
 class SessionStore {
   private sessions = new Map<string, Session>();
-  create(session: Session): string {
+  async create(session: Session): Promise<string> {
     const token = randomBytes(32).toString("base64url");
-    this.sessions.set(hash(token), session);
+    const digest = hash(token);
+    if (process.env.DATABASE_URL) {
+      const sql = postgres(process.env.DATABASE_URL, { max: 2, prepare: false });
+      await sql`insert into veilpass.demo_sessions (token_digest, private_app_id, gate_id, expires_at) values (${digest}, ${session.privateAppId}, ${session.gateId}, ${new Date(session.expiresAtMs)})`;
+      await sql.end();
+    } else { this.sessions.set(digest, session); }
     return token;
   }
-  read(token: string): Session | null {
-    const value = this.sessions.get(hash(token));
+  async read(token: string): Promise<Session | null> {
+    const digest = hash(token);
+    if (process.env.DATABASE_URL) {
+      const sql = postgres(process.env.DATABASE_URL, { max: 2, prepare: false });
+      const rows = await sql<{ private_app_id: string; gate_id: string; expires_at: Date }[]>`select private_app_id, gate_id, expires_at from veilpass.demo_sessions where token_digest = ${digest} and expires_at > now()`;
+      await sql.end();
+      const row = rows[0]; return row ? { privateAppId: row.private_app_id, gateId: row.gate_id, expiresAtMs: row.expires_at.getTime() } : null;
+    }
+    const value = this.sessions.get(digest);
     if (!value || value.expiresAtMs <= Date.now()) return null;
     return value;
   }

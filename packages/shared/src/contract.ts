@@ -10,3 +10,13 @@ export async function readGateState({ contractId, gateId, rpcUrl = "https://soro
   if (rpc.Api.isSimulationError(simulated) || !simulated.result?.retval) throw new Error("Gate state simulation failed");
   return scValToNative(simulated.result.retval) as GateState;
 }
+
+export async function readRevocationState({ contractId, gateId, revocationHash, rpcUrl = "https://soroban-testnet.stellar.org", sourceAccount }: { contractId: string; gateId: string; revocationHash: string; rpcUrl?: string; sourceAccount: string }): Promise<boolean> {
+  const server = new rpc.Server(rpcUrl, { allowHttp: rpcUrl.startsWith("http://localhost") });
+  const account = await server.getAccount(sourceAccount);
+  const call = new Contract(contractId).call("is_revoked", nativeToScVal(gateId), nativeToScVal(Buffer.from(revocationHash, "hex")));
+  const transaction = new TransactionBuilder(account, { fee: "100", networkPassphrase: Networks.TESTNET }).addOperation(call).setTimeout(30).build();
+  const simulated = await server.simulateTransaction(transaction);
+  if (rpc.Api.isSimulationError(simulated) || !simulated.result?.retval) throw new Error("Revocation state simulation failed");
+  return Boolean(scValToNative(simulated.result.retval));
+}

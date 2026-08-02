@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test --grep @a11y",
-    "contract:test": "cargo test --manifest-path contracts/veilpass-gate/Cargo.toml"
+    "contract:test": "cargo test --manifest-path contracts/veilpass-gate/Cargo.toml",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

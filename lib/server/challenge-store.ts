@@ -3,11 +3,13 @@ import "server-only";
 import { createHash, randomBytes as nodeRandomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
 import type { VeilPassErrorCode } from "@/packages/shared/src/contracts";
+import { PostgresChallengeStore } from "./postgres-challenge-store";
 
 type StoredChallenge = { challengeDigest: string; gateId: string; origin: string; expiresAtMs: number; spent: boolean };
 type ConsumeResult = { ok: true } | { ok: false; error: VeilPassErrorCode };
 
 export type IssuedChallenge = { challengeId: string; challenge: string; gateId: string; origin: string; expiresAt: string };
+export interface ChallengeStoreLike { issue(input: { gateId: string; origin: string }): Promise<IssuedChallenge>; consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string }): Promise<ConsumeResult>; }
 
 export class ChallengeStore {
   private challenges = new Map<string, StoredChallenge>();
@@ -60,6 +62,8 @@ export class ChallengeStore {
 
 function digest(value: Uint8Array | string): string { return createHash("sha256").update(value).digest("hex"); }
 
-declare global { var veilPassChallengeStore: ChallengeStore | undefined; }
-export const challengeStore = globalThis.veilPassChallengeStore ?? new ChallengeStore();
-if (process.env.NODE_ENV !== "production") globalThis.veilPassChallengeStore = challengeStore;
+export const durableChallengeStoreConfigured = Boolean(process.env.DATABASE_URL);
+declare global { var veilPassMemoryChallengeStore: ChallengeStore | undefined; }
+const memoryStore = globalThis.veilPassMemoryChallengeStore ?? new ChallengeStore();
+if (process.env.NODE_ENV !== "production") globalThis.veilPassMemoryChallengeStore = memoryStore;
+export const challengeStore: ChallengeStoreLike = process.env.DATABASE_URL ? new PostgresChallengeStore(process.env.DATABASE_URL) : memoryStore;
