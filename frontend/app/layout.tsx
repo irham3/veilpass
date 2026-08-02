@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import { connection } from "next/server";
 
+import { RouteTransition } from "@/components/motion/route-transition";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,9 @@ export default async function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          <RouteTransition>{children}</RouteTransition>
+        </TooltipProvider>
         <Toaster richColors position="bottom-right" />
       </body>
     </html>

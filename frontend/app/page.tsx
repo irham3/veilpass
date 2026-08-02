@@ -1,6 +1,13 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
+import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
+import { FingerprintSimpleIcon } from "@phosphor-icons/react/dist/ssr/FingerprintSimple";
+import { LockKeyIcon } from "@phosphor-icons/react/dist/ssr/LockKey";
+import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
+import { WalletIcon } from "@phosphor-icons/react/dist/ssr/Wallet";
 import Link from "next/link";
 
+import { Reveal } from "@/components/motion/reveal";
+import { LandingFaq } from "@/components/marketing/landing-faq";
 import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
 import { ProofWindow } from "@/components/marketing/proof-window";
@@ -8,45 +15,239 @@ import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+const inspectionCards = [
+  {
+    icon: FingerprintSimpleIcon,
+    title: "Different app, different ID",
+    text: "The same wallet becomes a separate host identifier for each allowed origin.",
+  },
+  {
+    icon: LockKeyIcon,
+    title: "Challenge gets consumed",
+    text: "Replay attempts hit the spent-challenge path instead of creating another session.",
+  },
+  {
+    icon: ShieldCheckIcon,
+    title: "Verifier stays small",
+    text: "The host receives the verdict fields it needs and nothing that identifies the wallet.",
+  },
+] as const;
+
+const evidence = [
+  ["Contract", "Soroban gate deployed on Stellar Testnet"],
+  ["Tests", "Unit, e2e, a11y, build, and contract smoke are wired"],
+  ["Docs", "Privacy model and limitations stay visible"],
+] as const;
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-ink-950 text-paper-50">
+    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
       <SiteHeader />
       <main>
-        <section className="relative overflow-hidden px-5 py-16 lg:min-h-[calc(100svh-4rem)] lg:px-8 lg:py-20">
-          <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_78%_18%,rgba(165,255,206,0.12),transparent_30%)]" />
-          <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[5fr_7fr] lg:items-center">
-            <div className="max-w-xl">
-              <Badge variant="outline" className="border-signal-400/40 bg-signal-400/10 text-signal-400">Stellar testnet MVP</Badge>
-              <h1 className="mt-7 text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl xl:text-7xl">Prove access.<br /><span className="text-paper-200">Keep your wallet private.</span></h1>
-              <p className="mt-7 max-w-lg text-lg leading-8 text-paper-200">VeilPass lets a Stellar wallet prove it meets an access rule without giving the host dApp its public address.</p>
+        <section className="aperture-field relative isolate overflow-hidden px-5 pb-16 pt-12 lg:px-8 lg:pb-24 lg:pt-16">
+          <div aria-hidden="true" className="aperture-ring absolute right-[-11rem] top-[-8rem] size-[34rem] rounded-full opacity-50 blur-[0.2px]" />
+          <div aria-hidden="true" className="absolute bottom-20 left-[5%] h-px w-[42rem] -rotate-6 bg-gradient-to-r from-transparent via-signal-400/40 to-transparent" />
+
+          <div className="relative z-10 mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <Reveal className="max-w-3xl">
+              <Badge
+                variant="outline"
+                className="rounded-full border-signal-400/35 bg-signal-400/10 px-4 py-1.5 font-mono text-[0.68rem] uppercase tracking-[0.18em] text-signal-400"
+              >
+                Stellar testnet private login
+              </Badge>
+              <h1 className="mt-6 max-w-4xl text-[clamp(3.25rem,6.4vw,6.2rem)] font-semibold leading-[0.88] tracking-[-0.07em] text-balance">
+                Prove access. Keep wallets private.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-8 text-paper-200">
+                Hosts get a scoped ID and verdict, not the Stellar address.
+              </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Button asChild size="lg"><Link href="/demo">Try the two-origin demo <ArrowRightIcon /></Link></Button>
-                <Button asChild size="lg" variant="outline"><Link href="/docs">Read developer docs</Link></Button>
+                <Button
+                  asChild
+                  size="lg"
+                  className="group rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                >
+                  <Link href="/demo">
+                    Try the two-origin demo
+                    <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1">
+                      <ArrowRightIcon size={16} />
+                    </span>
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full border-paper-50/16 bg-paper-50/5 text-paper-50 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-paper-50/10"
+                >
+                  <Link href="/docs">Read developer docs</Link>
+                </Button>
               </div>
-              <p className="mt-6 font-mono text-xs text-paper-200">No wallet address in the host response.</p>
-            </div>
-            <ProofWindow />
+            </Reveal>
+
+            <Reveal delay="medium" className="relative">
+              <div aria-hidden="true" className="absolute inset-6 rounded-[2.5rem] bg-signal-400/10 blur-3xl" />
+              <div className="relative rounded-[2.35rem] border border-paper-50/10 bg-paper-50/[0.045] p-2 shadow-[0_40px_120px_rgba(0,0,0,0.44)]">
+                <div className="rounded-[1.85rem] border border-line-dark/80 bg-ink-950/96 p-2">
+                  <ProofWindow />
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
+
         <PayloadComparison />
+
+        <section className="relative overflow-hidden px-5 py-24 lg:px-8 lg:py-36">
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-signal-400/50 to-transparent" />
+          <div className="mx-auto max-w-7xl">
+            <Reveal className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+              <div>
+                <p className="eyebrow">Reviewer path</p>
+                <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-6xl">
+                  Inspect the boundary from three angles.
+                </h2>
+              </div>
+              <p className="max-w-2xl text-lg leading-8 text-paper-200 lg:justify-self-end">
+                Run App A, switch to App B, then test replay and revocation. The product shows the exact point where the wallet stops.
+              </p>
+            </Reveal>
+
+            <div className="mt-14 grid gap-4 lg:grid-cols-3">
+              {inspectionCards.map((card, index) => {
+                const Icon = card.icon;
+
+                return (
+                  <Reveal key={card.title} as="article" delay={index === 0 ? "none" : index === 1 ? "short" : "medium"} className="group rounded-[1.9rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-signal-400/35">
+                    <div className="h-full rounded-[1.45rem] bg-ink-900/92 p-6 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-1">
+                      <div className="grid size-11 place-items-center rounded-2xl bg-signal-400/10 text-signal-400">
+                        <Icon aria-hidden="true" size={23} weight="duotone" />
+                      </div>
+                      <h3 className="mt-14 text-2xl font-semibold tracking-[-0.04em]">{card.title}</h3>
+                      <p className="mt-4 text-sm leading-7 text-paper-200">{card.text}</p>
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         <PrivacyBoundary />
-        <section className="border-y border-line-dark px-5 py-24 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-            <div><p className="eyebrow">Built for inspection</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em]">A small response surface with hard edges.</h2></div>
-            <pre className="overflow-x-auto rounded-2xl border border-line-dark bg-ink-900 p-6 font-mono text-sm leading-7 text-paper-200 sm:p-8"><code>{`{
+
+        <section className="px-5 py-24 lg:px-8 lg:py-36">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
+            <Reveal className="rounded-[2.1rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5">
+              <div className="flex h-full flex-col justify-between rounded-[1.6rem] bg-ink-900/92 p-7 sm:p-9">
+                <div>
+                  <p className="eyebrow">Evidence package</p>
+                  <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+                    Built to be checked, not believed.
+                  </h2>
+                  <p className="mt-6 max-w-xl text-lg leading-8 text-paper-200">
+                    The repo keeps the contract ID, test matrix, screenshots, and proof limitation notes close to the product code.
+                  </p>
+                </div>
+                <Button asChild size="lg" className="mt-10 w-fit rounded-full pr-1.5">
+                  <Link href="/docs">
+                    Open docs
+                    <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12">
+                      <ArrowRightIcon size={16} />
+                    </span>
+                  </Link>
+                </Button>
+              </div>
+            </Reveal>
+
+            <Reveal delay="short" className="grid gap-4">
+              {evidence.map(([label, text]) => (
+                <article key={label} className="rounded-[1.65rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5">
+                  <div className="flex items-start gap-5 rounded-[1.2rem] bg-ink-950/80 p-5 sm:p-6">
+                    <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-signal-400/10 text-signal-400">
+                      {label === "Contract" ? <CodeIcon size={22} /> : label === "Tests" ? <ShieldCheckIcon size={22} /> : <WalletIcon size={22} />}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold tracking-[-0.03em]">{label}</h3>
+                      <p className="mt-2 text-sm leading-7 text-paper-200">{text}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </Reveal>
+          </div>
+        </section>
+
+        <section className="border-y border-line-dark px-5 py-24 lg:px-8 lg:py-32">
+          <Reveal className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div>
+              <p className="eyebrow">Host response</p>
+              <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+                A small payload with hard edges.
+              </h2>
+              <p className="mt-6 max-w-xl text-paper-200">
+                The verifier returns fields that support access control. It does not return the wallet address.
+              </p>
+            </div>
+            <pre className="overflow-x-auto rounded-[1.65rem] border border-paper-50/10 bg-ink-900 p-6 font-mono text-sm leading-7 text-paper-200 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:p-8">
+              <code>{`{
   "ok": true,
   "privateAppId": "vp_appA_72f1",
   "gateId": "premium-holder",
-  "epoch": 20391,
+  "epoch": 1,
   "origin": "https://app.example",
   "expiresAt": 1760000000000
-}`}</code></pre>
-          </div>
+}`}</code>
+            </pre>
+          </Reveal>
         </section>
-        <section className="px-5 py-24 text-center lg:px-8 lg:py-32"><div className="mx-auto max-w-3xl"><p className="eyebrow">See the boundary move</p><h2 className="mt-4 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">One wallet. Two apps. Two unlinkable host identifiers.</h2><p className="mx-auto mt-6 max-w-2xl text-paper-200">Run the controlled test bench, replay a spent challenge, then revoke the gate and watch verification fail.</p><Button asChild size="lg" className="mt-9"><Link href="/demo">Open the demo <ArrowRightIcon /></Link></Button></div></section>
+
+        <section className="px-5 py-24 lg:px-8 lg:py-36">
+          <Reveal className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="eyebrow">FAQ</p>
+              <h2 className="mt-4 max-w-xl text-4xl font-semibold tracking-[-0.05em] text-balance sm:text-5xl">
+                Questions reviewers ask first
+              </h2>
+              <p className="mt-6 max-w-xl text-paper-200">
+                Short answers for the privacy, deployment, and proof claims that need clean edges.
+              </p>
+            </div>
+            <LandingFaq />
+          </Reveal>
+        </section>
+
+        <section className="px-5 pb-24 lg:px-8 lg:pb-36">
+          <Reveal className="mx-auto max-w-7xl rounded-[2.35rem] border border-signal-400/22 bg-signal-400/[0.08] p-2">
+            <div className="rounded-[1.85rem] bg-ink-950 px-6 py-12 text-center sm:px-10 lg:py-16">
+              <h2 className="mx-auto max-w-4xl text-4xl font-semibold tracking-[-0.055em] text-balance sm:text-6xl">
+                One wallet. Two apps. Two private host IDs.
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-paper-200">
+                Open the controlled bench, replay a spent challenge, then revoke the gate and watch verification fail.
+              </p>
+              <Button asChild size="lg" className="mt-9 rounded-full pr-1.5">
+                <Link href="/demo">
+                  Open the demo
+                  <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12">
+                    <ArrowRightIcon size={16} />
+                  </span>
+                </Link>
+              </Button>
+            </div>
+          </Reveal>
+        </section>
       </main>
-      <footer className="border-t border-line-dark px-5 py-8 text-sm text-paper-200 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row"><span>VeilPass MVP. Stellar testnet only.</span><div className="flex gap-5"><Link href="/docs/security">Security</Link><Link href="/docs/privacy-model">Privacy model</Link><Link href="/docs/limitations">Limitations</Link></div></div></footer>
+      <footer className="border-t border-line-dark px-5 py-8 text-sm text-paper-200 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row">
+          <span>VeilPass MVP. Stellar testnet only.</span>
+          <div className="flex flex-wrap gap-5">
+            <Link className="smooth-link" href="/docs/security">Security</Link>
+            <Link className="smooth-link" href="/docs/privacy-model">Privacy model</Link>
+            <Link className="smooth-link" href="/docs/limitations">Limitations</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

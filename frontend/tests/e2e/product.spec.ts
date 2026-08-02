@@ -14,6 +14,16 @@ test("landing explains and demonstrates the narrow privacy boundary", async ({ p
   if (testInfo.project.name === "chromium") await page.screenshot({ path: "docs/evidence/landing-desktop.png", fullPage: true });
 });
 
+test("landing FAQ opens privacy and deployment answers", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "Questions reviewers ask first" })).toBeVisible();
+  await page.getByRole("button", { name: "Does VeilPass make the user anonymous?" }).click();
+  await expect(page.getByText("No. The issuer still sees the wallet during enrollment.")).toBeVisible();
+  await page.getByRole("button", { name: "Can I deploy this from the frontend folder?" }).click();
+  await expect(page.getByText("Yes. Vercel should use frontend as the project root.")).toBeVisible();
+});
+
 test("VeilPass owns every browser and install surface", async ({ page, request }) => {
   await page.goto("/");
 

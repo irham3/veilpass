@@ -44,11 +44,11 @@ export function ProofWindow() {
   return (
     <section
       aria-label="Login payload comparison"
-      className="overflow-hidden rounded-2xl border border-line-dark bg-ink-900 shadow-[0_32px_90px_rgba(0,0,0,0.28)]"
+      className="overflow-hidden rounded-[1.45rem] border border-paper-50/10 bg-ink-900 shadow-[0_32px_90px_rgba(0,0,0,0.34)]"
     >
-      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line-dark px-4 py-3 sm:px-5">
+      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-paper-50/10 bg-paper-50/[0.025] px-4 py-3 sm:px-5">
         <div className="flex items-center gap-2 text-sm text-paper-200">
-          <span className="grid size-8 place-items-center rounded-md bg-ink-800 text-signal-400">
+          <span className="grid size-8 place-items-center rounded-xl bg-signal-400/10 text-signal-400">
             {mode === "standard" ? (
               <WalletIcon aria-hidden="true" size={17} weight="duotone" />
             ) : (
@@ -62,14 +62,14 @@ export function ProofWindow() {
         </span>
       </div>
 
-      <div className="grid gap-px bg-line-dark lg:grid-cols-[12rem_1fr]">
+      <div className="grid gap-px bg-paper-50/10 lg:grid-cols-[12rem_1fr]">
         <div className="flex flex-row gap-2 bg-ink-900 p-3 lg:flex-col lg:p-4">
           <Button
             type="button"
             variant={mode === "standard" ? "secondary" : "ghost"}
             aria-pressed={mode === "standard"}
             onClick={() => setMode("standard")}
-            className="min-h-11 flex-1 justify-start"
+            className="min-h-11 flex-1 justify-start rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
             Standard wallet login
           </Button>
@@ -78,18 +78,19 @@ export function ProofWindow() {
             variant={mode === "veilpass" ? "default" : "ghost"}
             aria-pressed={mode === "veilpass"}
             onClick={() => setMode("veilpass")}
-            className="min-h-11 flex-1 justify-start"
+            className="min-h-11 flex-1 justify-start rounded-2xl transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
             VeilPass login
           </Button>
         </div>
 
         <div className="relative min-h-80 overflow-hidden bg-ink-950 p-5 sm:p-7">
+          <div aria-hidden="true" className="absolute right-[-8rem] top-[-8rem] size-72 rounded-full bg-signal-400/10 blur-3xl" />
           <div
             aria-hidden="true"
             className={cn(
-              "absolute inset-y-0 left-[18%] w-px bg-signal-400/40 transition-transform duration-240",
-              mode === "veilpass" ? "translate-x-0" : "-translate-x-10 opacity-40",
+              "absolute inset-y-0 left-[18%] w-px bg-signal-400/40 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+              mode === "veilpass" ? "translate-x-0 opacity-100" : "-translate-x-10 opacity-40",
             )}
           />
           <div className="relative flex h-full flex-col justify-between gap-10">
@@ -112,7 +113,7 @@ export function ProofWindow() {
               <pre
                 data-testid="hero-payload"
                 aria-live="polite"
-                className="min-h-40 overflow-x-auto rounded-xl border border-line-dark bg-ink-900 p-4 font-mono text-[0.75rem] leading-6 text-paper-200"
+                className="min-h-40 overflow-x-auto rounded-2xl border border-paper-50/10 bg-paper-50/[0.035] p-4 font-mono text-[0.75rem] leading-6 text-paper-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
                 <code>{JSON.stringify(payload, null, 2)}</code>
               </pre>
@@ -137,6 +138,7 @@ export function ProofWindow() {
                     variant={app === "app-a" ? "secondary" : "ghost"}
                     aria-pressed={app === "app-a"}
                     onClick={() => setApp("app-a")}
+                    className="rounded-full"
                   >
                     Use App A
                   </Button>
@@ -146,6 +148,7 @@ export function ProofWindow() {
                     variant={app === "app-b" ? "secondary" : "ghost"}
                     aria-pressed={app === "app-b"}
                     onClick={() => setApp("app-b")}
+                    className="rounded-full"
                   >
                     Use App B
                   </Button>
