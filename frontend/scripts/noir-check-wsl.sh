@@ -20,4 +20,4 @@ nargo test
 nargo execute
 mkdir -p target/fixture
 bb prove -b ./target/veilpass_membership.json -w ./target/veilpass_membership.gz --write_vk -o ./target/fixture
-bb verify -p ./target/fixture/proof -k ./target/fixture/vk
+bb verify -p ./target/fixture/proof -k ./target/fixture/vk -i ./target/fixture/public_inputs

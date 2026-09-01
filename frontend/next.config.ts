@@ -3,6 +3,7 @@ import { securityHeaders } from "./lib/security/headers";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  transpilePackages: ["@veilpass/shared", "@veilpass/sdk", "@veilpass/server"],
   async rewrites() {
     return {
       beforeFiles: [

@@ -23,5 +23,5 @@ if (process.platform === "win32") {
   run("nargo", ["execute"]);
   const output = join(circuitDirectory, "target", "fixture");
   run("bb", ["prove", "-b", "./target/veilpass_membership.json", "-w", "./target/veilpass_membership.gz", "--write_vk", "-o", output]);
-  run("bb", ["verify", "-p", join(output, "proof"), "-k", join(output, "vk")]);
+  run("bb", ["verify", "-p", join(output, "proof"), "-k", join(output, "vk"), "-i", join(output, "public_inputs")]);
 }
