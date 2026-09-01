@@ -1,14 +1,12 @@
-import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 
-import type { ChallengeStoreLike } from "@/lib/server/challenge-store";
-import { normalizeOrigin } from "@/packages/shared/src/origin";
-import { proofResultSchema, type ProofResult, type VerifyResult, type VeilPassErrorCode } from "@/packages/shared/src/contracts";
-import { verifySimulatedProof } from "@/packages/proof/src/simulated";
+import { normalizeOrigin, proofResultSchema, type ProofResult, type VerifyResult, type VeilPassErrorCode } from "@veilpass/shared";
+import type { ChallengeStore } from "./types";
 
 export type GatePolicy = { active: boolean; epoch: number; credentialRoot: string; isRevoked?: (revocationHash: string) => Promise<boolean> };
+export type ProofVerifier = (proofResult: ProofResult) => Promise<boolean> | boolean;
 
-export async function verifyVeilPassProof({ proofResult, expectedOrigin, expectedGateId, store, policy, key, now = Date.now, requestId }: { proofResult: unknown; expectedOrigin: string; expectedGateId: string; store: ChallengeStoreLike; policy: GatePolicy; key: string; now?: () => number; requestId: string }): Promise<VerifyResult> {
+export async function verifyVeilPassProof({ proofResult, expectedOrigin, expectedGateId, store, policy, verifyProof, now = Date.now, requestId }: { proofResult: unknown; expectedOrigin: string; expectedGateId: string; store: ChallengeStore; policy: GatePolicy; verifyProof: ProofVerifier; now?: () => number; requestId: string }): Promise<VerifyResult> {
   const parsed = proofResultSchema.safeParse(proofResult);
   if (!parsed.success) return failure("PROOF_INVALID", requestId);
   const result: ProofResult = parsed.data;
@@ -22,7 +20,7 @@ export async function verifyVeilPassProof({ proofResult, expectedOrigin, expecte
   if (input.epoch !== policy.epoch) return failure("STALE_EPOCH", requestId);
   if (!safeEqual(input.credentialRoot, policy.credentialRoot)) return failure("PROOF_INVALID", requestId);
   if (policy.isRevoked && await policy.isRevoked(input.revocationHash)) return failure("CREDENTIAL_REVOKED", requestId);
-  if (!verifySimulatedProof({ proofResult: result, key })) return failure("PROOF_INVALID", requestId);
+  if (!await verifyProof(result)) return failure("PROOF_INVALID", requestId);
   const consumed = await store.consume({ challengeId: result.challengeId, challengeHash: input.challengeHash, gateId: input.gateId, origin: input.origin, loginNullifier: input.loginNullifier });
   if (!consumed.ok) return failure(consumed.error, requestId);
   return { ok: true, privateAppId: input.privateAppId, gateId: input.gateId, epoch: input.epoch, origin: input.origin, expiresAt: input.proofExpiresAt };

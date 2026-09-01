@@ -1,5 +1,4 @@
-import { normalizeOrigin } from "../../shared/src/origin";
-import { challengeResponseSchema, verifyResultSchema, type VerifiedLogin } from "../../shared/src/contracts";
+import { normalizeOrigin, challengeResponseSchema, verifyResultSchema, type VerifiedLogin } from "@veilpass/shared";
 import { validatePopupMessage } from "./channel";
 
 export class VeilPassError extends Error {

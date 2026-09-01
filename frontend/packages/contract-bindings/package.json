@@ -1,9 +1,14 @@
 {
-  "version": "0.0.0",
-  "name": "contract-bindings",
+  "version": "0.1.0",
+  "name": "@veilpass/contract-bindings",
+  "description": "Generated TypeScript bindings for the VeilPass Soroban gate contract.",
+  "license": "MIT",
+  "author": "Irham Tri Ahmadi <irhamtria@gmail.com>",
+  "repository": { "type": "git", "url": "git+https://github.com/irham3/veilpass.git", "directory": "frontend/packages/contract-bindings" },
   "type": "module",
-  "exports": "./dist/index.js",
-  "typings": "dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
@@ -13,5 +18,6 @@
   },
   "devDependencies": {
     "typescript": "^5.6.2"
-  }
+  },
+  "publishConfig": { "access": "public", "provenance": true }
 }
