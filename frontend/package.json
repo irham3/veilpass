@@ -26,6 +26,9 @@
     "pack:check": "npm run packages:build && node scripts/pack-check.mjs"
   },
   "dependencies": {
+    "@veilpass/sdk": "file:packages/sdk",
+    "@veilpass/server": "file:packages/server",
+    "@veilpass/shared": "file:packages/shared",
     "@emnapi/runtime": "^1.11.3",
     "@gsap/react": "^2.1.2",
     "@phosphor-icons/react": "^2.1.10",

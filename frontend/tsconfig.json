@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@veilpass/shared": ["./packages/shared/src/index.ts"],
+      "@veilpass/shared/*": ["./packages/shared/src/*"],
+      "@veilpass/sdk": ["./packages/sdk/src/index.ts"],
+      "@veilpass/server": ["./packages/server/src/index.ts"]
     }
   },
   "include": [
