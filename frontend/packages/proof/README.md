@@ -6,14 +6,14 @@ The checked-in TypeScript `simulated.ts` adapter is only a deterministic integra
 
 ## Reproducible circuit check
 
-The checked-in circuit compiles with Nargo `1.0.0-beta.26`. From `frontend`, run:
+The checked-in circuit is pinned to the official compatible pair Nargo `1.0.0-beta.22` and Barretenberg `5.0.0-nightly.20260522`. From `frontend`, run:
 
 ```sh
 npm run proof:check
 ```
 
-On Windows the command delegates to WSL; on Linux CI it invokes Nargo directly. The helper validates the installed compiler version before compiling, so an accidental compiler upgrade cannot silently change the circuit.
+On Windows the command delegates to WSL; on Linux CI it invokes the native binaries directly. The helper validates both versions, runs the valid-membership circuit test, produces a witness from the checked-in **synthetic** fixture, generates an UltraHonk proof, and verifies the proof against the generated verification key. An accidental compiler or backend upgrade therefore cannot silently change the circuit or proof serialization.
 
-Proof generation and verification additionally need the matching Barretenberg `bb` backend. The backend is intentionally not committed to this repository. Install it through `bbup` in WSL or your CI image, record its exact version in the release evidence, and run a proof/verification fixture before changing the proof mode to `noir`.
+The backend binary and generated proof material are intentionally not committed to this repository. Use `scripts/install-noir-toolchain.sh` inside WSL/Linux to install the pinned pair.
 
 `simulated.ts` remains an integration fixture only. The application rejects it whenever `NODE_ENV=production`, even when a simulator key is mistakenly configured.

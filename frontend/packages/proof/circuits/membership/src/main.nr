@@ -42,3 +42,34 @@ fn main(
     assert_eq(login_nullifier, h2(subject_secret, challenge_hash));
     assert_eq(revocation_hash, h3(subject_secret, gate_id_hash, 1));
 }
+
+#[test]
+fn accepts_a_valid_membership_witness() {
+    let subject_secret = 1;
+    let gate_id_hash = 2;
+    let epoch = 3;
+    let credential_expiry = 1_000_u64;
+    let leaf_nonce = 4;
+    let path = [0; 16];
+    let sides = [false; 16];
+    let mut root = std::hash::pedersen_hash([subject_secret, gate_id_hash, epoch as Field, credential_expiry as Field, leaf_nonce]);
+    for _ in 0..16 { root = h2(root, 0); }
+
+    main(
+        subject_secret,
+        credential_expiry,
+        leaf_nonce,
+        path,
+        sides,
+        root,
+        gate_id_hash,
+        epoch,
+        5,
+        6,
+        900,
+        800,
+        h3(subject_secret, gate_id_hash, 5),
+        h2(subject_secret, 6),
+        h3(subject_secret, gate_id_hash, 1),
+    );
+}

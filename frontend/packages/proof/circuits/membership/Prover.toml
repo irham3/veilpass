@@ -1,0 +1,15 @@
+challenge_hash = 6
+credential_expiry = 1000
+credential_root = "0x068b503bc57bff4463d8abc2e0e14179c703034bcb01cc218d8004906555ce86"
+current_time = 800
+epoch = 3
+gate_id_hash = 2
+leaf_nonce = 4
+login_nullifier = "0x2cec5513fb653232cf29b85688dabc039aec246538b6d66db0a03abfff7fd157"
+merkle_path = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+normalized_origin_hash = 5
+path_is_right = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+private_app_id = "0x0b43b49c6621ceea5d49c433ea712de1e8adaa80ef2778e005be35292853124b"
+proof_expiry = 900
+revocation_hash = "0x104a8d0dfc97b47e1475539ca48d431d542a435551c1d9250513d144d36de261"
+subject_secret = 1

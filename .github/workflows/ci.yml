@@ -28,12 +28,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install frontend dependencies
         run: npm ci
-      - name: Install pinned Noir compiler
+      - name: Install pinned Noir and Barretenberg toolchain
         run: |
           curl -L https://raw.githubusercontent.com/noir-lang/noirup/refs/heads/main/install | bash
           echo "$HOME/.nargo/bin" >> $GITHUB_PATH
-          "$HOME/.nargo/bin/noirup" --version 1.0.0-beta.26
-      - name: Compile Noir membership circuit
+          "$HOME/.nargo/bin/noirup" --version 1.0.0-beta.22
+          curl -L https://raw.githubusercontent.com/AztecProtocol/aztec-packages/refs/heads/next/barretenberg/bbup/install | bash
+          echo "$HOME/.bb" >> $GITHUB_PATH
+          "$HOME/.bb/bbup" --version 5.0.0-nightly.20260522 --no-modify-path
+      - name: Prove and verify Noir membership fixture
         run: npm run proof:check
       - name: Lint
         run: npm run lint
