@@ -1,5 +1,7 @@
 # VeilPass — Audit Implementasi dan Rencana Penyelesaian
 
+> **Pembaruan implementasi 1 September 2026:** package npm, enrollment challenge yang durable dan terikat, kompilasi circuit Noir yang dipin dan dijalankan CI, penolakan simulator pada production, demo SDK dua-host lokal, serta motion landing berbasis GSAP telah diimplementasikan. Gate rilis yang masih tersisa adalah fixture proof + verification key Noir/Barretenberg yang benar-benar berhasil dan bukti deployment Stellar testnet yang baru; keduanya memerlukan backend Barretenberg kompatibel serta kredensial testnet terkontrol.
+
 **Tanggal audit:** 1 September 2026
 **Acuan scope:** Proposal Instawards VeilPass, 2 Agustus 2026
 **Status keseluruhan:** **Functional prototype / pre-production** — fondasi produk dan sebagian besar alur sudah ada, tetapi MVP belum memenuhi klaim inti proposal: private login berbasis *zero-knowledge proof* yang berjalan, stabil, domain-bound, dan dapat direview pada dua dApp nyata.

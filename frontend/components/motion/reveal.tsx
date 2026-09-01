@@ -1,6 +1,8 @@
 "use client";
 
-import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { type ReactNode, type Ref, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -18,21 +20,30 @@ export function Reveal({
   as = "div",
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  useGSAP(() => {
     const node = ref.current;
     if (!node) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reducedMotion.matches) {
+      gsap.set(node, { clearProps: "all" });
       return;
     }
 
+    const delaySeconds = { none: 0, short: 0.09, medium: 0.16, long: 0.24 }[delay];
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
-          setVisible(true);
+          gsap.to(node, {
+            autoAlpha: 1,
+            y: 0,
+            filter: "blur(0px)",
+            duration: 0.76,
+            delay: delaySeconds,
+            ease: "power3.out",
+            overwrite: true,
+          });
           observer.disconnect();
         }
       },
@@ -41,11 +52,9 @@ export function Reveal({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, { scope: ref, dependencies: [delay] });
 
   const props = {
-    "data-visible": visible,
-    "data-delay": delay,
     className: cn("reveal-motion", className),
   };
 

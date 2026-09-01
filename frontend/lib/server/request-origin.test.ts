@@ -12,4 +12,10 @@ describe("resolveTrustedOrigin", () => {
     expect(resolveTrustedOrigin({ requestUrl: "http://localhost:3000/api", originHeader: "http://localhost:3000" })).toBe("http://localhost:3000");
     expect(() => resolveTrustedOrigin({ requestUrl: "https://app.example/api", originHeader: "https://app.example" })).toThrow("configured host origin");
   });
+
+  it("accepts only a configured member of an explicit host allowlist", () => {
+    const configured = "https://app-a.example, https://app-b.example";
+    expect(resolveTrustedOrigin({ configuredOrigin: configured, requestUrl: "https://internal.example/api", originHeader: "https://app-b.example" })).toBe("https://app-b.example");
+    expect(() => resolveTrustedOrigin({ configuredOrigin: configured, requestUrl: "https://internal.example/api", originHeader: "https://other.example" })).toThrow("origin mismatch");
+  });
 });

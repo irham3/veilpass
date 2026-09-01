@@ -3,6 +3,14 @@ import { securityHeaders } from "./lib/security/headers";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/", has: [{ type: "host", value: "app-a\\.localhost:3000" }], destination: "/host/app-a" },
+        { source: "/", has: [{ type: "host", value: "app-b\\.localhost:3000" }], destination: "/host/app-b" },
+      ],
+    };
+  },
   async headers() {
     return [
       {
