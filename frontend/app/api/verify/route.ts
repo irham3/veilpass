@@ -10,10 +10,12 @@ import { verifierGate } from "@/lib/server/verifier-gate";
 import { proofResultSchema } from "@/packages/shared/src/contracts";
 import { verifyVeilPassProof } from "@/packages/server/src/verifier";
 import { verifySimulatedProof } from "@/packages/proof/src/simulated";
+import { simulatedProofsAllowed } from "@/packages/proof/src/mode";
 
 export async function POST(request: NextRequest) {
   const id = requestId();
   if (process.env.NODE_ENV === "production" && !durableChallengeStoreConfigured) return publicError("SERVICE_UNAVAILABLE", id, 503);
+  if (!simulatedProofsAllowed()) return publicError("SERVICE_UNAVAILABLE", id, 503);
   let origin: string;
   try { origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }

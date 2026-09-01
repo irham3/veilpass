@@ -7,6 +7,7 @@ import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
 import { readJsonLimited } from "@/lib/server/request-body";
 import { createSimulatedProof } from "@/packages/proof/src/simulated";
+import { simulatedProofsAllowed } from "@/packages/proof/src/mode";
 import { challengeResponseSchema } from "@/packages/shared/src/contracts";
 import { issuedCredentialSchema } from "@/packages/credential/src/schema";
 import { z } from "zod";
@@ -15,6 +16,7 @@ const schema = z.object({ challenge: challengeResponseSchema, credential: issued
 
 export async function POST(request: NextRequest) {
   const id = requestId();
+  if (!simulatedProofsAllowed()) return publicError("SERVICE_UNAVAILABLE", id, 503);
   try { resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_LOGIN_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }
   const parsed = schema.safeParse(await readJsonLimited(request, 64_000).catch(() => null));

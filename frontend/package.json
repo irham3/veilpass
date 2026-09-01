@@ -17,6 +17,7 @@
     "test:a11y": "playwright test --grep @a11y",
     "contract:test": "cargo test --manifest-path ../contracts/veilpass-gate/Cargo.toml",
     "contract:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File ../contracts/veilpass-gate/scripts/smoke-testnet.ps1",
+    "proof:check": "node scripts/noir-check.mjs",
     "env:local": "node scripts/local-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
     "db:generate": "drizzle-kit generate",
