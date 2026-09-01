@@ -1,0 +1,24 @@
+{
+  "name": "@veilpass/shared",
+  "version": "0.1.0",
+  "description": "Public contracts and exact-origin helpers for VeilPass integrations.",
+  "license": "MIT",
+  "author": "Irham Tri Ahmadi <irhamtria@gmail.com>",
+  "repository": { "type": "git", "url": "git+https://github.com/irham3/veilpass.git", "directory": "frontend/packages/shared" },
+  "bugs": "https://github.com/irham3/veilpass/issues",
+  "homepage": "https://github.com/irham3/veilpass#readme",
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist", "README.md", "LICENSE"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
+    "./contracts": { "types": "./dist/contracts.d.ts", "import": "./dist/contracts.js", "require": "./dist/contracts.cjs" },
+    "./origin": { "types": "./dist/origin.d.ts", "import": "./dist/origin.js", "require": "./dist/origin.cjs" }
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "scripts": { "build": "tsup src/index.ts src/contracts.ts src/origin.ts --format esm,cjs --dts --clean --sourcemap --tsconfig tsconfig.build.json" },
+  "dependencies": { "zod": "^4.4.3" },
+  "publishConfig": { "access": "public", "provenance": true }
+}

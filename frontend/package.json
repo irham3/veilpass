@@ -2,6 +2,9 @@
   "name": "veilpass",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,13 +17,17 @@
     "test:a11y": "playwright test --grep @a11y",
     "contract:test": "cargo test --manifest-path ../contracts/veilpass-gate/Cargo.toml",
     "contract:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File ../contracts/veilpass-gate/scripts/smoke-testnet.ps1",
+    "proof:check": "node scripts/noir-check.mjs",
     "env:local": "node scripts/local-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "packages:build": "npm run build --workspace @veilpass/shared && npm run build --workspace @veilpass/sdk && npm run build --workspace @veilpass/server && npm run build --workspace @veilpass/contract-bindings",
+    "pack:check": "npm run packages:build && node scripts/pack-check.mjs"
   },
   "dependencies": {
     "@emnapi/runtime": "^1.11.3",
+    "@gsap/react": "^2.1.2",
     "@phosphor-icons/react": "^2.1.10",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^16.2.0",
@@ -28,6 +35,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "drizzle-orm": "^0.45.2",
+    "gsap": "^3.15.0",
     "idb": "^8.0.3",
     "jose": "^6.1.3",
     "lucide-react": "^1.28.0",
@@ -61,11 +69,13 @@
     "eslint-config-next": "16.2.12",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4",
+    "tsup": "^8.5.1",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10"
   },
   "overrides": {
+    "nanoid": "3.3.18",
     "postcss": "8.5.25",
     "sharp": "0.35.3"
   }

@@ -1,4 +1,4 @@
-import { proofResultSchema, type ProofResult } from "../../shared/src/contracts";
+import { proofResultSchema, type ProofResult } from "@veilpass/shared";
 
 type Envelope = { type: "veilpass:proof"; state: string; payload: ProofResult };
 

@@ -37,7 +37,7 @@ export function EnrollmentFlow() {
       const signed = await signMessage(challenge.message, { networkPassphrase: Networks.TESTNET, address: access.address });
       if (signed.error || !signed.signedMessage) throw new Error("Message signing was rejected");
       const signature = typeof signed.signedMessage === "string" ? signed.signedMessage : signed.signedMessage.toString("base64");
-      const issueResponse = await fetch("/api/enrollment/issue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ challengeId: challenge.challengeId, signature, commitment }) });
+      const issueResponse = await fetch("/api/enrollment/issue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ challengeId: challenge.challengeId, address: access.address, message: challenge.message, gateId: challenge.gateId, signature, commitment }) });
       const issued = issuedCredentialSchema.safeParse(await issueResponse.json());
       if (!issued.success) throw new Error("Issuer could not create the credential");
       await saveCredential({ ...issued.data, subjectSecret, storedAt: new Date().toISOString() });

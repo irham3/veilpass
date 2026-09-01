@@ -7,7 +7,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Output "Reading VeilPass gate from Stellar Testnet..."
-stellar contract invoke --id $ContractId --source $Source --network testnet -- get_gate --gate_id $GateId
+stellar contract invoke --id $ContractId --source-account $Source --network testnet --send no -- get_gate --gate_id $GateId
 
 Write-Output "Checking a non-revoked fixture hash..."
-stellar contract invoke --id $ContractId --source $Source --network testnet -- is_revoked --gate_id $GateId --revocation_hash $RevocationHash
+stellar contract invoke --id $ContractId --source-account $Source --network testnet --send no -- is_revoked --gate_id $GateId --revocation_hash $RevocationHash

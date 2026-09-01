@@ -9,10 +9,13 @@ import { readJsonLimited } from "@/lib/server/request-body";
 import { verifierGate } from "@/lib/server/verifier-gate";
 import { proofResultSchema } from "@/packages/shared/src/contracts";
 import { verifyVeilPassProof } from "@/packages/server/src/verifier";
+import { verifySimulatedProof } from "@/packages/proof/src/simulated";
+import { simulatedProofsAllowed } from "@/packages/proof/src/mode";
 
 export async function POST(request: NextRequest) {
   const id = requestId();
   if (process.env.NODE_ENV === "production" && !durableChallengeStoreConfigured) return publicError("SERVICE_UNAVAILABLE", id, 503);
+  if (!simulatedProofsAllowed()) return publicError("SERVICE_UNAVAILABLE", id, 503);
   let origin: string;
   try { origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); }
   catch { return publicError("ORIGIN_MISMATCH", id, 403); }
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
   const key = process.env.VEILPASS_SIMULATOR_KEY ?? (process.env.NODE_ENV === "production" ? "" : "veilpass-local-simulator-only");
   if (!key) return publicError("SERVICE_UNAVAILABLE", id, 503);
   let policy; try { policy = await getGatePolicy(gateId); } catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
-  const result = await verifierGate.run(() => verifyVeilPassProof({ proofResult: parsed.data, expectedOrigin: origin, expectedGateId: gateId, store: challengeStore, policy, key, requestId: id }));
+  const result = await verifierGate.run(() => verifyVeilPassProof({ proofResult: parsed.data, expectedOrigin: origin, expectedGateId: gateId, store: challengeStore, policy, verifyProof: (proofResult) => verifySimulatedProof({ proofResult, key }), requestId: id }));
   if (!result) return publicError("SERVICE_UNAVAILABLE", id, 503);
   const status = result.ok ? 200 : result.error === "SERVICE_UNAVAILABLE" ? 503 : result.error === "ORIGIN_MISMATCH" ? 403 : 400;
   const response = NextResponse.json(result, { status, headers: { "Cache-Control": "no-store" } });

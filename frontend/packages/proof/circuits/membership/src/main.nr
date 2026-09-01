@@ -12,16 +12,16 @@ fn main(
     leaf_nonce: Field,
     merkle_path: [Field; 16],
     path_is_right: [bool; 16],
-    pub credential_root: Field,
-    pub gate_id_hash: Field,
-    pub epoch: u32,
-    pub normalized_origin_hash: Field,
-    pub challenge_hash: Field,
-    pub proof_expiry: u64,
-    pub current_time: u64,
-    pub private_app_id: Field,
-    pub login_nullifier: Field,
-    pub revocation_hash: Field,
+    credential_root: pub Field,
+    gate_id_hash: pub Field,
+    epoch: pub u32,
+    normalized_origin_hash: pub Field,
+    challenge_hash: pub Field,
+    proof_expiry: pub u64,
+    current_time: pub u64,
+    private_app_id: pub Field,
+    login_nullifier: pub Field,
+    revocation_hash: pub Field,
 ) {
     assert(credential_expiry >= current_time);
     assert(proof_expiry >= current_time);
@@ -41,4 +41,35 @@ fn main(
     assert_eq(private_app_id, h3(subject_secret, gate_id_hash, normalized_origin_hash));
     assert_eq(login_nullifier, h2(subject_secret, challenge_hash));
     assert_eq(revocation_hash, h3(subject_secret, gate_id_hash, 1));
+}
+
+#[test]
+fn accepts_a_valid_membership_witness() {
+    let subject_secret = 1;
+    let gate_id_hash = 2;
+    let epoch = 3;
+    let credential_expiry = 1_000_u64;
+    let leaf_nonce = 4;
+    let path = [0; 16];
+    let sides = [false; 16];
+    let mut root = std::hash::pedersen_hash([subject_secret, gate_id_hash, epoch as Field, credential_expiry as Field, leaf_nonce]);
+    for _ in 0..16 { root = h2(root, 0); }
+
+    main(
+        subject_secret,
+        credential_expiry,
+        leaf_nonce,
+        path,
+        sides,
+        root,
+        gate_id_hash,
+        epoch,
+        5,
+        6,
+        900,
+        800,
+        h3(subject_secret, gate_id_hash, 5),
+        h2(subject_secret, 6),
+        h3(subject_secret, gate_id_hash, 1),
+    );
 }

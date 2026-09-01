@@ -3,33 +3,34 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { enrollmentStore } from "@/lib/server/enrollment-store";
+import { durableEnrollmentStoreConfigured, enrollmentStore } from "@/lib/server/enrollment-store";
 import { buildIssuedCredentialPayload } from "@/lib/server/credential-issuance";
 import { getGatePolicy } from "@/lib/server/gate-policy";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
 import { readJsonLimited } from "@/lib/server/request-body";
 
-const schema = z.object({ challengeId: z.string().uuid(), signature: z.string().min(1).max(1024), commitment: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+const schema = z.object({ challengeId: z.string().uuid(), address: z.string().min(1).max(128), message: z.string().min(1).max(1024), gateId: z.string().min(1).max(128), signature: z.string().min(1).max(1024), commitment: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export async function POST(request: NextRequest) {
   const id = requestId();
+  if (process.env.NODE_ENV === "production" && !durableEnrollmentStoreConfigured) return publicError("SERVICE_UNAVAILABLE", id, 503);
   try { resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_LOGIN_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") }); } catch { return publicError("ORIGIN_MISMATCH", id, 403); }
   const parsed = schema.safeParse(await readJsonLimited(request, 8_192).catch(() => null));
   if (!parsed.success) return publicError("PROOF_INVALID", id, 400);
-  const challenge = enrollmentStore.consume(parsed.data.challengeId);
-  if (!challenge) return publicError("CHALLENGE_SPENT", id, 400);
-  const valid = Keypair.fromPublicKey(challenge.address).verify(Buffer.from(challenge.message), Buffer.from(parsed.data.signature, "base64"));
+  const consumed = await enrollmentStore.consume({ challengeId: parsed.data.challengeId, address: parsed.data.address, message: parsed.data.message, gateId: parsed.data.gateId });
+  if (!consumed) return publicError("CHALLENGE_SPENT", id, 400);
+  const valid = Keypair.fromPublicKey(parsed.data.address).verify(Buffer.from(parsed.data.message), Buffer.from(parsed.data.signature, "base64"));
   if (!valid) return publicError("PROOF_INVALID", id, 400);
   const issuerSecret = process.env.VEILPASS_ISSUER_SECRET;
   if (!issuerSecret) return publicError("SERVICE_UNAVAILABLE", id, 503);
   let issuer: Keypair; try { issuer = Keypair.fromSecret(issuerSecret); } catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
   let policy;
-  try { policy = await getGatePolicy(challenge.gateId); }
+  try { policy = await getGatePolicy(parsed.data.gateId); }
   catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
   let payload;
   try {
     payload = buildIssuedCredentialPayload({
-      gateId: challenge.gateId,
+      gateId: parsed.data.gateId,
       commitment: parsed.data.commitment,
       issuerPublicKey: issuer.publicKey(),
       policy,
