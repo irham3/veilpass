@@ -19,6 +19,8 @@
     "contract:test": "cargo test --manifest-path ../contracts/veilpass-gate/Cargo.toml",
     "contract:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File ../contracts/veilpass-gate/scripts/smoke-testnet.ps1",
     "proof:check": "node scripts/noir-check.mjs",
+    "proof:artifacts": "node scripts/build-proof-artifacts.mjs",
+    "proof:runtime": "node scripts/noir-runtime-check.mjs",
     "env:local": "node scripts/local-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
     "db:generate": "drizzle-kit generate",
@@ -27,6 +29,8 @@
     "pack:check": "npm run packages:build && node scripts/pack-check.mjs"
   },
   "dependencies": {
+    "@aztec/bb.js": "5.0.0-nightly.20260522",
+    "@noir-lang/noir_js": "1.0.0-beta.22",
     "@veilpass/sdk": "file:packages/sdk",
     "@veilpass/server": "file:packages/server",
     "@veilpass/shared": "file:packages/shared",

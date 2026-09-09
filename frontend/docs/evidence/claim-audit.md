@@ -8,5 +8,5 @@ Audit results:
 - The one use of `anonymous` is a negative warning that a private app ID is not anonymous.
 - Enrollment explicitly says the issuer sees the Stellar address and checks the public Testnet balance.
 - Landing, demo, login, docs, and README state that IP address, browser fingerprint, timing, device state, or later on-chain activity remain outside the boundary.
-- Every simulated cryptographic surface is labeled `Simulated proof` and says it is forgeable and not a zero-knowledge proof.
+- The hosted login creates a local Noir/UltraHonk proof; `/api/verify` accepts only a proof that verifies against the committed VK. The isolated simulator route is not on the verifier path.
 - Verified host success is schema-limited to `privateAppId`, `gateId`, `epoch`, `origin`, and `expiresAt` plus `ok`.
