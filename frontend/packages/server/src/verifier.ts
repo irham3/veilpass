@@ -3,7 +3,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { normalizeOrigin, proofResultSchema, type ProofResult, type VerifyResult, type VeilPassErrorCode } from "@veilpass/shared";
 import type { ChallengeStore } from "./types";
 
-export type GatePolicy = { active: boolean; epoch: number; credentialRoot: string; isRevoked?: (revocationHash: string) => Promise<boolean> };
+export type GatePolicy = { active: boolean; epoch: number; credentialRoot: string; owner?: string; isRevoked?: (revocationHash: string) => Promise<boolean> };
 export type ProofVerifier = (proofResult: ProofResult) => Promise<boolean> | boolean;
 
 export async function verifyVeilPassProof({ proofResult, expectedOrigin, expectedGateId, store, policy, verifyProof, now = Date.now, requestId }: { proofResult: unknown; expectedOrigin: string; expectedGateId: string; store: ChallengeStore; policy: GatePolicy; verifyProof: ProofVerifier; now?: () => number; requestId: string }): Promise<VerifyResult> {
@@ -15,13 +15,15 @@ export async function verifyVeilPassProof({ proofResult, expectedOrigin, expecte
   try { normalizedExpected = normalizeOrigin(expectedOrigin); } catch { return failure("ORIGIN_MISMATCH", requestId); }
   if (!safeEqual(input.origin, normalizedExpected)) return failure("ORIGIN_MISMATCH", requestId);
   if (!safeEqual(input.gateId, expectedGateId)) return failure("GATE_MISMATCH", requestId);
+  const proofCreatedAt = Date.parse(input.proofCreatedAt);
+  if (!Number.isFinite(proofCreatedAt) || proofCreatedAt > now() + 60_000 || proofCreatedAt < now() - 10 * 60_000) return failure("PROOF_INVALID", requestId);
   if (Date.parse(input.proofExpiresAt) <= now()) return failure("CREDENTIAL_EXPIRED", requestId);
   if (!policy.active) return failure("CREDENTIAL_REVOKED", requestId);
   if (input.epoch !== policy.epoch) return failure("STALE_EPOCH", requestId);
   if (!safeEqual(input.credentialRoot, policy.credentialRoot)) return failure("PROOF_INVALID", requestId);
   if (policy.isRevoked && await policy.isRevoked(input.revocationHash)) return failure("CREDENTIAL_REVOKED", requestId);
   if (!await verifyProof(result)) return failure("PROOF_INVALID", requestId);
-  const consumed = await store.consume({ challengeId: result.challengeId, challengeHash: input.challengeHash, gateId: input.gateId, origin: input.origin, loginNullifier: input.loginNullifier });
+  const consumed = await store.consume({ challengeId: result.challengeId, challengeHash: input.challengeHash, gateId: input.gateId, origin: input.origin, loginNullifier: input.loginNullifier, proofExpiresAt: input.proofExpiresAt });
   if (!consumed.ok) return failure(consumed.error, requestId);
   return { ok: true, privateAppId: input.privateAppId, gateId: input.gateId, epoch: input.epoch, origin: input.origin, expiresAt: input.proofExpiresAt };
 }

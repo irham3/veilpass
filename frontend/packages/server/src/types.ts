@@ -6,6 +6,7 @@ export type ChallengeConsumeInput = {
   gateId: string;
   origin: string;
   loginNullifier: string;
+  proofExpiresAt: string;
 };
 
 export type ChallengeConsumeResult =
