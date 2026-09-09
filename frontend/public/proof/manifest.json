@@ -1,0 +1,6 @@
+{
+  "noir": "1.0.0-beta.22",
+  "barretenberg": "5.0.0-nightly.20260522",
+  "circuitSha256": "94725bb85009a3c232d5d6f426fbd2c08f938b3be634223301c3715cf20bcec6",
+  "verificationKeySha256": "94096e85aeba0aeca56672ad1d4a7c261690683b257af4d2ff50cdfd74c01ed3"
+}
