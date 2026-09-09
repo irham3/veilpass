@@ -14,9 +14,10 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
   const [status, setStatus] = useState(configured ? "Ready to simulate" : "Add the public contract environment values to enable writes");
   const [txHash, setTxHash] = useState("");
   const [gateId, setGateId] = useState("premium-holder");
+  const [epoch, setEpoch] = useState("1");
   const [hash, setHash] = useState("00".repeat(32));
 
-  async function submit(kind: "create" | "rotate" | "revoke") {
+  async function submit(kind: "create" | "update" | "rotate" | "revoke") {
     if (!configured || !/^[a-f0-9]{64}$/i.test(hash)) return;
     try {
       setTxHash(""); setStatus("Connecting Freighter on Testnet");
@@ -24,7 +25,9 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
       const client = new Client({ contractId, rpcUrl, networkPassphrase: Networks.TESTNET, publicKey: access.address, signTransaction });
       setStatus("Simulating contract transaction");
       const bytes = Buffer.from(hash, "hex");
-      const assembled = kind === "create" ? await client.create_gate({ owner: access.address, gate_id: gateId, policy_hash: bytes, root: bytes }) : kind === "rotate" ? await client.rotate_epoch({ owner: access.address, gate_id: gateId, new_root: bytes }) : await client.revoke({ owner: access.address, gate_id: gateId, revocation_hash: bytes });
+      const expectedEpoch = Number.parseInt(epoch, 10);
+      if (!Number.isInteger(expectedEpoch) || expectedEpoch < 1) throw new Error("Enter the gate's current epoch");
+      const assembled = kind === "create" ? await client.create_gate({ owner: access.address, gate_id: gateId, policy_hash: bytes, root: bytes }) : kind === "update" ? await client.update_root({ owner: access.address, gate_id: gateId, expected_epoch: expectedEpoch, new_root: bytes }) : kind === "rotate" ? await client.rotate_epoch({ owner: access.address, gate_id: gateId, new_root: bytes }) : await client.revoke({ owner: access.address, gate_id: gateId, revocation_hash: bytes });
       setStatus("Awaiting Freighter approval");
       const sent = await assembled.signAndSend();
       const submittedHash = sent.sendTransactionResponse?.hash ?? "";
@@ -59,6 +62,15 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
             />
           </label>
           <label className="min-w-0 text-sm text-paper-200">
+            Current epoch
+            <Input
+              value={epoch}
+              inputMode="numeric"
+              onChange={(event) => setEpoch(event.target.value)}
+              className="mt-2 w-full rounded-2xl border-paper-50/10 bg-ink-950 text-paper-50"
+            />
+          </label>
+          <label className="min-w-0 text-sm text-paper-200">
             32-byte value (hex)
             <Input
               value={hash}
@@ -70,10 +82,13 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
 
         <Tabs defaultValue="create" className="mt-6">
           <TabsList className="h-auto flex-wrap rounded-full bg-ink-950 p-1">
-            <TabsTrigger value="create" className="rounded-full">
-              Create gate
-            </TabsTrigger>
-            <TabsTrigger value="rotate" className="rounded-full">
+          <TabsTrigger value="create" className="rounded-full">
+            Create gate
+          </TabsTrigger>
+          <TabsTrigger value="update" className="rounded-full">
+            Update root
+          </TabsTrigger>
+          <TabsTrigger value="rotate" className="rounded-full">
               Rotate epoch
             </TabsTrigger>
             <TabsTrigger value="revoke" className="rounded-full">
@@ -83,6 +98,11 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
           <TabsContent value="create">
             <Button className="rounded-full" disabled={!configured} onClick={() => submit("create")}>
               Simulate and create
+            </Button>
+          </TabsContent>
+          <TabsContent value="update">
+            <Button className="rounded-full" disabled={!configured} onClick={() => submit("update")}>
+              Publish root at this epoch
             </Button>
           </TabsContent>
           <TabsContent value="rotate">

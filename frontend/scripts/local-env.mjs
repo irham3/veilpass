@@ -45,6 +45,8 @@ export function buildLocalEnvText(values) {
     "# Secrets: never expose with NEXT_PUBLIC_ and never commit .env.local",
     `VEILPASS_SIMULATOR_KEY=${values.simulatorKey}`,
     `VEILPASS_ISSUER_SECRET=${values.issuerSecret}`,
+    "# Live root publication requires the separate secret of the configured gate owner.",
+    "VEILPASS_GATE_OWNER_SECRET=",
     `VEILPASS_FIXTURE_CREDENTIAL=${values.fixtureCredential}`,
     "",
     "# Add DATABASE_URL only for production or when testing durable replay protection.",

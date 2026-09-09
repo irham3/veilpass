@@ -49,8 +49,8 @@ export const docs: Record<string, DocPage> = {
     { heading: "Disclosure", body: "Before Freighter connects, the UI must state that the issuer sees the address, the credential is stored locally, and losing browser data requires re-enrollment." },
     { heading: "Wallet rules", body: "Require Stellar Testnet. Use Freighter for address access and message signing. Never request or store a secret key." },
   ]},
-  contract: { title: "Gate contract", eyebrow: "Stellar testnet", intro: "The Soroban gate registry stores public policy configuration, epochs, issuer keys, and gate state. Routine login remains off-chain.", sections: [
-    { heading: "Lifecycle", body: "An administrator creates or updates a gate. Issuer key rotation and revocation epoch changes emit events. Login does not submit a transaction." },
+  contract: { title: "Gate contract", eyebrow: "Stellar testnet", intro: "The Soroban gate registry stores public policy configuration, credential roots, epochs, revocation state, and gate ownership. Routine login remains off-chain.", sections: [
+    { heading: "Lifecycle", body: "An administrator creates a gate, updates its root at the expected epoch, rotates an epoch with a replacement root, or revokes a credential hash. Each state change emits an event. Routine login does not submit a transaction." },
     { heading: "Local commands", body: "Run contract tests and the live testnet smoke from the frontend directory. A new deployment requires a funded testnet identity and explicit contract environment values.", code: "npm run contract:test\nnpm run contract:smoke\nstellar contract build --manifest-path ../contracts/veilpass-gate/Cargo.toml --locked", language: "bash" },
   ]},
   errors: { title: "Error reference", eyebrow: "Safe failures", intro: "Public errors are stable codes. Detailed causes belong in redacted server logs keyed by requestId.", sections: [
