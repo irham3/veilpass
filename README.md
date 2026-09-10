@@ -84,7 +84,7 @@ sequenceDiagram
   Wallet-->>VeilPass: Signed approval
   VeilPass->>VeilPass: Create a local commitment and check asset eligibility
   VeilPass->>Contract: Publish the new Merkle root at the active epoch
-  VeilPass->>VeilPass: Issue witness; retain subject secret in IndexedDB
+  VeilPass->>VeilPass: Issue witness and retain subject secret in IndexedDB
   Host->>VeilPass: Create exact-origin challenge
   VeilPass->>VeilPass: Refresh Merkle witness and produce a local Noir proof
   VeilPass->>Contract: Check root, epoch, and revocation state
