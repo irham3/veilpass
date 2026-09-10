@@ -19,7 +19,7 @@ A host dApp can learn that a user passed a policy, such as holding the required 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.
 
-[Live Demo](https://veilpass-stellar.vercel.app) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
+[Live Demo](https://veilpass-stellar.vercel.app) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
 
 ---
 
@@ -46,7 +46,7 @@ VeilPass handles:
 - Popup/message-channel verification for host dApps.
 - Replay-resistant challenge consumption.
 - A Soroban gate registry on Stellar Testnet.
-- A visible deterministic `Simulated proof` adapter while the Noir ZK circuit remains a clearly marked boundary.
+- Browser-local Noir/UltraHonk membership proofs verified by the server against a pinned verification key.
 
 The product goal is narrow and deliberate: prove the private-login loop, preserve the privacy boundary, and avoid overstating what the MVP hides.
 
@@ -64,7 +64,7 @@ For a reviewer or demo session, the shortest path is:
 6. Open `/dashboard/enroll` with Freighter set to Stellar Testnet.
 7. Add the testnet `VPT` trustline in Freighter.
 8. Issue the testnet asset locally to the Freighter wallet.
-9. Complete enrollment and verify that the host receives only the minimized private result.
+9. Complete enrollment and verify that the host receives only the minimized private result. This live step requires the durable database and gate-root publisher environment values described below.
 10. Check `frontend/docs/evidence/` for captured local test results, visuals, contract evidence, and proof boundary notes.
 
 ---
@@ -82,10 +82,12 @@ sequenceDiagram
   User->>VeilPass: Open enrollment
   VeilPass->>Wallet: Request wallet proof and Testnet account
   Wallet-->>VeilPass: Signed approval
-  VeilPass->>VeilPass: Check asset eligibility and issue credential
-  VeilPass->>Contract: Read gate root, epoch, and revocation state
+  VeilPass->>VeilPass: Create a local commitment and check asset eligibility
+  VeilPass->>Contract: Publish the new Merkle root at the active epoch
+  VeilPass->>VeilPass: Issue witness; retain subject secret in IndexedDB
   Host->>VeilPass: Create exact-origin challenge
-  VeilPass->>VeilPass: Consume challenge and derive app-scoped private ID
+  VeilPass->>VeilPass: Refresh Merkle witness and produce a local Noir proof
+  VeilPass->>Contract: Check root, epoch, and revocation state
   VeilPass-->>Host: Return private app ID and minimized policy verdict
 ```
 
@@ -104,7 +106,8 @@ flowchart LR
 
   Enrollment --> Eligibility["Horizon asset eligibility"]
   Enrollment --> Credential["Issuer credential"]
-  Credential --> LocalSecret["IndexedDB subject secret"]
+  Credential --> Tree["Durable Merkle tree + witness refresh"]
+  Tree --> LocalSecret["IndexedDB subject secret"]
 
   Host["Host dApp"] --> SDK["VeilPass SDK popup channel"]
   SDK --> Challenge["Challenge API"]
@@ -120,8 +123,8 @@ flowchart LR
 - **Wallet:** Freighter on Stellar Testnet.
 - **Stellar reads:** Horizon and Stellar RPC.
 - **Contract:** Soroban gate registry in `contracts/veilpass-gate`.
-- **Storage:** In-memory local adapters and PostgreSQL production adapters via Drizzle.
-- **Proof boundary:** Deterministic integration adapter clearly labeled `Simulated proof`; Noir source included for the future ZK path.
+- **Storage:** PostgreSQL is required for production challenge, enrollment, session, and Merkle-tree state; memory adapters are development-only.
+- **Proof boundary:** the hosted page generates the Noir/UltraHonk proof locally; the verifier uses the pinned verification key and returns no wallet data to the host.
 - **Deployment:** Vercel Hobby-compatible frontend deployment from `frontend/`.
 
 ---
@@ -159,7 +162,8 @@ flowchart LR
 | `POST` | `/api/challenges` | Creates a digest-only host challenge |
 | `POST` | `/api/verify` | Consumes a challenge and returns the minimized verifier result |
 | `POST` | `/api/session` | Creates or clears the opaque HTTP-only session |
-| `POST` | `/api/proof/simulate` | Runs the visibly labeled deterministic integration proof adapter |
+| `POST` | `/api/credentials/witness` | Refreshes a signed credential's Merkle path at the current contract root |
+| `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
 | `POST` | `/api/enrollment/challenge` | Creates the enrollment challenge for Freighter signing |
 | `POST` | `/api/enrollment/issue` | Checks eligibility and issues a credential |
 
@@ -287,7 +291,7 @@ Deployment evidence lives in [frontend/docs/evidence/contract.md](frontend/docs/
 
 `frontend/packages/proof/circuits/membership` contains the Noir source.
 
-The TypeScript adapter used by the MVP is deterministic integration proof simulation, not a zero-knowledge proof. The UI and docs label it as `Simulated proof`.
+The hosted login uses the checked-in circuit artifact and creates an UltraHonk proof locally. `api/proof/simulate` remains an isolated non-production compatibility fixture; `/api/verify` never accepts it.
 
 Use WSL for the official Noir/Barretenberg toolchain on Windows:
 
@@ -297,7 +301,26 @@ nargo test
 nargo compile
 ```
 
-Replace `UnavailableNoirAdapter` only after committing the compiled artifact and verification key and rerunning the full proof matrix.
+Rebuild and validate the browser artifact and pinned verification key with:
+
+```powershell
+npm run proof:artifacts
+npm run proof:runtime
+```
+
+The runtime command executes the circuit through NoirJS, creates an UltraHonk proof, and checks it with the committed VK.
+
+### Live issuer prerequisites
+
+Production enrollment intentionally fails closed until all of the following are configured:
+
+- `DATABASE_URL` for durable challenge, nullifier, enrollment, and Merkle-tree records;
+- `VEILPASS_GATE_OWNER_SECRET`, held only by the service that is authorized to publish `update_root` transactions; and
+- a gate whose current root is the zero field (`00` repeated 32 bytes) or whose durable tree state has already been initialized to the on-chain root.
+
+`VEILPASS_GATE_OWNER_SECRET` is distinct from `VEILPASS_ISSUER_SECRET`. It is never sent to the browser. The deployed Testnet gate must be initialized or updated by its actual owner before the first enrollment; the dashboard exposes an explicit same-epoch **Update root** operation for that owner flow.
+
+The exact final acceptance sequence, including two public origins, Freighter approval, rejection cases, and the review recording, is in [the live acceptance checklist](frontend/docs/evidence/live-acceptance-checklist.md).
 
 ---
 
@@ -354,10 +377,11 @@ Expected current results:
 | --- | --- |
 | ESLint | Pass |
 | TypeScript | Pass |
-| Vitest | 52 tests passing |
+| Vitest | 58 tests passing |
+| Noir fixture | Pinned circuit test, witness, UltraHonk proof, and verification pass |
 | Soroban Rust tests | 3 tests passing |
 | Stellar Testnet smoke | Pass |
-| Playwright e2e | 22 tests passing |
+| Playwright e2e | 26 tests passing |
 | Axe accessibility checks | 8 tests passing |
 | Production build | Pass locally and on Vercel |
 | Runtime dependency audit | 0 vulnerabilities |
@@ -374,6 +398,7 @@ Tracked evidence lives under `frontend/docs/evidence/`.
 | Privacy claim audit | [claim-audit.md](frontend/docs/evidence/claim-audit.md) |
 | Contract deployment and smoke evidence | [contract.md](frontend/docs/evidence/contract.md) |
 | Proof boundary documentation | [proof.md](frontend/docs/evidence/proof.md) |
+| Proposal delivery status | [delivery-status.md](frontend/docs/evidence/delivery-status.md) |
 | Landing screenshot | [landing-desktop.png](frontend/docs/evidence/landing-desktop.png) |
 | Demo screenshot | [demo-desktop.png](frontend/docs/evidence/demo-desktop.png) |
 
@@ -407,10 +432,10 @@ veilpass/
 - Eligibility is based on the configured testnet asset and gate policy.
 - The enrollment issuer sees the wallet address.
 - The host verifier must not receive the wallet address.
-- Deterministic proof simulation is labeled as simulation and is not represented as ZK.
-- Noir circuit source is included, but native Windows proof compilation is not part of this MVP.
+- The hosted login produces a local Noir/UltraHonk membership proof; the verifier uses the pinned VK.
+- The compiler check runs through the pinned WSL toolchain on Windows and emits the reviewed browser artifact.
 - IP address, timing, browser/device fingerprinting, and later on-chain activity remain outside the privacy boundary.
-- Production replay hardening requires PostgreSQL via `DATABASE_URL`.
+- Production challenge, enrollment, session, and Merkle-tree persistence require PostgreSQL via `DATABASE_URL`.
 
 ---
 

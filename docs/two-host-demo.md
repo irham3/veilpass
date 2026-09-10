@@ -23,4 +23,6 @@ The configured host list is an explicit comma-separated allowlist. For deployed 
 
 ## What this proves — and what it does not
 
-The two host sites are real separate browser origins and exercise the SDK's popup/source/origin checks. The current local login proof remains explicitly labelled **Simulated proof**. It is an integration fixture, not a ZK proof. Production rejects that adapter; switch to a verified Noir/Barretenberg artifact only after proving and verifier evidence has been recorded.
+The two host sites are real separate browser origins and exercise the SDK's popup/source/origin checks. The popup now creates a Noir/UltraHonk membership proof locally and the verifier checks it with the committed verification key. The old `/api/proof/simulate` route is retained only as a non-production compatibility fixture; `/api/verify` never accepts it.
+
+For a live enrollment, configure PostgreSQL plus `VEILPASS_GATE_OWNER_SECRET` on the login service, and initialize the gate's root to the zero field before issuing the first credential. This is an operator setup requirement, not a host-dApp capability.

@@ -14,7 +14,7 @@ export async function getGatePolicy(gateId = "premium-holder"): Promise<GatePoli
   const rpcUrl = process.env.NEXT_PUBLIC_STELLAR_RPC_URL ?? "https://soroban-testnet.stellar.org";
   if (contractId && sourceAccount) {
     const live = await readGateState({ contractId, gateId, rpcUrl, sourceAccount });
-    return { active: true, epoch: live.epoch, credentialRoot: Buffer.from(live.credential_root).toString("hex"), isRevoked: (revocationHash) => readRevocationState({ contractId, gateId, revocationHash, rpcUrl, sourceAccount }) };
+    return { active: true, epoch: live.epoch, owner: live.owner, credentialRoot: Buffer.from(live.credential_root).toString("hex"), isRevoked: (revocationHash) => readRevocationState({ contractId, gateId, revocationHash, rpcUrl, sourceAccount }) };
   }
   return {
     active: process.env.VEILPASS_GATE_REVOKED !== "true",

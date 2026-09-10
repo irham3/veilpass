@@ -24,10 +24,12 @@ export const publicInputsSchema = z
     epoch: z.number().int().nonnegative(),
     origin: z.string().min(1).max(512),
     challengeHash: z.string().min(1).max(256),
+    credentialCommitment: z.string().min(1).max(256),
     credentialRoot: z.string().min(1).max(256),
     privateAppId: z.string().min(1).max(256),
     loginNullifier: z.string().min(1).max(256),
     revocationHash: z.string().min(1).max(256),
+    proofCreatedAt: z.string().datetime(),
     proofExpiresAt: z.string().datetime(),
   })
   .strict();

@@ -17,5 +17,5 @@ export function verifySimulatedProof({ proofResult, key }: { proofResult: ProofR
 }
 
 function canonical(challengeId: string, input: PublicInputs): string {
-  return JSON.stringify([challengeId, input.gateId, input.epoch, input.origin, input.challengeHash, input.credentialRoot, input.privateAppId, input.loginNullifier, input.revocationHash, input.proofExpiresAt]);
+  return JSON.stringify([challengeId, input.gateId, input.epoch, input.origin, input.challengeHash, input.credentialCommitment, input.credentialRoot, input.privateAppId, input.loginNullifier, input.revocationHash, input.proofCreatedAt, input.proofExpiresAt]);
 }

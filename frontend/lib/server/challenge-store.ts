@@ -4,12 +4,13 @@ import { createHash, randomBytes as nodeRandomBytes, randomUUID, timingSafeEqual
 
 import type { VeilPassErrorCode } from "@/packages/shared/src/contracts";
 import { PostgresChallengeStore } from "./postgres-challenge-store";
+import { fieldHexFromDigest } from "@/packages/shared/src/field";
 
 type StoredChallenge = { challengeDigest: string; gateId: string; origin: string; expiresAtMs: number; spent: boolean };
 type ConsumeResult = { ok: true } | { ok: false; error: VeilPassErrorCode };
 
 export type IssuedChallenge = { challengeId: string; challenge: string; gateId: string; origin: string; expiresAt: string };
-export interface ChallengeStoreLike { issue(input: { gateId: string; origin: string }): Promise<IssuedChallenge>; consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string }): Promise<ConsumeResult>; }
+export interface ChallengeStoreLike { issue(input: { gateId: string; origin: string }): Promise<IssuedChallenge>; consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string; proofExpiresAt: string }): Promise<ConsumeResult>; }
 
 export class ChallengeStore {
   private challenges = new Map<string, StoredChallenge>();
@@ -28,16 +29,18 @@ export class ChallengeStore {
     if (raw.byteLength !== 32) throw new Error("Challenge entropy source must return exactly 32 bytes");
     const challengeId = randomUUID();
     const expiresAtMs = this.now() + 5 * 60_000;
-    this.challenges.set(challengeId, { challengeDigest: digest(raw), gateId, origin, expiresAtMs, spent: false });
+    this.challenges.set(challengeId, { challengeDigest: challengeDigest(raw), gateId, origin, expiresAtMs, spent: false });
     return { challengeId, challenge: raw.toString("base64url"), gateId, origin, expiresAt: new Date(expiresAtMs).toISOString() };
   }
 
-  consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string }): Promise<ConsumeResult> {
+  consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string; proofExpiresAt: string }): Promise<ConsumeResult> {
     return this.atomic(() => {
       const record = this.challenges.get(input.challengeId);
       if (!record) return { ok: false, error: "PROOF_INVALID" };
       if (record.spent || this.nullifiers.has(input.loginNullifier)) return { ok: false, error: "CHALLENGE_SPENT" };
       if (this.now() > record.expiresAtMs) return { ok: false, error: "CHALLENGE_EXPIRED" };
+      const proofExpiresAt = Date.parse(input.proofExpiresAt);
+      if (!Number.isFinite(proofExpiresAt) || proofExpiresAt > record.expiresAtMs) return { ok: false, error: "PROOF_INVALID" };
       if (input.origin !== record.origin) return { ok: false, error: "ORIGIN_MISMATCH" };
       if (input.gateId !== record.gateId) return { ok: false, error: "GATE_MISMATCH" };
       const supplied = Buffer.from(input.challengeHash);
@@ -60,7 +63,7 @@ export class ChallengeStore {
   }
 }
 
-function digest(value: Uint8Array | string): string { return createHash("sha256").update(value).digest("hex"); }
+function challengeDigest(value: Uint8Array | string): string { return fieldHexFromDigest(createHash("sha256").update(value).digest()); }
 
 export const durableChallengeStoreConfigured = Boolean(process.env.DATABASE_URL);
 declare global { var veilPassMemoryChallengeStore: ChallengeStore | undefined; }

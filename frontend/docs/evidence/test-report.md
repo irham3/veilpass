@@ -1,20 +1,22 @@
 # VeilPass MVP local verification report
 
-Date: 2026-08-02
-Verified implementation revision: frontend workspace after moving the Next.js app to `frontend/`
+Date: 2026-09-02
+Verified implementation revision: `4a9147c` (`fix(proof): pass fixture public inputs to verifier`), plus the working tree changes documented with this report.
 
 ## Automated results
 
 - ESLint: pass
 - TypeScript `--noEmit`: pass
-- Vitest: 14 files, 52 tests passing
+- Vitest: 17 files, 58 tests passing
+- Noir membership circuit: pinned Nargo `1.0.0-beta.22` and Barretenberg `5.0.0-nightly.20260522`; valid circuit test, witness generation, UltraHonk proof generation, and verification all pass
+- NoirJS runtime: `npm run proof:runtime` generated a 14,656-byte proof with 11 public inputs and verified it with the committed VK
 - Soroban Rust: 3 tests passing
-- Stellar Testnet smoke: `get_gate` returned `premium-holder` epoch 1 and credential root `853beeab108a74b7fe1410d6bebb1a5bdca9ad416ebdf0cc92ab248332ad2bdc`; `is_revoked` returned false for the fixture hash
-- Playwright desktop Chromium: 11 tests passing
-- Playwright mobile Chromium emulation: 11 tests passing
+- Stellar Testnet smoke: current `get_gate` result returned `premium-holder`, epoch `1`, owner `GCUSQB6ZWO633HV7M3EF6BCWSYQMTA65RJU4OMQ435OAQ3WJRIVA43VM`, and credential root `853beeab108a74b7fe1410d6bebb1a5bdca9ad416ebdf0cc92ab248332ad2bdc`; `is_revoked` returned `false` for the fixture hash
+- Playwright desktop Chromium and mobile Chromium emulation: 26 tests passing, including distinct local App A and App B hosts
 - Axe: no serious or critical violations on landing, demo, dashboard, or docs in desktop and mobile projects
 - Reduced motion: pass
-- Five-step reviewer flow: pass
+- Two-origin host routing: pass for `app-a.localhost:3000` and `app-b.localhost:3000`
+- Five-step controlled reviewer flow: pass
 - Known-wallet exclusion across rendered text, Web Storage, cookies, console, and API bodies: pass
 - Browser/install surfaces: `/icon.svg`, generated Apple icon, and `manifest.webmanifest` are VeilPass-owned; default Next template assets return 404
 - Production Next.js build: pass
@@ -40,7 +42,10 @@ The full development audit reports four moderate findings in Drizzle Kit's devel
 ## External setup not performed
 
 - Freighter wallet trustline and holder funding were not performed because they require the user's Testnet wallet public key and wallet approval. Run `npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` after adding the generated `VPT` asset in Freighter.
-- The Noir circuit was not compiled because the official Noir/Barretenberg toolchain requires WSL on Windows and is not installed here.
 - No PostgreSQL integration run was performed because no `DATABASE_URL` service was provided; schema and atomic adapter are included and production fails closed without it.
+- No live Freighter enrollment or host-to-host sign-in was performed. Those paths require a user-controlled testnet wallet, a VPT trustline, asset funding, a configured issuer key, a production database, and the gate-owner signer for root publication.
+- The currently deployed Testnet root is not a canonical BN254 field root for this membership circuit, and the configured issuer signer is not the Testnet gate owner. The gate owner must approve an initial zero-root `update_root` transaction (or supply the separately scoped `VEILPASS_GATE_OWNER_SECRET`) before live credential issuance.
 
-These are environment/credential setup items. The deterministic proof path remains visibly labeled `Simulated proof` and is not represented as zero knowledge.
+## Important scope boundary
+
+The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. The outstanding work is operational: owner-approved Testnet root initialization, durable database provisioning, independent public host deployments, live Freighter evidence, and the final review recording.

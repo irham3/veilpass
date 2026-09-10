@@ -7,8 +7,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        { source: "/", has: [{ type: "host", value: "app-a\\.localhost:3000" }], destination: "/host/app-a" },
-        { source: "/", has: [{ type: "host", value: "app-b\\.localhost:3000" }], destination: "/host/app-b" },
+        // Next.js matches `has.type = host` against the hostname (without the
+        // development port). Keep the port out of these expressions so the
+        // same rewrites work in local development and behind a HTTPS proxy.
+        { source: "/", has: [{ type: "host", value: "app-a\\.localhost" }], destination: "/host/app-a" },
+        { source: "/", has: [{ type: "host", value: "app-b\\.localhost" }], destination: "/host/app-b" },
       ],
     };
   },

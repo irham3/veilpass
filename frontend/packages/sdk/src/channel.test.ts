@@ -14,8 +14,8 @@ describe("validatePopupMessage", () => {
       proof: "simulated-v1.signature",
       publicInputs: {
         gateId: "gate", epoch: 1, origin: "https://app.example", challengeHash: "hash",
-        credentialRoot: "root", privateAppId: "vp_a", loginNullifier: "nullifier",
-        revocationHash: "rev", proofExpiresAt: "2026-08-02T09:00:00.000Z",
+        credentialCommitment: "commitment", credentialRoot: "root", privateAppId: "vp_a", loginNullifier: "nullifier",
+        revocationHash: "rev", proofCreatedAt: "2026-08-02T08:59:00.000Z", proofExpiresAt: "2026-08-02T09:00:00.000Z",
       },
     },
   };

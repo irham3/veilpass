@@ -3,6 +3,7 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getGatePolicy, isAllowedGate } from "@/lib/server/gate-policy";
+import { issuedCredentialCanonical } from "@/lib/server/credential-issuance";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { publicError, requestId } from "@/lib/server/responses";
 import { readJsonLimited } from "@/lib/server/request-body";
@@ -10,6 +11,7 @@ import { createSimulatedProof } from "@/packages/proof/src/simulated";
 import { simulatedProofsAllowed } from "@/packages/proof/src/mode";
 import { challengeResponseSchema } from "@/packages/shared/src/contracts";
 import { issuedCredentialSchema } from "@/packages/credential/src/schema";
+import { fieldHexFromDigest } from "@/packages/shared/src/field";
 import { z } from "zod";
 
 const schema = z.object({ challenge: challengeResponseSchema, credential: issuedCredentialSchema, derived: z.object({ privateAppId: z.string().min(1).max(256), loginNullifier: z.string().min(1).max(256), revocationHash: z.string().min(1).max(256) }).strict() }).strict();
@@ -29,11 +31,11 @@ export async function POST(request: NextRequest) {
   if (!policy.active) return publicError("CREDENTIAL_REVOKED", id, 400);
   if (credential.gateId !== challenge.gateId || credential.epoch !== policy.epoch) return publicError("STALE_EPOCH", id, 400);
   if (credential.credentialRoot !== policy.credentialRoot || Date.parse(credential.expiresAt) <= Date.now()) return publicError("CREDENTIAL_EXPIRED", id, 400);
-  const canonical = JSON.stringify([credential.gateId, credential.epoch, credential.commitment, credential.credentialRoot, credential.expiresAt, credential.issuerPublicKey]);
-  const validIssuer = Keypair.fromPublicKey(credential.issuerPublicKey).verify(createHash("sha256").update(canonical).digest(), Buffer.from(credential.issuerSignature, "base64"));
+  const validIssuer = Keypair.fromPublicKey(credential.issuerPublicKey).verify(createHash("sha256").update(issuedCredentialCanonical(credential)).digest(), Buffer.from(credential.issuerSignature, "base64"));
   if (!validIssuer) return publicError("PROOF_INVALID", id, 400);
-  const challengeHash = createHash("sha256").update(Buffer.from(challenge.challenge, "base64url")).digest("hex");
+  const challengeHash = fieldHexFromDigest(createHash("sha256").update(Buffer.from(challenge.challenge, "base64url")).digest());
+  const proofCreatedAt = new Date().toISOString();
   const proofExpiresAt = new Date(Math.min(Date.parse(challenge.expiresAt), Date.now() + 5 * 60_000)).toISOString();
-  const proof = createSimulatedProof({ challengeId: challenge.challengeId, key, publicInputs: { gateId: challenge.gateId, epoch: policy.epoch, origin: challenge.origin, challengeHash, credentialRoot: policy.credentialRoot, privateAppId: derived.privateAppId, loginNullifier: derived.loginNullifier, revocationHash: derived.revocationHash, proofExpiresAt } });
+  const proof = createSimulatedProof({ challengeId: challenge.challengeId, key, publicInputs: { gateId: challenge.gateId, epoch: policy.epoch, origin: challenge.origin, challengeHash, credentialCommitment: credential.commitment, credentialRoot: policy.credentialRoot, privateAppId: derived.privateAppId, loginNullifier: derived.loginNullifier, revocationHash: derived.revocationHash, proofCreatedAt, proofExpiresAt } });
   return NextResponse.json(proof, { headers: { "Cache-Control": "no-store" } });
 }
