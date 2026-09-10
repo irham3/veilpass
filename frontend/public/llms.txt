@@ -26,7 +26,7 @@ VeilPass gives each allowed origin a scoped private app ID and an eligibility ve
 - Host response: privateAppId, gateId, epoch, origin, expiresAt, and eligibility verdict fields.
 - Privacy claim: hides the Stellar wallet address from the host dApp during login.
 - Limitation: the issuer observes the wallet at enrollment; IP address, browser fingerprint, timing, device state, and later on-chain activity are not hidden.
-- Proof status: the MVP includes a deterministic simulated proof adapter and a Noir circuit boundary. It is not represented as production zero knowledge.
+- Proof status: hosted login generates a browser-local Noir/UltraHonk membership proof and the server verifies it with a pinned verification key. The separately labeled simulated-proof route is a non-production compatibility fixture and is never accepted by the verifier.
 
 ## Common queries VeilPass answers
 

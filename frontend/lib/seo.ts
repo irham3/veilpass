@@ -36,7 +36,7 @@ export const landingFaqItems = [
   {
     question: "Is the proof already zero knowledge?",
     answer:
-      "The MVP ships a deterministic proof adapter labeled Simulated proof. The Noir circuit boundary is included for the future ZK path and is not misrepresented as production ZK.",
+      "Hosted login generates a local Noir/UltraHonk membership proof and the server verifies it with a pinned verification key. The separately labeled Simulated proof route is a non-production compatibility fixture and is never accepted by the verifier.",
   },
   {
     question: "What does the host receive?",

@@ -1,0 +1,48 @@
+name: Release packages
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Pack and publish release artifacts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install the pinned npm version
+        run: npm install --global npm@11.6.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify package contents
+        run: npm run pack:check
+
+      - name: Create distributable package archives
+        run: |
+          npm pack --workspace @veilpass/shared --json
+          npm pack --workspace @veilpass/sdk --json
+          npm pack --workspace @veilpass/server --json
+          sha256sum veilpass-*.tgz > SHA256SUMS
+
+      - name: Publish immutable GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --target "$GITHUB_SHA" --generate-notes veilpass-*.tgz SHA256SUMS

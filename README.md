@@ -166,6 +166,7 @@ flowchart LR
 | `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
 | `POST` | `/api/enrollment/challenge` | Creates the enrollment challenge for Freighter signing |
 | `POST` | `/api/enrollment/issue` | Checks eligibility and issues a credential |
+| `GET` | `/api/health` | Reports redacted runtime-configuration readiness for the login service |
 
 ---
 
@@ -185,6 +186,7 @@ Run the app from the frontend workspace:
 cd frontend
 npm install
 npm run env:local
+npm run env:validate
 npm run dev
 ```
 
@@ -248,6 +250,7 @@ DATABASE_URL=
 Important rules:
 
 - Do not commit `.env.local`.
+- Run `npm run env:validate` before a live deployment. It reports only missing or malformed variable names; it never outputs configuration values or secrets.
 - Never prefix issuer, simulator, fixture credential, or database secrets with `NEXT_PUBLIC_`.
 - Set exact origins only; do not include paths.
 - Production replay protection and atomic challenge consumption require `DATABASE_URL`.
@@ -399,6 +402,8 @@ Tracked evidence lives under `frontend/docs/evidence/`.
 | Contract deployment and smoke evidence | [contract.md](frontend/docs/evidence/contract.md) |
 | Proof boundary documentation | [proof.md](frontend/docs/evidence/proof.md) |
 | Proposal delivery status | [delivery-status.md](frontend/docs/evidence/delivery-status.md) |
+| Deliverable implementation audit | [audit-deliverable-1-5-2026-09-10.md](frontend/docs/evidence/audit-deliverable-1-5-2026-09-10.md) |
+| Live-acceptance operator runbook | [operator-acceptance-runbook-2026-09-10.md](frontend/docs/evidence/operator-acceptance-runbook-2026-09-10.md) |
 | Landing screenshot | [landing-desktop.png](frontend/docs/evidence/landing-desktop.png) |
 | Demo screenshot | [demo-desktop.png](frontend/docs/evidence/demo-desktop.png) |
 

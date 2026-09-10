@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { buildLocalEnvText, buildSetupSummary } from "./local-env.mjs";
+import { buildLocalEnvText, buildSetupSummary } from "./local-env-format.mjs";
 
 const values = {
   hostOrigin: "http://localhost:3000",

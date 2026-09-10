@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Client } from "@/packages/contract-bindings/src";
 
 export function ContractActions({ contractId, rpcUrl, configured }: { contractId: string; rpcUrl: string; configured: boolean }) {
-  const [status, setStatus] = useState(configured ? "Ready to simulate" : "Add the public contract environment values to enable writes");
+  const [status, setStatus] = useState(configured ? "Ready for a Stellar Testnet transaction" : "Add the public contract environment values to enable writes");
   const [txHash, setTxHash] = useState("");
   const [gateId, setGateId] = useState("premium-holder");
   const [epoch, setEpoch] = useState("1");
@@ -97,7 +97,7 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
           </TabsList>
           <TabsContent value="create">
             <Button className="rounded-full" disabled={!configured} onClick={() => submit("create")}>
-              Simulate and create
+              Create gate with Freighter
             </Button>
           </TabsContent>
           <TabsContent value="update">
@@ -107,12 +107,12 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
           </TabsContent>
           <TabsContent value="rotate">
             <Button className="rounded-full" disabled={!configured} onClick={() => submit("rotate")}>
-              Simulate and rotate
+              Rotate epoch with Freighter
             </Button>
           </TabsContent>
           <TabsContent value="revoke">
             <Button className="rounded-full" variant="destructive" disabled={!configured} onClick={() => submit("revoke")}>
-              Simulate and revoke
+              Revoke credential with Freighter
             </Button>
           </TabsContent>
         </Tabs>

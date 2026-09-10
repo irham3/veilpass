@@ -22,6 +22,7 @@
     "proof:artifacts": "node scripts/build-proof-artifacts.mjs",
     "proof:runtime": "node scripts/noir-runtime-check.mjs",
     "env:local": "node scripts/local-env.mjs",
+    "env:validate": "node scripts/validate-runtime-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

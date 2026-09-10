@@ -1,5 +1,7 @@
 # VeilPass — Audit Implementasi dan Rencana Penyelesaian
 
+> **Digantikan pada 10 September 2026.** Dokumen historis ini masih menjelaskan gap proof adapter lama. Implementasi saat ini memakai proof Noir/UltraHonk lokal pada hosted login. Untuk status berbasis bukti dan pekerjaan operator yang tersisa, baca [audit deliverable](../frontend/docs/evidence/audit-deliverable-1-5-2026-09-10.md) dan [runbook live acceptance](../frontend/docs/evidence/operator-acceptance-runbook-2026-09-10.md).
+
 > **Pembaruan implementasi 1 September 2026:** package npm, enrollment challenge yang durable dan terikat, circuit Noir yang dipin serta diuji melalui `compile → witness → prove → verify` di CI, penolakan simulator pada production, demo SDK dua-host lokal, serta motion landing berbasis GSAP telah diimplementasikan. Bukti deployment Stellar testnet yang baru masih harus dijalankan dengan akun testnet terkontrol sebelum sebuah rilis publik dapat mengklaim status deployment terkini.
 
 **Tanggal audit:** 1 September 2026

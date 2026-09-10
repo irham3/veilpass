@@ -81,3 +81,13 @@ fn accepts_a_valid_membership_witness() {
         revocation_hash,
     );
 }
+
+#[test]
+fn derives_distinct_private_ids_for_distinct_origins() {
+    let subject_secret = 1;
+    let gate_id_hash = 2;
+    let app_a_origin_hash = 3;
+    let app_b_origin_hash = 4;
+
+    assert(h3(subject_secret, gate_id_hash, app_a_origin_hash) != h3(subject_secret, gate_id_hash, app_b_origin_hash));
+}

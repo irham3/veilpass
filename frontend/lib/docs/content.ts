@@ -20,25 +20,29 @@ const verified = await verifyVeilPassProof({
   proofResult,
   expectedOrigin: "https://app.example",
   expectedGateId: "premium-holder",
+  policy,
+  store: durableChallengeStore,
+  verifyProof: verifyNoirMembershipProof,
+  requestId,
 });`;
 
 export const docs: Record<string, DocPage> = {
   "": { title: "Developer documentation", eyebrow: "VeilPass docs", intro: "Integrate origin-scoped, eligibility-gated login without receiving the user's Stellar address.", sections: [
     { heading: "What the host receives", body: "A successful login returns only a private app ID, gate ID, epoch, normalized origin, and expiry. The host does not receive a wallet address, balance, credential commitment, revocation handle, nullifier, or proof." },
-    { heading: "MVP status", body: "This repository is testnet software. Its deterministic proof adapter is for integration testing and is visibly labeled Simulated proof. It is not a zero-knowledge proof. Use the included Noir circuit as the production prover boundary once a pinned Noir and Barretenberg toolchain is available." },
+    { heading: "MVP status", body: "This repository is testnet software. The hosted login generates a local Noir/UltraHonk membership proof and the verifier checks it with the pinned verification key. The separately labeled Simulated proof endpoint is only a non-production compatibility fixture; /api/verify never accepts it." },
   ]},
   quickstart: { title: "Quickstart", eyebrow: "Start here", intro: "Create one challenge on the host, open the VeilPass login surface, verify once, then establish an opaque cookie session.", sections: [
-    { heading: "Prerequisites", body: "Use Node.js 20 or later, a Freighter wallet connected to Stellar Testnet, and a testnet account funded with the asset required by your gate." },
+    { heading: "Prerequisites", body: "Use Node.js 20 or later, a Freighter wallet connected to Stellar Testnet, and a testnet account funded with the asset required by your gate. Before starting a live service, run npm run env:validate; it reports configuration names only and never prints secret values." },
     { heading: "Install", body: "The SDK package is currently a pre-release workspace package, not a public npm release.", code: install, language: "bash" },
     { heading: "Client", body: "The popup channel validates the exact login origin, window source, request state, and response schema.", code: client },
-    { heading: "Server", body: "Verification must happen on the host server. A browser verdict is never sufficient.", code: server },
+    { heading: "Server", body: "Verification must happen on the host server. Supply a durable challenge/nullifier store and the pinned Noir verifier; a browser verdict is never sufficient.", code: server },
   ]},
   client: { title: "Client SDK", eyebrow: "Browser boundary", intro: "The client SDK opens a dedicated login window and accepts only a response from the configured login origin and the exact popup it created.", sections: [
     { heading: "Public surface", body: "VeilPass.login accepts a gateId and optional timeout. It resolves to VerifiedLogin or throws a typed VeilPassError. It never exposes the proof payload to host application code." , code: client },
     { heading: "Channel rules", body: "Always use an exact targetOrigin. Reject source mismatches, origin mismatches, stale state, malformed data, closed windows, and timeouts. Remove message listeners after every terminal outcome." },
   ]},
   server: { title: "Server verifier", eyebrow: "Trusted boundary", intro: "Bind each challenge to the trusted deployment origin and gate, then consume challenge and nullifier in one atomic operation.", sections: [
-    { heading: "Verify", body: "The verifier checks schema, challenge digest, expiry, origin, gate, epoch, credential expiry, revocation state, proof validity, and nullifier uniqueness.", code: server },
+    { heading: "Verify", body: "The verifier checks schema, challenge digest, expiry, origin, gate, epoch, credential expiry, revocation state, proof validity, and nullifier uniqueness. The policy, durable store, verifier callback, and request ID are explicit server-owned dependencies.", code: server },
     { heading: "Response minimization", body: "Return the documented success object only. Error responses contain a safe public error code and request ID, never raw verifier diagnostics." },
   ]},
   identity: { title: "Identity semantics", eyebrow: "Scoped identity", intro: "privateAppId is stable for one credential, normalized origin, and gate epoch. It changes across origins.", sections: [
@@ -66,9 +70,14 @@ export const docs: Record<string, DocPage> = {
     { heading: "Trust assumptions", body: "The issuer, host verifier deployment, browser runtime, and configured verifier keys are trusted within their documented boundaries. Compromised endpoints, malicious extensions, traffic analysis, and endpoint malware are out of scope." },
     { heading: "Logging", body: "Log request ID, gate ID, normalized origin, public error code, and timing. Never log wallet addresses, proof bytes, credential secrets, nullifiers, revocation handles, or raw challenges." },
   ]},
-  api: { title: "API reference", eyebrow: "Host endpoints", intro: "Two POST endpoints form the host integration surface: issue a one-time challenge, then verify its proof result.", sections: [
+  api: { title: "API reference", eyebrow: "Host and login endpoints", intro: "Host applications create a one-time challenge and submit a proof result. The hosted login also exposes enrollment, witness, session, and health endpoints.", sections: [
     { heading: "POST /api/challenges", body: "Creates 32 random bytes, stores only their digest, binds the record to trusted origin and gate, and expires it after five minutes.", code: `{"gateId":"premium-holder"}` },
     { heading: "POST /api/verify", body: "Validates and atomically consumes the challenge and login nullifier. A successful response contains only the documented VerifiedLogin fields.", code: `{"ok":true,"privateAppId":"vp_appA_72f1","gateId":"premium-holder","epoch":20391,"origin":"https://app.example","expiresAt":"2026-08-02T09:00:00.000Z"}`, language: "json" },
+    { heading: "POST /api/session", body: "Creates or clears the opaque, Secure, HttpOnly cookie-session adapter after a successful server verification. It must not receive a wallet address." },
+    { heading: "POST /api/credentials/witness", body: "Refreshes the signed credential's Merkle witness against the active contract root. It is part of the hosted-login service, not an endpoint a host dApp needs to call directly." },
+    { heading: "POST /api/enrollment/challenge and POST /api/enrollment/issue", body: "Create the Freighter signing challenge, check the configured Testnet asset rule, issue the local credential, and publish the updated root through the owner-controlled service flow." },
+    { heading: "GET /api/health", body: "Returns 200 only when origin, database URL, contract, gate, asset, and required signing configuration are structurally valid. It returns issue codes only, never configuration values or secrets." },
+    { heading: "POST /api/proof/simulate", body: "A clearly non-production compatibility fixture for controlled UI demonstrations. Production requests are rejected and the real verifier never accepts its output." },
   ]},
   examples: { title: "Examples", eyebrow: "Two origins", intro: "App A and App B use the same gate while receiving different private IDs for the same local credential.", sections: [
     { heading: "App A", body: "A holder-only dashboard shows standard wallet login beside VeilPass login and exposes the received payload for comparison." },

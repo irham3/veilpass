@@ -14,6 +14,6 @@ npm run proof:check
 
 On Windows the command delegates to WSL; on Linux CI it invokes the native binaries directly. The helper validates both versions, runs the valid-membership circuit test, produces a witness from the checked-in **synthetic** fixture, generates an UltraHonk proof, and verifies the proof against the generated verification key. An accidental compiler or backend upgrade therefore cannot silently change the circuit or proof serialization.
 
-The backend binary and generated proof material are intentionally not committed to this repository. Use `scripts/install-noir-toolchain.sh` inside WSL/Linux to install the pinned pair.
+The backend binary, source-fixture proof, and generated witness are intentionally not committed to this repository. The reviewed browser circuit artifact, manifest, and pinned verification key required by the hosted login are committed under `frontend/public/proof/`. Use `scripts/install-noir-toolchain.sh` inside WSL/Linux to install the pinned pair.
 
 `simulated.ts` remains an integration fixture only. The application rejects it whenever `NODE_ENV=production`, even when a simulator key is mistakenly configured.
