@@ -3,7 +3,7 @@
   <h1>VeilPass</h1>
   <p>Origin-scoped private eligibility login for Stellar Testnet apps.</p>
 
-  <a href="https://veilpass-stellar.vercel.app"><img src="https://img.shields.io/badge/demo-live-22c55e.svg" alt="Live demo"></a>
+  <a href="https://veilpass.dev"><img src="https://img.shields.io/badge/demo-live-22c55e.svg" alt="Live demo"></a>
   <img src="https://img.shields.io/badge/chain-Stellar%20Testnet-7c3aed.svg" alt="Stellar Testnet">
   <img src="https://img.shields.io/badge/contracts-Soroban-111827.svg" alt="Soroban">
   <img src="https://img.shields.io/badge/frontend-Next.js%2016-black.svg" alt="Next.js 16">
@@ -19,7 +19,7 @@ A host dApp can learn that a user passed a policy, such as holding the required 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.
 
-[Live Demo](https://veilpass-stellar.vercel.app) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
+[Live Demo](https://veilpass.dev) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
 
 ---
 
@@ -56,7 +56,7 @@ The product goal is narrow and deliberate: prove the private-login loop, preserv
 
 For a reviewer or demo session, the shortest path is:
 
-1. Open [https://veilpass-stellar.vercel.app](https://veilpass-stellar.vercel.app).
+1. Open [https://veilpass.dev](https://veilpass.dev).
 2. Review the landing page privacy language; it should not claim anonymity.
 3. Open `/demo` and compare App A and App B behavior.
 4. Confirm same-origin IDs stay stable while cross-origin IDs differ.
@@ -351,7 +351,7 @@ npx vercel --prod --yes
 Production URL:
 
 ```text
-https://veilpass-stellar.vercel.app
+https://veilpass.dev
 ```
 
 Configure environment variables in Vercel. Do not commit `frontend/.env.local`.

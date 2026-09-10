@@ -8,15 +8,15 @@ VeilPass gives each allowed origin a scoped private app ID and an eligibility ve
 
 ## Primary pages
 
-- Home: https://veilpass-stellar.vercel.app/
-- Two-origin demo: https://veilpass-stellar.vercel.app/demo
-- Developer docs: https://veilpass-stellar.vercel.app/docs
-- Client SDK: https://veilpass-stellar.vercel.app/docs/client
-- Server verifier: https://veilpass-stellar.vercel.app/docs/server
-- Privacy model: https://veilpass-stellar.vercel.app/docs/privacy
-- Threat model: https://veilpass-stellar.vercel.app/docs/threat-model
-- Gate contract: https://veilpass-stellar.vercel.app/docs/contract
-- Pricing: https://veilpass-stellar.vercel.app/pricing.md
+- Home: https://veilpass.dev/
+- Two-origin demo: https://veilpass.dev/demo
+- Developer docs: https://veilpass.dev/docs
+- Client SDK: https://veilpass.dev/docs/client
+- Server verifier: https://veilpass.dev/docs/server
+- Privacy model: https://veilpass.dev/docs/privacy
+- Threat model: https://veilpass.dev/docs/threat-model
+- Gate contract: https://veilpass.dev/docs/contract
+- Pricing: https://veilpass.dev/pricing.md
 
 ## Product boundaries
 
@@ -39,5 +39,5 @@ VeilPass gives each allowed origin a scoped private app ID and an eligibility ve
 
 ## Contact and repo
 
-- Product site: https://veilpass-stellar.vercel.app/
+- Product site: https://veilpass.dev/
 - GitHub: https://github.com/irham3/veilpass
