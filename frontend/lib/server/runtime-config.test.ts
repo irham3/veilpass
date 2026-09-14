@@ -44,4 +44,19 @@ describe("runtime configuration inspection", () => {
     expect(report.issues).toContain("LOGIN_ORIGIN_INVALID");
     expect(JSON.stringify(report)).not.toContain("password");
   });
+
+  it("accepts an explicit, unique host-origin allowlist for the two-dApp deployment", () => {
+    const report = inspectRuntimeConfiguration({
+      ...complete,
+      VEILPASS_HOST_ORIGIN: "https://app-a.example.test, https://app-b.example.test",
+    });
+    expect(report.ok).toBe(true);
+    expect(report.checks.hostOrigin).toBe(true);
+  });
+
+  it("rejects empty, malformed, or duplicate entries in a host-origin allowlist", () => {
+    expect(inspectRuntimeConfiguration({ ...complete, VEILPASS_HOST_ORIGIN: "https://app-a.example.test,,https://app-b.example.test" }).checks.hostOrigin).toBe(false);
+    expect(inspectRuntimeConfiguration({ ...complete, VEILPASS_HOST_ORIGIN: "https://app-a.example.test, not-an-origin" }).checks.hostOrigin).toBe(false);
+    expect(inspectRuntimeConfiguration({ ...complete, VEILPASS_HOST_ORIGIN: "https://app-a.example.test, https://app-a.example.test" }).checks.hostOrigin).toBe(false);
+  });
 });

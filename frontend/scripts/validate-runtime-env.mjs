@@ -22,6 +22,13 @@ function isExactOrigin(value) {
   }
 }
 
+function isOriginAllowlist(value) {
+  if (!value) return false;
+  const configuredOrigins = value.split(",");
+  const origins = configuredOrigins.map((origin) => origin.trim()).filter(Boolean);
+  return origins.length > 0 && origins.length === configuredOrigins.length && origins.every(isExactOrigin) && new Set(origins).size === origins.length;
+}
+
 function isPostgresUrl(value) {
   try {
     const url = new URL(value);
@@ -32,7 +39,7 @@ function isPostgresUrl(value) {
 }
 
 const checks = [
-  ["VEILPASS_HOST_ORIGIN", isExactOrigin(process.env.VEILPASS_HOST_ORIGIN ?? "")],
+  ["VEILPASS_HOST_ORIGIN", isOriginAllowlist(process.env.VEILPASS_HOST_ORIGIN ?? "")],
   ["VEILPASS_LOGIN_ORIGIN", isExactOrigin(process.env.VEILPASS_LOGIN_ORIGIN ?? "")],
   ["NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN", isExactOrigin(process.env.NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN ?? "")],
   ["DATABASE_URL", isPostgresUrl(process.env.DATABASE_URL ?? "")],

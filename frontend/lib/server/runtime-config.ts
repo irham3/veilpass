@@ -38,6 +38,13 @@ function isExactOrigin(value: string | undefined): boolean {
   }
 }
 
+function isOriginAllowlist(value: string | undefined): boolean {
+  if (!value) return false;
+  const configuredOrigins = value.split(",");
+  const origins = configuredOrigins.map((origin) => origin.trim()).filter(Boolean);
+  return origins.length > 0 && origins.length === configuredOrigins.length && origins.every(isExactOrigin) && new Set(origins).size === origins.length;
+}
+
 function isPostgresUrl(value: string | undefined): boolean {
   if (!value) return false;
   try {
@@ -55,7 +62,7 @@ function isPostgresUrl(value: string | undefined): boolean {
 export function inspectRuntimeConfiguration(environment: RuntimeEnvironment = process.env): RuntimeConfigReport {
   const checks = {
     database: isPostgresUrl(environment.DATABASE_URL),
-    hostOrigin: isExactOrigin(environment.VEILPASS_HOST_ORIGIN),
+    hostOrigin: isOriginAllowlist(environment.VEILPASS_HOST_ORIGIN),
     loginOrigin: isExactOrigin(environment.VEILPASS_LOGIN_ORIGIN),
     publicLoginOrigin: isExactOrigin(environment.NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN),
     contractId: Boolean(environment.NEXT_PUBLIC_VEILPASS_CONTRACT_ID),

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785644177000,
+      "tag": "0000_veilpass_mvp",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788254522000,
+      "tag": "0001_enrollment_challenge_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788941948000,
+      "tag": "0002_credential_merkle_tree",
+      "breakpoints": true
+    }
+  ]
+}
