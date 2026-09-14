@@ -58,3 +58,16 @@ The full development audit reports four moderate findings in Drizzle Kit's devel
 ## Important scope boundary
 
 The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. The outstanding work is operational: owner-approved Testnet root initialization, durable database provisioning, independent public host deployments, live Freighter evidence, and the final review recording.
+
+## Production configuration acceptance — 2026-09-14
+
+This section supersedes the dated operational-status statements above where they describe the Testnet owner, initial root, or Vercel runtime configuration.
+
+- Production deployment: [`DppC4sc1K3rwTsGa6RGn3ABQ39xQ`](https://vercel.com/my-team-11d97e25/veilpass/DppC4sc1K3rwTsGa6RGn3ABQ39xQ), status **Ready**, from commit `e070368`.
+- Production aliases include [`https://www.veilpass.dev`](https://www.veilpass.dev) and `https://veilpass.dev`.
+- `NEXT_PUBLIC_VEILPASS_CONTRACT_ID` and `NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT` were recreated as Vercel **Config** variables for Production and Preview. This is required because browser-facing `NEXT_PUBLIC_*` values must not be stored as write-only Secrets.
+- `NEXT_PUBLIC_STELLAR_RPC_URL`, `NEXT_PUBLIC_STELLAR_NETWORK`, and `NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN` were likewise normalized to Config variables. The active single-origin login boundary is `https://www.veilpass.dev`.
+- `VEILPASS_LOGIN_ORIGIN` and `VEILPASS_HOST_ORIGIN` are aligned with that exact active origin. Future App A/App B deployment must replace this single-origin boundary with the explicit final allowlist described in the runbook.
+- `VEILPASS_GATE_OWNER_SECRET` is present only as a write-only Vercel Production Secret and is never committed or returned by an API.
+- `GET https://www.veilpass.dev/api/health` returned HTTP `200` and `{ "ok": true }`; database, origins, contract/source identifiers, asset rule, issuer secret, and gate-owner secret all passed runtime validation.
+- A deliberately invalid `POST /api/enrollment/challenge` request with `Origin: https://www.veilpass.dev` returned `PROOF_INVALID` (HTTP `400`), rather than `ORIGIN_MISMATCH`; this proves the current origin boundary accepted the request before payload validation.
