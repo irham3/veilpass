@@ -1,6 +1,6 @@
 # VeilPass — Release dan Konfigurasi Cloud Runbook
 
-**Tanggal pemeriksaan:** 14 September 2026  
+**Tanggal pemeriksaan:** 14 September 2026
 **Tujuan:** menutup gap konfigurasi untuk Deliverable 1–3 tanpa mengungkap seed, password, token, atau data wallet.
 
 Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan menimpa, audit deliverable terdahulu. Semua perintah di bawah dijalankan dari komputer pengembang; jangan menempelkan nilai rahasia ke chat, Git, issue, atau README.
