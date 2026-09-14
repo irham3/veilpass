@@ -23,6 +23,15 @@ Verified implementation revision: `4a9147c` (`fix(proof): pass fixture public in
 - Runtime dependency audit: 0 vulnerabilities
 - Secret-pattern scan: no committed Stellar secret seed found; generated `.env.local` remains git-ignored
 
+## Testnet owner replacement — 2026-09-14
+
+- Previous Testnet gate owner material was unavailable, so the historical contract is superseded for live acceptance.
+- Final active Testnet contract: `CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK`.
+- Final gate owner public key: `GDVP7QVOCQ4L4CDNXVWD53ATXGYDXTDOYVFPJ3UA5OTWJW7XGXSNFXRJ`.
+- Deploy transaction: `ebefe9c2aa18361e58dc1defac11fe346840d62efee2b3c4ac0c35c3544af3cb`.
+- Gate initialization transaction: `c7b420f20f0167c47340259f7afb060040ac06b9f40303163ae2da8c79620558`.
+- `premium-holder` starts at epoch `1` with the canonical empty Merkle root (`00` repeated 32 bytes); existing credentials from the superseded contract must be re-enrolled.
+
 ## Workspace structure
 
 - Next.js frontend root: `frontend/`
