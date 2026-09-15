@@ -27,6 +27,8 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 - Schema `veilpass` telah memiliki `contract_sync_cursors`, `credential_merkle_credentials`, `credential_tree_nodes`, `demo_sessions`, `enrollment_challenges`, `issuer_credentials`, `login_challenges`, dan `login_nullifiers`.
 - Vercel telah memverifikasi `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev`. Parent domain memakai nameserver Vercel, jadi tidak perlu menambahkan record secara manual pada Spaceship untuk tiga subdomain tersebut.
 - Environment production dan preview sekarang mengarahkan hosted login ke `https://login.veilpass.dev` dan menerima exact-host allowlist `https://app-a.veilpass.dev,https://app-b.veilpass.dev`.
+- Setelah deployment `dpl_APSdzxf2dCM9hVpTfjwFF97zYKvz` berstatus Ready, `GET https://login.veilpass.dev/api/health` mengembalikan `ok: true`; root App A dan App B mengembalikan HTTP 200 serta UI host yang benar.
+- Acceptance request langsung ke `/api/challenges` menghasilkan origin `https://app-a.veilpass.dev` untuk App A dan `https://app-b.veilpass.dev` untuk App B. Kedua origin berbeda dan keduanya lolos allowlist.
 
 ### Bukti kontrak Testnet
 
