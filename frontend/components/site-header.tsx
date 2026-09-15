@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRightIcon } from "@phosphor-icons/react/ArrowRight";
-import { CaretDownIcon } from "@phosphor-icons/react/CaretDown";
 import { ListIcon } from "@phosphor-icons/react/List";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -103,21 +102,16 @@ export function SiteHeader() {
               {link.label}
             </a>
           ))}
-          <details className="group relative">
-            <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-paper-200 transition-colors hover:text-paper-50 [&::-webkit-details-marker]:hidden">
-              Live apps
-              <CaretDownIcon aria-hidden="true" size={14} className="transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="absolute right-0 top-7 w-64 rounded-2xl border border-paper-50/10 bg-ink-950/98 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-              <p className="px-3 py-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-paper-200">Separate trusted origins</p>
-              {liveApps.map((app) => (
-                <a key={app.href} href={app.href} className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-paper-50/10">
-                  <span className="block text-sm text-paper-50">{app.label}</span>
-                  <span className="mt-0.5 block text-xs text-paper-200">{app.description}</span>
-                </a>
-              ))}
-            </div>
-          </details>
+          {liveApps.map((app) => (
+            <a
+              key={app.href}
+              href={app.href}
+              className="smooth-link text-sm text-paper-200 hover:-translate-y-0.5 hover:text-paper-50"
+              title={app.description}
+            >
+              {app.label}
+            </a>
+          ))}
           <Button
             asChild
             size="sm"
