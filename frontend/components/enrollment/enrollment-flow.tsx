@@ -2,6 +2,7 @@
 
 import { getNetworkDetails, isConnected, requestAccess, signMessage } from "@stellar/freighter-api";
 import { Networks } from "@stellar/stellar-sdk";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,7 +14,8 @@ import { createCredentialSecrets } from "@/packages/proof/src/noir";
 
 const gateId = "premium-holder";
 
-export function EnrollmentFlow() {
+export function EnrollmentFlow({ returnTo }: { returnTo?: string }) {
+  const router = useRouter();
   const [disclosed, setDisclosed] = useState(false);
   const [status, setStatus] = useState("Ready to connect");
   const [complete, setComplete] = useState(false);
@@ -41,7 +43,13 @@ export function EnrollmentFlow() {
       const issued = issuedCredentialSchema.safeParse(await issueResponse.json());
       if (!issued.success) throw new Error("Issuer could not create the credential");
       await saveCredential({ ...issued.data, subjectSecret, storedAt: new Date().toISOString() });
-      setComplete(true); setStatus("Credential stored in this browser");
+      setComplete(true);
+      if (returnTo) {
+        setStatus("Credential stored. Returning to private login…");
+        window.setTimeout(() => router.replace(returnTo), 500);
+      } else {
+        setStatus("Credential stored in this browser");
+      }
     } catch (error) { setStatus(error instanceof Error ? error.message : "Enrollment failed"); }
   }
 

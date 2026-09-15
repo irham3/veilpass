@@ -10,8 +10,10 @@ export class VeilPass {
   constructor({ loginOrigin }: { loginOrigin: string }) { this.loginOrigin = normalizeOrigin(loginOrigin); }
 
   async login({ gateId, timeoutMs = 120_000 }: { gateId: string; timeoutMs?: number }): Promise<VerifiedLogin> {
-    const challengeResponse = await fetch("/api/challenges", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ gateId }) });
-    const challenge = challengeResponseSchema.parse(await challengeResponse.json());
+    const createChallenge = async () => {
+      const challengeResponse = await fetch("/api/challenges", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ gateId }) });
+      return challengeResponseSchema.parse(await challengeResponse.json());
+    };
     const state = crypto.randomUUID();
     const url = new URL("/login", this.loginOrigin);
     url.searchParams.set("gateId", gateId);
@@ -24,7 +26,11 @@ export class VeilPass {
       const cleanup = () => { window.removeEventListener("message", onMessage); window.clearTimeout(timeout); };
       const onMessage = (event: MessageEvent) => {
         if (event.origin === this.loginOrigin && event.source === popup && event.data?.type === "veilpass:ready" && event.data?.state === state) {
-          popup.postMessage({ type: "veilpass:challenge", state, challenge }, this.loginOrigin);
+          void createChallenge().then((challenge) => {
+            popup.postMessage({ type: "veilpass:challenge", state, challenge }, this.loginOrigin);
+          }).catch((error) => {
+            cleanup(); popup.close(); reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Could not create a login challenge"));
+          });
           return;
         }
         const result = validatePopupMessage({ event, popup, loginOrigin: this.loginOrigin, state });

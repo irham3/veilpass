@@ -12,14 +12,9 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: publicAppLinks.home, label: "Overview" },
-  { href: `${publicAppLinks.home}/demo`, label: "Demo" },
-  { href: `${publicAppLinks.login}/dashboard`, label: "Dashboard" },
+  { href: `${publicAppLinks.home}/demo`, label: "Two-app demo" },
   { href: `${publicAppLinks.home}/docs`, label: "Docs" },
-];
-
-const liveApps = [
-  { href: publicAppLinks.appA, label: "App A", description: "Holder dashboard" },
-  { href: publicAppLinks.appB, label: "App B", description: "Private feedback" },
+  { href: `${publicAppLinks.login}/dashboard`, label: "Gate dashboard" },
 ];
 
 export function SiteHeader() {
@@ -31,7 +26,12 @@ export function SiteHeader() {
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 18);
+        setScrolled((wasScrolled) => {
+          // A small hysteresis band prevents rapid state toggling around the
+          // threshold on trackpads and touch devices.
+          const next = wasScrolled ? window.scrollY > 8 : window.scrollY > 24;
+          return next === wasScrolled ? wasScrolled : next;
+        });
       });
     };
 
@@ -48,16 +48,15 @@ export function SiteHeader() {
     <header
       data-scrolled={scrolled}
       className={cn(
-        "sticky top-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        scrolled ? "px-3 pt-2" : "px-4 pt-4",
+        "sticky top-0 z-50 h-20 px-4 pt-3 sm:px-5",
       )}
     >
       <div
         className={cn(
-          "relative mx-auto flex items-center justify-between overflow-hidden rounded-full border px-4 backdrop-blur-xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:px-5",
+          "relative mx-auto flex h-15 max-w-7xl items-center justify-between overflow-hidden rounded-full border px-4 backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-200 ease-out lg:px-5",
           scrolled
-            ? "h-13 max-w-5xl scale-[0.985] border-signal-400/24 bg-ink-950/90 shadow-[0_16px_70px_rgba(0,0,0,0.48),0_0_0_1px_rgba(185,245,208,0.03)]"
-            : "h-16 max-w-7xl border-paper-50/10 bg-ink-950/64 shadow-[0_18px_70px_rgba(0,0,0,0.24)]",
+            ? "border-signal-400/24 bg-ink-950/92 shadow-[0_16px_50px_rgba(0,0,0,0.42),0_0_0_1px_rgba(185,245,208,0.03)]"
+            : "border-paper-50/10 bg-ink-950/72 shadow-[0_12px_36px_rgba(0,0,0,0.22)]",
         )}
       >
         <span
@@ -79,17 +78,13 @@ export function SiteHeader() {
             height={28}
             priority
             className={cn(
-              "transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.025]",
-              scrolled && "scale-[0.94]",
+              "transition-transform duration-200 ease-out group-hover:scale-[1.025]",
             )}
           />
         </a>
         <nav
           aria-label="Primary navigation"
-          className={cn(
-            "hidden items-center transition-[gap] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex",
-            scrolled ? "gap-4" : "gap-5",
-          )}
+          className="hidden items-center gap-5 xl:flex"
         >
           {links.map((link) => (
             <a
@@ -100,16 +95,6 @@ export function SiteHeader() {
               )}
             >
               {link.label}
-            </a>
-          ))}
-          {liveApps.map((app) => (
-            <a
-              key={app.href}
-              href={app.href}
-              className="smooth-link text-sm text-paper-200 hover:-translate-y-0.5 hover:text-paper-50"
-              title={app.description}
-            >
-              {app.label}
             </a>
           ))}
           <Button
@@ -126,7 +111,7 @@ export function SiteHeader() {
           </Button>
         </nav>
         <Sheet>
-          <SheetTrigger asChild className="lg:hidden">
+          <SheetTrigger asChild className="xl:hidden">
             <Button variant="ghost" size="icon" aria-label="Open navigation" className="rounded-full">
               <ListIcon size={22} />
             </Button>
@@ -142,17 +127,6 @@ export function SiteHeader() {
                   className="min-h-12 justify-start rounded-2xl text-base transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                 >
                   <a href={link.href}>{link.label}</a>
-                </Button>
-              ))}
-              <p className="mt-5 px-3 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-paper-200">Live apps</p>
-              {liveApps.map((app) => (
-                <Button
-                  key={app.href}
-                  asChild
-                  variant="ghost"
-                  className="min-h-12 justify-start rounded-2xl text-base transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
-                >
-                  <a href={app.href}>{app.label} — {app.description}</a>
                 </Button>
               ))}
               <Button asChild className="mt-4 rounded-full">

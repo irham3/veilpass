@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EnrollPage() {
+function safeLoginReturnPath(value: string | string[] | undefined) {
+  if (typeof value !== "string" || !value.startsWith("/login?")) return undefined;
+  return value;
+}
+
+export default async function EnrollPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const returnTo = safeLoginReturnPath((await searchParams).returnTo);
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
       <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
@@ -35,7 +42,7 @@ export default function EnrollPage() {
             </div>
           </Reveal>
           <Reveal delay="short" className="mt-10">
-            <EnrollmentFlow />
+            <EnrollmentFlow returnTo={returnTo} />
           </Reveal>
         </div>
       </main>
