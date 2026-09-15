@@ -24,6 +24,7 @@
     "env:local": "node scripts/local-env.mjs",
     "env:validate": "node scripts/validate-runtime-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
+    "production:acceptance": "node scripts/production-acceptance.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "packages:build": "npm run build --workspace @veilpass/shared && npm run build --workspace @veilpass/sdk && npm run build --workspace @veilpass/server && npm run build --workspace @veilpass/contract-bindings",

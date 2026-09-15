@@ -32,6 +32,7 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 - npm public release selesai: [shared](https://www.npmjs.com/package/@veilpass/shared), [sdk](https://www.npmjs.com/package/@veilpass/sdk), dan [server](https://www.npmjs.com/package/@veilpass/server) semuanya berada pada version `0.1.0` dengan dist-tag `latest`.
 - Smoke install dalam folder baru di luar repository memasang ketiga package dari registry, menemukan nol vulnerability, dan menjalankan import ESM untuk ketiganya dengan hasil `PUBLIC_NPM_IMPORTS=PASS`.
 - Trusted Publisher npm untuk `@veilpass/shared`, `@veilpass/sdk`, dan `@veilpass/server` telah diaktifkan oleh owner. Workflow GitHub `release-packages.yml` sekarang dapat memperoleh identity token OIDC untuk rilis versi berikutnya tanpa `NPM_TOKEN` permanen.
+- Jalankan `npm run production:acceptance` dari `frontend/` untuk memeriksa health hosted login, route publik App A/App B, domain-bound challenge App A/App B, dan penolakan origin tidak tepercaya tanpa memerlukan wallet atau secret.
 
 ### Bukti kontrak Testnet
 

@@ -1,5 +1,19 @@
 # VeilPass MVP local verification report
 
+## Current acceptance status — 2026-09-15
+
+This section supersedes earlier dated statements in this report that describe the database, npm publication, or public App A/App B deployment.
+
+- **Private Gate Core:** current Soroban tests pass 3/3; the Testnet smoke reads the active `premium-holder` gate at epoch `1`, and the Noir runtime creates a 14,656-byte proof with 11 public inputs that verifies against the committed key.
+- **SDK and Hosted Login:** `@veilpass/shared@0.1.0`, `@veilpass/sdk@0.1.0`, and `@veilpass/server@0.1.0` are public npm packages. A clean external installation imported all three successfully with zero reported vulnerabilities.
+- **Database:** Drizzle migrations `0000` through `0002` were applied to Neon; the `veilpass` schema contains all eight required durable challenge, nullifier, credential, Merkle-tree, session, and cursor tables.
+- **Two public dApps:** `https://login.veilpass.dev`, `https://app-a.veilpass.dev`, and `https://app-b.veilpass.dev` are verified Vercel domains. The automated `npm run production:acceptance` check confirms hosted-login health, both host routes, distinct origin-bound challenges, and rejection of an untrusted origin.
+- **Regression verification:** TypeScript, ESLint, and 62 Vitest tests pass on the current release workspace.
+
+### Remaining manual wallet evidence
+
+The only non-video acceptance step that cannot be executed by an agent is a user-owned Freighter action: add the Testnet VPT trustline, receive the demo asset, approve wallet access, and approve the enrollment message signature. This is intentionally non-automatable because VeilPass must not receive the wallet seed or bypass a user signature. Once the wallet owner performs those approvals, the existing App A/App B flow can demonstrate the final live private-ID, replay, expiry, and revocation evidence.
+
 Date: 2026-09-02
 Verified implementation revision: `4a9147c` (`fix(proof): pass fixture public inputs to verifier`), plus the working tree changes documented with this report.
 
