@@ -3,6 +3,7 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/ArrowRight";
 import { ListIcon } from "@phosphor-icons/react/List";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,12 @@ const links = [
 ];
 
 export function SiteHeader() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const onEnrollmentPage = pathname === "/dashboard/enroll";
+  const primaryAction = onEnrollmentPage
+    ? { href: publicAppLinks.appA, label: "Open App A" }
+    : { href: enrollmentUrl, label: "Enroll with Freighter" };
 
   useEffect(() => {
     let frame = 0;
@@ -102,8 +108,8 @@ export function SiteHeader() {
             size="default"
             className="group min-h-11 rounded-full px-4 pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
-            <a href={enrollmentUrl}>
-              Enroll with Freighter
+            <a href={primaryAction.href}>
+              {primaryAction.label}
               <span aria-hidden="true" className="ml-1 grid size-7 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
                 <ArrowRightIcon size={15} />
               </span>
@@ -115,8 +121,8 @@ export function SiteHeader() {
           size="default"
           className="group hidden min-h-11 rounded-full px-4 pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:inline-flex xl:hidden"
         >
-          <a href={enrollmentUrl}>
-            Enroll
+          <a href={primaryAction.href}>
+            {onEnrollmentPage ? "Open App A" : "Enroll"}
             <span aria-hidden="true" className="ml-1 grid size-7 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
               <ArrowRightIcon size={15} />
             </span>
@@ -142,7 +148,7 @@ export function SiteHeader() {
                 </Button>
               ))}
               <Button asChild className="mt-4 min-h-12 rounded-full px-5">
-                <a href={enrollmentUrl}>Enroll with Freighter</a>
+                <a href={primaryAction.href}>{primaryAction.label}</a>
               </Button>
             </nav>
           </SheetContent>

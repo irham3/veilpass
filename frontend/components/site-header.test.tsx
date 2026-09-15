@@ -7,6 +7,10 @@ import { publicAppLinks } from "@/lib/public-app-links";
 
 import { SiteHeader } from "./site-header";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
+
 describe("SiteHeader", () => {
   beforeEach(() => {
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
