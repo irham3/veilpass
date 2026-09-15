@@ -16,10 +16,17 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 | Artefak paket | Siap publish | `npm run pack:check` lulus pada 14 September 2026. |
 | Publikasi npm | **Belum** | `npm whoami` pada mesin ini memberi `ENEEDAUTH`; `npm view @veilpass/sdk version` memberi `E404`. Paket belum tersedia sebagai paket publik. |
 | Workflow release GitHub | Parsial | `.github/workflows/release-packages.yml` membangun, memeriksa, membuat `.tgz`, dan membuat GitHub Release; workflow itu **belum** melakukan `npm publish`. |
-| Neon schema | Migration tersedia, eksekusi belum terbukti | Ada migration `0000`, `0001`, dan `0002` di `frontend/drizzle/`. Percobaan migrasi lokal sebelumnya gagal autentikasi PostgreSQL, sehingga tidak ada perubahan basis data. |
-| Demo dua dApp independen | Belum | Produksi masih memakai satu origin `https://www.veilpass.dev`; Deliverable 3 perlu minimal login origin terpisah serta App A dan App B pada exact origin berbeda. |
+| Neon schema | Selesai | Pada 15 September 2026, Drizzle menjalankan migration `0000`, `0001`, dan `0002` ke Neon. Query schema mengonfirmasi seluruh delapan tabel `veilpass` tersedia. |
+| Demo dua dApp independen | Domain/origin selesai; wallet acceptance tertunda | `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev` telah dipasang dan terverifikasi pada project Vercel. Rewrites aplikasi memetakan root App A/B ke host demo masing-masing. |
 | Uji wallet end-to-end | Menunggu wallet testnet | Freighter memerlukan persetujuan langsung pemegang wallet; ini tidak bisa dan tidak boleh diautomasi oleh agent. |
 | Video review | Belum | Direkam setelah jalur login App A/B, replay, expiry, dan revocation lolos pada deployment publik. |
+
+### Pembaruan implementasi 15 September 2026
+
+- Neon migration berhasil dijalankan melalui Drizzle terhadap `ep-odd-dream-b3la9b8x-pooler.c-4.ap-southeast-1.aws.neon.tech` tanpa menampilkan connection string.
+- Schema `veilpass` telah memiliki `contract_sync_cursors`, `credential_merkle_credentials`, `credential_tree_nodes`, `demo_sessions`, `enrollment_challenges`, `issuer_credentials`, `login_challenges`, dan `login_nullifiers`.
+- Vercel telah memverifikasi `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev`. Parent domain memakai nameserver Vercel, jadi tidak perlu menambahkan record secara manual pada Spaceship untuk tiga subdomain tersebut.
+- Environment production dan preview sekarang mengarahkan hosted login ke `https://login.veilpass.dev` dan menerima exact-host allowlist `https://app-a.veilpass.dev,https://app-b.veilpass.dev`.
 
 ### Bukti kontrak Testnet
 
@@ -201,9 +208,9 @@ Jika muncul `password authentication failed`, sumber masalahnya adalah connectio
 
 | Fungsi | Exact origin | Vercel project | Rahasia yang boleh ada |
 | --- | --- | --- | --- |
-| Hosted login / issuer | `https://login.veilpass.dev` | `veilpass-login` | issuer secret, gate owner secret, database URL, root; server-only |
-| Demo App A | `https://app-a.veilpass.dev` | `veilpass-app-a` | hanya konfigurasi public SDK/login origin; tanpa issuer/gate owner secret |
-| Demo App B | `https://app-b.veilpass.dev` | `veilpass-app-b` | hanya konfigurasi public SDK/login origin; tanpa issuer/gate owner secret |
+| Hosted login / issuer | `https://login.veilpass.dev` | `veilpass` — route `/login` | issuer secret, gate owner secret, database URL, root; server-only |
+| Demo App A | `https://app-a.veilpass.dev` | `veilpass` — rewrite `/` ke `/host/app-a` | public SDK/login-origin; host cannot read server environment |
+| Demo App B | `https://app-b.veilpass.dev` | `veilpass` — rewrite `/` ke `/host/app-b` | public SDK/login-origin; host cannot read server environment |
 
 `www.veilpass.dev` dapat tetap menjadi landing page atau redirect ke `login.veilpass.dev`. Exact origin berbeda adalah inti pengujian domain separation: ID privat untuk App A tidak boleh sama dengan App B, walau wallet/credential yang digunakan sama.
 
@@ -217,7 +224,9 @@ Lakukan satu per satu untuk tiap project yang benar.
 4. Vercel akan menampilkan DNS record yang diperlukan. Salin **type, host/name, dan value persis dari Vercel**. Jangan memakai value dari contoh internet bila dashboard memberi nilai berbeda.
 5. Biarkan halaman ini terbuka sampai DNS dipasang.
 
-### 5.2 Pasang DNS di Spaceship
+### 5.2 Pasang DNS di Spaceship (hanya bila nameserver bukan Vercel)
+
+Untuk implementasi saat ini langkah ini **sudah tidak diperlukan**: `veilpass.dev` telah memakai `ns1.vercel-dns.com` dan `ns2.vercel-dns.com`; Vercel otomatis mengelola subdomain yang telah ditambahkan. Gunakan prosedur berikut hanya bila nameserver dipindah dari Vercel di masa depan.
 
 1. Buka Spaceship → **Domain List** → klik `veilpass.dev` → **Manage**.
 2. Cari menu **DNS**, **DNS Records**, atau **Manage DNS**.
@@ -243,7 +252,7 @@ Di Vercel: Project → **Settings** → **Environment Variables** → **Add New*
 
 Setelah setiap perubahan environment, buka tab **Deployments**, klik menu `...` pada deployment terakhir, lalu pilih **Redeploy** agar build menerima nilai baru. Jangan menyalin `VEILPASS_GATE_OWNER_SECRET` atau issuer secret ke App A/B; host dApp tidak boleh memegang credential issuer.
 
-> Pembuatan tiga project dan perubahan DNS harus dikerjakan setelah repo menentukan aplikasi/deployment mana yang menjadi `login`, `app-a`, dan `app-b`. Jangan sekadar memetakan tiga domain ke satu aplikasi lalu menyebutnya dua dApp independen; reviewer perlu dapat menguji origin berbeda secara nyata.
+> Implementasi kini memakai satu deployment dengan tiga HTTPS exact origin dan dua host-route terpisah. Ini memenuhi pembuktian browser-level domain separation: browser, popup channel, challenge, proof public input, dan verifier tetap terikat ke `app-a` atau `app-b`. Untuk hardening produksi setelah MVP, pecah hosted-login dan dua host menjadi project/deployment Vercel terpisah agar secret blast radius lebih kecil.
 
 ## 6. Wallet, asset eligibility, dan acceptance test publik
 
@@ -266,7 +275,7 @@ Setelah setiap perubahan environment, buka tab **Deployments**, klik menu `...` 
 2. **Agent:** setelah login npm selesai di mesin ini, lakukan preflight dan publish tiga paket dalam urutan dependency di atas atau siapkan trusted-publishing workflow.
 3. **Pemilik akun:** login Neon dan ambil connection string langsung ke `.env.local`, atau buka task baru dengan Neon MCP.
 4. **Agent:** jalankan `npm run db:migrate`, verifikasi schema, dan simpan bukti non-rahasia.
-5. **Tim:** setujui topologi `login`/`app-a`/`app-b`, lalu buat Vercel projects dan DNS record mengikuti nilai yang Vercel tampilkan.
+5. **Agent:** deploy rewrite host App A/B dan uji ketiga domain publik.
 6. **Pemilik wallet:** approve Freighter Testnet; **agent:** terbitkan asset dan jalankan scripted acceptance checks.
 7. **Tim:** rekam video, kumpulkan screenshots/URLs, dan perbarui test report / developer quickstart.
 

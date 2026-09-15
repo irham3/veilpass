@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
         // same rewrites work in local development and behind a HTTPS proxy.
         { source: "/", has: [{ type: "host", value: "app-a\\.localhost" }], destination: "/host/app-a" },
         { source: "/", has: [{ type: "host", value: "app-b\\.localhost" }], destination: "/host/app-b" },
+        { source: "/", has: [{ type: "host", value: "app-a\\.veilpass\\.dev" }], destination: "/host/app-a" },
+        { source: "/", has: [{ type: "host", value: "app-b\\.veilpass\\.dev" }], destination: "/host/app-b" },
       ],
     };
   },
