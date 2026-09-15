@@ -4,8 +4,7 @@ export const docNav = [
   ["", "Overview"], ["quickstart", "Quickstart"], ["client", "Client SDK"], ["server", "Server verifier"], ["identity", "Identity semantics"], ["enrollment", "Enrollment"], ["contract", "Gate contract"], ["errors", "Errors"], ["privacy", "Privacy model"], ["threat-model", "Threat model"], ["api", "API reference"], ["examples", "Examples"],
 ] as const;
 
-const install = `npm install @veilpass/sdk
-# Pre-release local package in this repository: packages/sdk`;
+const install = `npm install @veilpass/sdk`;
 const client = `import { VeilPass } from "@veilpass/sdk";
 
 const veilpass = new VeilPass({
@@ -33,7 +32,7 @@ export const docs: Record<string, DocPage> = {
   ]},
   quickstart: { title: "Quickstart", eyebrow: "Start here", intro: "Create one challenge on the host, open the VeilPass login surface, verify once, then establish an opaque cookie session.", sections: [
     { heading: "Prerequisites", body: "Use Node.js 20 or later, a Freighter wallet connected to Stellar Testnet, and a testnet account funded with the asset required by your gate. Before starting a live service, run npm run env:validate; it reports configuration names only and never prints secret values." },
-    { heading: "Install", body: "The SDK package is currently a pre-release workspace package, not a public npm release.", code: install, language: "bash" },
+    { heading: "Install", body: "Install the public SDK package from npm. The package opens the hosted login popup and returns only the minimized verifier result to the host application.", code: install, language: "bash" },
     { heading: "Client", body: "The popup channel validates the exact login origin, window source, request state, and response schema.", code: client },
     { heading: "Server", body: "Verification must happen on the host server. Supply a durable challenge/nullifier store and the pinned Noir verifier; a browser verdict is never sufficient.", code: server },
   ]},
