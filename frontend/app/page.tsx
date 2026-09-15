@@ -12,6 +12,7 @@ import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
 import { ProofWindow } from "@/components/marketing/proof-window";
 import { Button } from "@/components/ui/button";
+import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
 import { absoluteUrl, landingFaqItems, siteConfig } from "@/lib/seo";
 
 const homeJsonLd = [
@@ -118,12 +119,12 @@ export default function Home() {
                   size="lg"
                   className="group w-full rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:w-auto"
                 >
-                  <Link href="/demo">
-                    Try demo
+                  <a href={enrollmentUrl}>
+                    Start enrollment
                     <span aria-hidden="true" className="ml-2 grid size-8 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1">
                       <ArrowRightIcon size={16} />
                     </span>
-                  </Link>
+                  </a>
                 </Button>
                 <Button
                   asChild
@@ -131,9 +132,12 @@ export default function Home() {
                   variant="outline"
                   className="w-full rounded-full border-paper-50/16 bg-paper-50/5 text-paper-50 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-paper-50/10 sm:w-auto"
                 >
-                  <Link href="/docs">Read developer docs</Link>
+                  <a href={publicAppLinks.appA}>Open App A</a>
                 </Button>
               </div>
+              <p className="mt-4 text-sm text-paper-200">
+                Already enrolled? Open <a className="smooth-link text-signal-400" href={publicAppLinks.appA}>App A</a> or <a className="smooth-link text-signal-400" href={publicAppLinks.appB}>App B</a> to compare their separate private IDs.
+              </p>
             </Reveal>
 
             <Reveal delay="medium" className="relative mx-auto w-full max-w-lg sm:max-w-xl lg:max-w-none">

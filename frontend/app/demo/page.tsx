@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-
 import { DemoBench } from "@/components/demo/demo-bench";
 import { Reveal } from "@/components/motion/reveal";
+import { Button } from "@/components/ui/button";
+import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
 import { siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -50,12 +50,13 @@ export default function DemoPage() {
           </Reveal>
 
           <Reveal delay="medium" className="mt-8 rounded-[1.65rem] border border-signal-400/24 bg-signal-400/[0.07] p-5 text-sm leading-7 text-paper-200">
-            <strong className="text-paper-50">Live path:</strong>{" "}
-            connect Freighter on the{" "}
-            <Link href="/dashboard/enroll" className="text-signal-400 underline underline-offset-4">
-              enrollment screen
-            </Link>
-            . Contract reads use the deployed Stellar Testnet gate.
+            <strong className="text-paper-50">Ready for the live path?</strong>
+            <p className="mt-2">Enroll once on the hosted login origin, then open each separate host origin. Contract reads use the deployed Stellar Testnet gate.</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild size="sm" className="rounded-full"><a href={enrollmentUrl}>1. Enroll with Freighter</a></Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full border-paper-50/20 bg-transparent"><a href={publicAppLinks.appA}>2. Open App A</a></Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full border-paper-50/20 bg-transparent"><a href={publicAppLinks.appB}>3. Open App B</a></Button>
+            </div>
           </Reveal>
         </div>
       </main>

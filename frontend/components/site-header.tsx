@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightIcon } from "@phosphor-icons/react/ArrowRight";
+import { CaretDownIcon } from "@phosphor-icons/react/CaretDown";
 import { ListIcon } from "@phosphor-icons/react/List";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,12 +10,19 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
 import { cn } from "@/lib/utils";
 
 const links = [
+  { href: "/", label: "Overview" },
   { href: "/demo", label: "Demo" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/docs", label: "Docs" },
+];
+
+const liveApps = [
+  { href: publicAppLinks.appA, label: "App A", description: "Holder dashboard" },
+  { href: publicAppLinks.appB, label: "App B", description: "Private feedback" },
 ];
 
 export function SiteHeader() {
@@ -83,8 +91,8 @@ export function SiteHeader() {
         <nav
           aria-label="Primary navigation"
           className={cn(
-            "hidden items-center transition-[gap] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] md:flex",
-            scrolled ? "gap-5" : "gap-7",
+            "hidden items-center transition-[gap] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:flex",
+            scrolled ? "gap-4" : "gap-5",
           )}
         >
           {links.map((link) => (
@@ -100,21 +108,36 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <details className="group relative">
+            <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-paper-200 transition-colors hover:text-paper-50 [&::-webkit-details-marker]:hidden">
+              Live apps
+              <CaretDownIcon aria-hidden="true" size={14} className="transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="absolute right-0 top-7 w-64 rounded-2xl border border-paper-50/10 bg-ink-950/98 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <p className="px-3 py-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-paper-200">Separate trusted origins</p>
+              {liveApps.map((app) => (
+                <a key={app.href} href={app.href} className="block rounded-xl px-3 py-2.5 transition-colors hover:bg-paper-50/10">
+                  <span className="block text-sm text-paper-50">{app.label}</span>
+                  <span className="mt-0.5 block text-xs text-paper-200">{app.description}</span>
+                </a>
+              ))}
+            </div>
+          </details>
           <Button
             asChild
             size="sm"
             className="group rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
-            <Link href="/demo">
-              Try private login
+            <a href={enrollmentUrl}>
+              Enroll with Freighter
               <span aria-hidden="true" className="ml-1 grid size-7 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
                 <ArrowRightIcon size={15} />
               </span>
-            </Link>
+            </a>
           </Button>
         </nav>
         <Sheet>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon" aria-label="Open navigation" className="rounded-full">
               <ListIcon size={22} />
             </Button>
@@ -132,8 +155,19 @@ export function SiteHeader() {
                   <Link href={link.href}>{link.label}</Link>
                 </Button>
               ))}
+              <p className="mt-5 px-3 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-paper-200">Live apps</p>
+              {liveApps.map((app) => (
+                <Button
+                  key={app.href}
+                  asChild
+                  variant="ghost"
+                  className="min-h-12 justify-start rounded-2xl text-base transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+                >
+                  <a href={app.href}>{app.label} — {app.description}</a>
+                </Button>
+              ))}
               <Button asChild className="mt-4 rounded-full">
-                <Link href="/demo">Try private login</Link>
+                <a href={enrollmentUrl}>Enroll with Freighter</a>
               </Button>
             </nav>
           </SheetContent>
