@@ -30,6 +30,7 @@ async function issueChallenge(origin) {
 const login = exactOrigin(loginOrigin, "Login origin");
 const appA = exactOrigin(appAOrigin, "App A origin");
 const appB = exactOrigin(appBOrigin, "App B origin");
+const home = "https://veilpass.dev";
 const enrollment = new URL("/dashboard/enroll", login).toString();
 
 const { response: healthResponse, body: health } = await requestJson(new URL("/api/health", login));
@@ -39,7 +40,7 @@ for (const [label, origin, expectedText] of [["App A", appA, "Holder dashboard"]
   const response = await fetch(origin);
   const html = await response.text();
   if (!response.ok || !html.includes(expectedText)) throw new Error(`${label} public host route failed`);
-  for (const expectedLink of [enrollment, appA, appB]) {
+  for (const expectedLink of [enrollment, `${home}/demo`]) {
     if (!html.includes(expectedLink)) throw new Error(`${label} navigation is missing ${expectedLink}`);
   }
 }
