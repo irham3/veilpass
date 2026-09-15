@@ -53,9 +53,16 @@ export function LandingScrollMagnet({ children }: LandingScrollMagnetProps) {
           }
 
           const progressPoints = () => {
-            const maximumScroll = ScrollTrigger.maxScroll(window);
+            const rootTop =
+              rootElement.getBoundingClientRect().top + window.scrollY;
+            const scrollStart = rootTop;
+            const scrollEnd = Math.max(
+              scrollStart,
+              rootTop + rootElement.offsetHeight - window.innerHeight,
+            );
+            const scrollRange = scrollEnd - scrollStart;
 
-            if (maximumScroll <= 0) {
+            if (scrollRange <= 0) {
               return [];
             }
 
@@ -63,8 +70,9 @@ export function LandingScrollMagnet({ children }: LandingScrollMagnetProps) {
               gsap.utils.clamp(
                 0,
                 1,
-                (section.getBoundingClientRect().top + window.scrollY - 80) /
-                  maximumScroll,
+                (section.getBoundingClientRect().top + window.scrollY - 80 -
+                  scrollStart) /
+                  scrollRange,
               ),
             );
           };
