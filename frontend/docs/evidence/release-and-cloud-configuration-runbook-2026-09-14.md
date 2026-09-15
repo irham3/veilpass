@@ -15,7 +15,7 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 | Deployment produksi | Selesai | `https://www.veilpass.dev/api/health` memberi HTTP 200 dan seluruh pemeriksaan konfigurasi bernilai `true`. |
 | Artefak paket | Siap publish | `npm run pack:check` lulus pada 14 September 2026. |
 | Publikasi npm | Selesai | `@veilpass/shared@0.1.0`, `@veilpass/sdk@0.1.0`, dan `@veilpass/server@0.1.0` telah diterbitkan public pada 15 September 2026; instalasi bersih dan import ESM ketiganya lulus. |
-| Workflow release GitHub | Siap Trusted Publishing | Workflow membangun, memeriksa, publish dengan npm provenance, membuat `.tgz`, dan membuat GitHub Release. Konfigurasi Trusted Publisher per-package di npm UI masih perlu diaktifkan sebelum tag rilis berikutnya. |
+| Workflow release GitHub | Trusted Publishing aktif | Workflow membangun, memeriksa, publish dengan npm provenance, membuat `.tgz`, dan membuat GitHub Release. Pemilik akun mengonfirmasi Trusted Publisher npm telah diaktifkan untuk ketiga package pada 15 September 2026. |
 | Neon schema | Selesai | Pada 15 September 2026, Drizzle menjalankan migration `0000`, `0001`, dan `0002` ke Neon. Query schema mengonfirmasi seluruh delapan tabel `veilpass` tersedia. |
 | Demo dua dApp independen | Domain/origin selesai; wallet acceptance tertunda | `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev` telah dipasang dan terverifikasi pada project Vercel. Rewrites aplikasi memetakan root App A/B ke host demo masing-masing. |
 | Uji wallet end-to-end | Menunggu wallet testnet | Freighter memerlukan persetujuan langsung pemegang wallet; ini tidak bisa dan tidak boleh diautomasi oleh agent. |
@@ -31,6 +31,7 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 - Acceptance request langsung ke `/api/challenges` menghasilkan origin `https://app-a.veilpass.dev` untuk App A dan `https://app-b.veilpass.dev` untuk App B. Kedua origin berbeda dan keduanya lolos allowlist.
 - npm public release selesai: [shared](https://www.npmjs.com/package/@veilpass/shared), [sdk](https://www.npmjs.com/package/@veilpass/sdk), dan [server](https://www.npmjs.com/package/@veilpass/server) semuanya berada pada version `0.1.0` dengan dist-tag `latest`.
 - Smoke install dalam folder baru di luar repository memasang ketiga package dari registry, menemukan nol vulnerability, dan menjalankan import ESM untuk ketiganya dengan hasil `PUBLIC_NPM_IMPORTS=PASS`.
+- Trusted Publisher npm untuk `@veilpass/shared`, `@veilpass/sdk`, dan `@veilpass/server` telah diaktifkan oleh owner. Workflow GitHub `release-packages.yml` sekarang dapat memperoleh identity token OIDC untuk rilis versi berikutnya tanpa `NPM_TOKEN` permanen.
 
 ### Bukti kontrak Testnet
 
