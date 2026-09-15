@@ -7,6 +7,7 @@ import { WalletIcon } from "@phosphor-icons/react/dist/ssr/Wallet";
 import Link from "next/link";
 
 import { Reveal } from "@/components/motion/reveal";
+import { LandingScrollMagnet } from "@/components/motion/landing-scroll-magnet";
 import { LandingFaq } from "@/components/marketing/landing-faq";
 import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
@@ -94,9 +95,10 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
       />
-      <main>
+      <LandingScrollMagnet>
+        <main>
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section className="aperture-field relative isolate flex min-h-[calc(100dvh-5rem)] items-center overflow-hidden px-4 pb-12 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-12 lg:pt-10">
+        <section data-scroll-magnet="hero" className="aperture-field relative isolate flex min-h-[calc(100dvh-5rem)] items-center overflow-hidden px-4 pb-12 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-12 lg:pt-10">
           <div aria-hidden="true" className="hero-aperture-motion" />
           <div aria-hidden="true" className="hero-scanline" />
           {/* Ring — smaller on mobile so it doesn't cause overflow */}
@@ -176,10 +178,12 @@ export default function Home() {
         </section>
 
         {/* ── Payload Comparison ──────────────────────────────────────── */}
-        <PayloadComparison />
+        <div data-scroll-magnet="payload">
+          <PayloadComparison />
+        </div>
 
         {/* ── Inspection Cards ────────────────────────────────────────── */}
-        <section className="section-ink-wash relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
+        <section data-scroll-magnet="reviewer" className="section-ink-wash relative overflow-hidden px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-signal-400/50 to-transparent" />
           <div className="mx-auto max-w-7xl">
             <Reveal className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
@@ -215,7 +219,9 @@ export default function Home() {
         </section>
 
         {/* ── Privacy Boundary ────────────────────────────────────────── */}
-        <PrivacyBoundary />
+        <div data-scroll-magnet="privacy">
+          <PrivacyBoundary />
+        </div>
 
         {/* ── Evidence Package ────────────────────────────────────────── */}
         <section className="section-ink-slab px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
@@ -304,7 +310,7 @@ export default function Home() {
         </section>
 
         {/* ── Bottom CTA ──────────────────────────────────────────────── */}
-        <section className="bg-[linear-gradient(180deg,#0f1412_0%,#0b0f0e_100%)] px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 lg:pb-36">
+        <section data-scroll-magnet="demo" className="bg-[linear-gradient(180deg,#0f1412_0%,#0b0f0e_100%)] px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 lg:pb-36">
           <Reveal className="mx-auto max-w-7xl rounded-[1.5rem] border border-signal-400/22 bg-signal-400/8 p-1.5 sm:rounded-[2.35rem] sm:p-2">
             <div className="rounded-[1.1rem] bg-ink-950 px-5 py-10 text-center sm:rounded-[1.85rem] sm:px-10 sm:py-12 lg:py-16">
               <h2 className="mx-auto max-w-4xl text-3xl font-semibold tracking-[-0.055em] text-balance sm:text-4xl lg:text-6xl">
@@ -324,7 +330,8 @@ export default function Home() {
             </div>
           </Reveal>
         </section>
-      </main>
+        </main>
+      </LandingScrollMagnet>
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
       <footer className="border-t border-line-dark px-4 py-7 text-sm text-paper-200 sm:px-6 sm:py-8 lg:px-8">
