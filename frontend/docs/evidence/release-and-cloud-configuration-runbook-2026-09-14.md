@@ -14,7 +14,7 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 | Env Vercel inti | Selesai | Kontrak, public source account, root, network/RPC, origin, dan owner secret sudah ada pada environment yang sesuai. |
 | Deployment produksi | Selesai | `https://www.veilpass.dev/api/health` memberi HTTP 200 dan seluruh pemeriksaan konfigurasi bernilai `true`. |
 | Artefak paket | Siap publish | `npm run pack:check` lulus pada 14 September 2026. |
-| Publikasi npm | **Belum** | `npm whoami` pada mesin ini memberi `ENEEDAUTH`; `npm view @veilpass/sdk version` memberi `E404`. Paket belum tersedia sebagai paket publik. |
+| Publikasi npm | Menunggu OTP pemilik akun | Pada 15 September 2026 akun `irhamtria` terverifikasi sebagai owner `@veilpass`; preflight paket lulus dan tiga versi `0.1.0` belum ada. Direct publish dihentikan npm pada `EOTP`, sebelum paket apa pun terbit. |
 | Workflow release GitHub | Parsial | `.github/workflows/release-packages.yml` membangun, memeriksa, membuat `.tgz`, dan membuat GitHub Release; workflow itu **belum** melakukan `npm publish`. |
 | Neon schema | Selesai | Pada 15 September 2026, Drizzle menjalankan migration `0000`, `0001`, dan `0002` ke Neon. Query schema mengonfirmasi seluruh delapan tabel `veilpass` tersedia. |
 | Demo dua dApp independen | Domain/origin selesai; wallet acceptance tertunda | `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev` telah dipasang dan terverifikasi pada project Vercel. Rewrites aplikasi memetakan root App A/B ke host demo masing-masing. |
@@ -52,7 +52,7 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 2. Mengonfirmasi kepemilikan domain serta menambahkan DNS record pada registrar. Ini mengubah infrastruktur eksternal.
 3. Login Neon bila sesi belum ada dan memilih project/branch database yang benar. Jangan membagikan connection string berisi password di chat.
 4. Menyetujui popup Freighter untuk proof/signature/transaction. Tidak ada pihak lain yang boleh mengambil alih wallet.
-5. Melakukan approve akhir pada staged npm release bila metode staged publishing dipilih.
+5. Memasukkan OTP authenticator ke terminal lokal saat publish awal. OTP tidak boleh dikirim ke agent atau chat.
 
 ### Tentang MCP
 
@@ -107,12 +107,12 @@ Setelah scope/2FA valid dan pemeriksaan lulus, jalankan tepat dalam urutan ini:
 
 ```powershell
 cd D:\Work\00\veilpass\frontend
-npm publish --workspace @veilpass/shared --access public --provenance
-npm publish --workspace @veilpass/sdk --access public --provenance
-npm publish --workspace @veilpass/server --access public --provenance
+npm publish --workspace @veilpass/shared --access public --provenance=false
+npm publish --workspace @veilpass/sdk --access public --provenance=false
+npm publish --workspace @veilpass/server --access public --provenance=false
 ```
 
-CLI dapat meminta OTP dari authenticator. Isi hanya ke prompt lokal. Jangan memakai OTP di argumen shell atau chat karena berisiko tersimpan di history.
+CLI akan meminta OTP dari authenticator untuk setiap publish. Isi hanya ke prompt lokal. Jangan memakai `--otp=<kode>` atau mengirim OTP ke chat karena berisiko tersimpan di history/log. Opsi `--provenance=false` hanya dipakai untuk rilis awal dari mesin lokal; provenance otomatis harus dilakukan dari GitHub Actions Trusted Publishing pada rilis berikutnya.
 
 Lalu verifikasi registry dan instalasi bersih:
 
@@ -132,7 +132,7 @@ Setelah selesai, hapus folder test manual melalui File Explorer bila ingin membe
 
 ### 3.4 Otomasi GitHub yang lebih aman: npm Trusted Publishing
 
-Ini adalah opsi jangka panjang yang direkomendasikan karena GitHub Actions tidak menyimpan `NPM_TOKEN`. Ia baru dilakukan **setelah package pertama tersedia** atau package telah distage di npm.
+Ini adalah opsi jangka panjang yang direkomendasikan karena GitHub Actions tidak menyimpan `NPM_TOKEN`. Ia dilakukan **setelah package pertama tersedia** di npm.
 
 1. Pastikan workflow publish berada di repository `irham3/veilpass` dan file berada pada `.github/workflows/`. File yang sekarang ada: `release-packages.yml`.
 2. Pada npmjs.com buka halaman package, contoh `@veilpass/sdk` → **Settings** → bagian **Trusted Publisher** → **Configure** / **Add Trusted Publisher**.
@@ -145,11 +145,13 @@ Ini adalah opsi jangka panjang yang direkomendasikan karena GitHub Actions tidak
    | Repository | `veilpass` |
    | Workflow filename | `release-packages.yml` |
    | Environment name | kosong, kecuali GitHub Environment memang ditambahkan |
-   | Allowed action | izinkan direct `npm publish` hanya bila ingin rilis otomatis; alternatif lebih aman adalah staged publish |
+   | Allowed action | izinkan direct `npm publish` untuk workflow release yang sudah direview |
 
 5. Ulangi konfigurasi Trusted Publisher untuk `@veilpass/shared`, `@veilpass/sdk`, dan `@veilpass/server`.
 6. Setelah itu, agent dapat mengubah workflow agar menambahkan permission `id-token: write` dan menjalankan tiga publish command pada tag semver. Jangan simpan legacy `NPM_TOKEN` di GitHub Secrets kecuali ada alasan operasional yang kuat.
 7. Buat tag baru yang sesuai dengan versi, push tag, lihat **GitHub repository → Actions → Release packages**, lalu verifikasi provenance di halaman npm.
+
+> **Catatan tooling:** pada npm `11.6.2` yang dipin di repository ini, perintah `npm stage publish` belum tersedia. Jangan menjadikan staged publishing sebagai langkah rilis sampai CLI resmi di-upgrade dan diverifikasi kembali.
 
 Dokumentasi resmi: [public scoped packages](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) dan [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/).
 
