@@ -53,9 +53,9 @@ export default function DemoPage() {
             <strong className="text-paper-50">Ready for the live path?</strong>
             <p className="mt-2">Enroll once on the hosted login origin, then open each separate host origin. Contract reads use the deployed Stellar Testnet gate.</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Button asChild size="sm" className="rounded-full"><a href={enrollmentUrl}>1. Enroll with Freighter</a></Button>
-              <Button asChild size="sm" variant="outline" className="rounded-full border-paper-50/20 bg-transparent"><a href={publicAppLinks.appA}>2. Open App A</a></Button>
-              <Button asChild size="sm" variant="outline" className="rounded-full border-paper-50/20 bg-transparent"><a href={publicAppLinks.appB}>3. Open App B</a></Button>
+              <Button asChild size="default" className="min-h-11 rounded-full px-4"><a href={enrollmentUrl}>Enroll with Freighter</a></Button>
+              <Button asChild size="default" variant="outline" className="min-h-11 rounded-full border-paper-50/20 bg-transparent px-4"><a href={publicAppLinks.appA}>Open App A</a></Button>
+              <Button asChild size="default" variant="outline" className="min-h-11 rounded-full border-paper-50/20 bg-transparent px-4"><a href={publicAppLinks.appB}>Open App B</a></Button>
             </div>
           </Reveal>
         </div>

@@ -99,8 +99,8 @@ export function SiteHeader() {
           ))}
           <Button
             asChild
-            size="sm"
-            className="group rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
+            size="default"
+            className="group min-h-11 rounded-full px-4 pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
           >
             <a href={enrollmentUrl}>
               Enroll with Freighter
@@ -110,9 +110,21 @@ export function SiteHeader() {
             </a>
           </Button>
         </nav>
+        <Button
+          asChild
+          size="default"
+          className="group hidden min-h-11 rounded-full px-4 pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:inline-flex xl:hidden"
+        >
+          <a href={enrollmentUrl}>
+            Enroll
+            <span aria-hidden="true" className="ml-1 grid size-7 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
+              <ArrowRightIcon size={15} />
+            </span>
+          </a>
+        </Button>
         <Sheet>
           <SheetTrigger asChild className="xl:hidden">
-            <Button variant="ghost" size="icon" aria-label="Open navigation" className="rounded-full">
+            <Button variant="ghost" size="icon" aria-label="Open navigation" className="size-11 rounded-full">
               <ListIcon size={22} />
             </Button>
           </SheetTrigger>
@@ -129,7 +141,7 @@ export function SiteHeader() {
                   <a href={link.href}>{link.label}</a>
                 </Button>
               ))}
-              <Button asChild className="mt-4 rounded-full">
+              <Button asChild className="mt-4 min-h-12 rounded-full px-5">
                 <a href={enrollmentUrl}>Enroll with Freighter</a>
               </Button>
             </nav>

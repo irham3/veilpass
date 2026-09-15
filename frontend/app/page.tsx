@@ -119,7 +119,7 @@ export default function Home() {
                 <Button
                   asChild
                   size="lg"
-                  className="group w-full rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:w-auto"
+                  className="group min-h-12 w-full rounded-full pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:w-auto"
                 >
                   <a href={enrollmentUrl}>
                     Start enrollment
@@ -132,7 +132,7 @@ export default function Home() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="w-full rounded-full border-paper-50/16 bg-paper-50/5 text-paper-50 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-paper-50/10 sm:w-auto"
+                  className="min-h-12 w-full rounded-full border-paper-50/16 bg-paper-50/5 text-paper-50 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-paper-50/10 sm:w-auto"
                 >
                   <a href={publicAppLinks.appA}>Open App A</a>
                 </Button>

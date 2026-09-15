@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { EnrollmentFlow } from "@/components/enrollment/enrollment-flow";
 import { Reveal } from "@/components/motion/reveal";
+import { publicAppLinks } from "@/lib/public-app-links";
 
 export const metadata: Metadata = {
   title: "Enrollment",
@@ -21,6 +22,12 @@ function safeLoginReturnPath(value: string | string[] | undefined) {
 
 export default async function EnrollPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const returnTo = safeLoginReturnPath((await searchParams).returnTo);
+  const rawMinimum = Number.parseFloat(process.env.VEILPASS_MIN_BALANCE ?? "1");
+  const assetRule = {
+    code: process.env.VEILPASS_ASSET_CODE ?? "VPT",
+    issuer: process.env.VEILPASS_ASSET_ISSUER ?? "GDBCLMMSWLEQIZRTDBZGRQKNZYQBURTJXT6E3GFEQT7LFVC5XOOZHCGU",
+    minimum: Number.isFinite(rawMinimum) ? rawMinimum : 1,
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
@@ -28,21 +35,21 @@ export default async function EnrollPage({ searchParams }: { searchParams: Promi
         <div aria-hidden="true" className="aperture-ring absolute right-[-12rem] top-4 size-[30rem] rounded-full opacity-30" />
         <div className="relative mx-auto max-w-5xl">
           <Reveal>
-            <Link href="/dashboard" className="smooth-link text-sm text-paper-200 hover:text-paper-50">
-              Back to dashboard
+            <Link href={returnTo ?? publicAppLinks.home} className="smooth-link text-sm text-paper-200 hover:text-paper-50">
+              {returnTo ? "Back to private login" : "Back to VeilPass"}
             </Link>
-            <div className="mt-8 max-w-3xl">
-              <p className="eyebrow">Enrollment</p>
-              <h1 className="mt-4 text-5xl font-semibold leading-[0.92] tracking-[-0.06em] text-balance sm:text-7xl">
+            <div className="mt-7 max-w-2xl">
+              <p className="eyebrow">Stellar Testnet enrollment</p>
+              <h1 className="mt-3 text-4xl font-semibold leading-[0.96] tracking-[-0.05em] text-balance sm:text-5xl">
                 Create a local credential.
               </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-paper-200">
+              <p className="mt-4 max-w-xl text-base leading-7 text-paper-200 sm:text-lg">
                 Freighter proves wallet control. The host still gets no wallet address.
               </p>
             </div>
           </Reveal>
-          <Reveal delay="short" className="mt-10">
-            <EnrollmentFlow returnTo={returnTo} />
+          <Reveal delay="short" className="mt-8">
+            <EnrollmentFlow assetRule={assetRule} returnTo={returnTo} />
           </Reveal>
         </div>
       </main>
