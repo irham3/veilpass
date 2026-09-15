@@ -25,6 +25,7 @@
     "env:validate": "node scripts/validate-runtime-env.mjs",
     "asset:issue": "node scripts/issue-testnet-asset.mjs",
     "asset:seed": "node scripts/seed-testnet-asset.mjs",
+    "asset:liquidity": "node scripts/ensure-testnet-liquidity.mjs",
     "production:acceptance": "node scripts/production-acceptance.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

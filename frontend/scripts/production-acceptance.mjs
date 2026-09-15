@@ -4,6 +4,8 @@ const loginOrigin = process.env.VEILPASS_ACCEPTANCE_LOGIN_ORIGIN ?? "https://log
 const appAOrigin = process.env.VEILPASS_ACCEPTANCE_APP_A_ORIGIN ?? "https://app-a.veilpass.dev";
 const appBOrigin = process.env.VEILPASS_ACCEPTANCE_APP_B_ORIGIN ?? "https://app-b.veilpass.dev";
 const gateId = "premium-holder";
+const assetCode = process.env.VEILPASS_ACCEPTANCE_ASSET_CODE ?? "VPT";
+const assetIssuer = process.env.VEILPASS_ACCEPTANCE_ASSET_ISSUER ?? "GDBCLMMSWLEQIZRTDBZGRQKNZYQBURTJXT6E3GFEQT7LFVC5XOOZHCGU";
 
 function exactOrigin(value, name) {
   const parsed = new URL(value);
@@ -55,6 +57,14 @@ const rejected = await fetch(new URL("/api/challenges", appA), {
 });
 if (rejected.status !== 403) throw new Error("Untrusted origin was not rejected");
 
+const swapQuoteUrl = new URL("https://horizon-testnet.stellar.org/paths/strict-send");
+swapQuoteUrl.searchParams.set("source_asset_type", "native");
+swapQuoteUrl.searchParams.set("source_amount", "1");
+swapQuoteUrl.searchParams.set("destination_assets", `${assetCode}:${assetIssuer}`);
+const { response: quoteResponse, body: quote } = await requestJson(swapQuoteUrl);
+const quoteRecord = quote?._embedded?.records?.[0];
+if (!quoteResponse.ok || !quoteRecord?.destination_amount) throw new Error("XLM to VPT Testnet quote is unavailable");
+
 console.log(JSON.stringify({
   ok: true,
   health: true,
@@ -62,4 +72,8 @@ console.log(JSON.stringify({
   challenges: [challengeA, challengeB],
   untrustedOriginRejected: true,
   crossOriginNavigation: true,
+  swapQuote: {
+    source: "1 XLM",
+    destination: `${quoteRecord.destination_amount} ${assetCode}`,
+  },
 }, null, 2));

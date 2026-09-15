@@ -112,7 +112,7 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
           <ol className="mt-5 grid gap-4 text-sm leading-6 text-paper-200 sm:grid-cols-3">
             <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">Use Testnet</strong>Switch Freighter to Stellar Testnet before connecting.</li>
             <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">Add {assetRule.code}</strong>In Freighter, open Assets, choose Add asset, then choose Custom asset.</li>
-            <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">Receive {assetRule.minimum} {assetRule.code}</strong>Ask the VeilPass demo operator to issue the Testnet balance to your public wallet address.</li>
+            <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">Swap for {assetRule.code}</strong>After the asset appears, use Freighter Swap to exchange XLM for at least {assetRule.minimum} {assetRule.code}.</li>
           </ol>
           <div className="mt-5 grid gap-3 rounded-xl border border-paper-50/10 bg-ink-950/60 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0">
