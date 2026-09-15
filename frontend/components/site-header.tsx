@@ -4,8 +4,6 @@ import { ArrowRightIcon } from "@phosphor-icons/react/ArrowRight";
 import { CaretDownIcon } from "@phosphor-icons/react/CaretDown";
 import { ListIcon } from "@phosphor-icons/react/List";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,10 +12,10 @@ import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", label: "Overview" },
-  { href: "/demo", label: "Demo" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/docs", label: "Docs" },
+  { href: publicAppLinks.home, label: "Overview" },
+  { href: `${publicAppLinks.home}/demo`, label: "Demo" },
+  { href: `${publicAppLinks.login}/dashboard`, label: "Dashboard" },
+  { href: `${publicAppLinks.home}/docs`, label: "Docs" },
 ];
 
 const liveApps = [
@@ -26,7 +24,6 @@ const liveApps = [
 ];
 
 export function SiteHeader() {
-  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -71,8 +68,8 @@ export function SiteHeader() {
             scrolled ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0",
           )}
         />
-        <Link
-          href="/"
+        <a
+          href={publicAppLinks.home}
           aria-label="VeilPass home"
           className="group shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4"
         >
@@ -87,7 +84,7 @@ export function SiteHeader() {
               scrolled && "scale-[0.94]",
             )}
           />
-        </Link>
+        </a>
         <nav
           aria-label="Primary navigation"
           className={cn(
@@ -96,17 +93,15 @@ export function SiteHeader() {
           )}
         >
           {links.map((link) => (
-            <Link
+            <a
               key={link.href}
               href={link.href}
-              aria-current={pathname === link.href || pathname.startsWith(`${link.href}/`) ? "page" : undefined}
               className={cn(
                 "smooth-link text-sm text-paper-200 hover:-translate-y-0.5 hover:text-paper-50",
-                (pathname === link.href || pathname.startsWith(`${link.href}/`)) && "text-paper-50",
               )}
             >
               {link.label}
-            </Link>
+            </a>
           ))}
           <details className="group relative">
             <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-paper-200 transition-colors hover:text-paper-50 [&::-webkit-details-marker]:hidden">
@@ -152,7 +147,7 @@ export function SiteHeader() {
                   variant="ghost"
                   className="min-h-12 justify-start rounded-2xl text-base transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
                 >
-                  <Link href={link.href}>{link.label}</Link>
+                  <a href={link.href}>{link.label}</a>
                 </Button>
               ))}
               <p className="mt-5 px-3 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-paper-200">Live apps</p>
