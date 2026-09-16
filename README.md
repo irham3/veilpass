@@ -62,10 +62,9 @@ For a reviewer or demo session, the shortest path is:
 4. Confirm same-origin IDs stay stable while cross-origin IDs differ.
 5. Open `/dashboard` to review the gate registry and operator surfaces.
 6. Open `/dashboard/enroll` with Freighter set to Stellar Testnet.
-7. Add the testnet `VPT` trustline in Freighter.
-8. Issue the testnet asset locally to the Freighter wallet.
-9. Complete enrollment and verify that the host receives only the minimized private result. This live step requires the durable database and gate-root publisher environment values described below.
-10. Check `frontend/docs/evidence/` for captured local test results, visuals, contract evidence, and proof boundary notes.
+7. Accept the disclosure, then select **Prepare demo wallet**. Freighter presents a Testnet `VPT` trustline transaction followed by a wallet-bound one-time claim.
+8. Complete enrollment and verify that the host receives only the minimized private result. No XLM-to-VPT swap or VPT purchase is required; this live step still requires the durable database and gate-root publisher environment values described below.
+9. Check `frontend/docs/evidence/` for captured local test results, visuals, contract evidence, and proof boundary notes.
 
 ---
 
@@ -166,6 +165,8 @@ flowchart LR
 | `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
 | `POST` | `/api/enrollment/challenge` | Creates the enrollment challenge for Freighter signing |
 | `POST` | `/api/enrollment/issue` | Checks eligibility and issues a credential |
+| `POST` | `/api/demo-asset/challenge` | Creates an origin- and wallet-bound proof request for the fixed Testnet fixture |
+| `POST` | `/api/demo-asset/issue` | Verifies the Freighter signature and issues the fixed fixture once per wallet |
 | `GET` | `/api/health` | Reports redacted runtime-configuration readiness for the login service |
 
 ---
@@ -198,14 +199,9 @@ http://localhost:3000
 
 The generated `frontend/.env.local` supports the landing page, docs, fixture demo, dashboard, and live contract read path. It is ignored by git.
 
-For live enrollment, first add the generated `VPT` asset in Freighter Testnet using the issuer printed by `npm run env:local`, then fund that wallet:
+For the public Testnet demo, use **Prepare demo wallet** on `/dashboard/enroll`. The browser creates the required VPT trustline with a transaction the wallet owner approves, signs an origin- and wallet-bound one-time claim, and then receives the fixed Testnet balance. It is deliberately a narrow fixture for the one asset-rule deliverable: users do not swap or purchase VPT, and SDK/host-dApp integrators never need to manage VPT.
 
-```powershell
-cd frontend
-npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>
-```
-
-Freighter must create the trustline first. The issuer script will fail with a Stellar trustline error if the wallet has not added the asset.
+`npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` remains an operator-only fallback for a pre-provisioned Testnet wallet. It is not part of the normal reviewer or developer journey.
 
 ---
 
@@ -241,6 +237,8 @@ VEILPASS_CREDENTIAL_ROOT=
 VEILPASS_ASSET_CODE=VPT
 VEILPASS_ASSET_ISSUER=
 VEILPASS_MIN_BALANCE=1
+# Optional Testnet-only global safety cap; defaults to 100 claims per rolling 24 hours.
+VEILPASS_DEMO_ASSET_DAILY_LIMIT=100
 VEILPASS_SIMULATOR_KEY=
 VEILPASS_ISSUER_SECRET=
 VEILPASS_FIXTURE_CREDENTIAL=
@@ -254,6 +252,7 @@ Important rules:
 - Never prefix issuer, simulator, fixture credential, or database secrets with `NEXT_PUBLIC_`.
 - Set exact origins only; do not include paths.
 - Production replay protection and atomic challenge consumption require `DATABASE_URL`.
+- The Testnet fixture is issued only after Freighter signs a message bound to the exact login origin, wallet, asset, amount, and nonce. PostgreSQL records one irreversible claim per wallet and serializes the rolling daily cap.
 - The host verifier response must remain minimized and must not include the wallet address.
 
 ---
@@ -444,17 +443,13 @@ veilpass/
 
 ---
 
-## Remaining Setup
+## Reviewer Wallet Setup
 
-The code, contract, tests, and Vercel deployment are in place. The remaining user-controlled setup is wallet-specific:
+The remaining wallet-controlled interaction is intentionally small and cannot be bypassed by the application:
 
-1. Open Freighter on Stellar Testnet.
-2. Add a trustline for `VPT` with the issuer printed by `npm run env:local`.
-3. Fund the wallet:
+1. Open Freighter on Stellar Testnet and make sure the account has enough XLM for Stellar's Testnet base reserve and transaction fee.
+2. Open [`https://login.veilpass.dev/dashboard/enroll`](https://login.veilpass.dev/dashboard/enroll), read and accept the enrollment disclosure, then select **Prepare demo wallet**.
+3. Inspect and approve the VPT trustline transaction in Freighter, then inspect and approve the one-time claim message.
+4. Approve the separate enrollment message. The credential remains in that browser; App A and App B receive only scoped private IDs.
 
-```powershell
-cd frontend
-npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>
-```
-
-After that, the live enrollment path can verify the holder against the Testnet policy.
+The claim is deliberately limited to one fixed Testnet balance per wallet and is not a general token faucet, payment, transfer, or production asset distribution service.

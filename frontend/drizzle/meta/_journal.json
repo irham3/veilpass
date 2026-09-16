@@ -22,6 +22,13 @@
       "when": 1788941948000,
       "tag": "0002_credential_merkle_tree",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789030800000,
+      "tag": "0003_demo_asset_claims",
+      "breakpoints": true
     }
   ]
 }
