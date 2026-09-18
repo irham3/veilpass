@@ -38,6 +38,15 @@ function isPostgresUrl(value) {
   }
 }
 
+function isAssetRule(environment) {
+  const declaredType = environment.VEILPASS_ASSET_TYPE?.trim().toLowerCase();
+  const type = declaredType || (environment.VEILPASS_ASSET_ISSUER ? "credit" : "");
+  const minimum = Number.parseFloat(environment.VEILPASS_MIN_BALANCE ?? "1");
+  if (!Number.isFinite(minimum) || minimum <= 0) return false;
+  if (type === "native") return !environment.VEILPASS_ASSET_CODE || environment.VEILPASS_ASSET_CODE.trim().toUpperCase() === "XLM";
+  return type === "credit" && Boolean(environment.VEILPASS_ASSET_CODE?.trim()) && Boolean(environment.VEILPASS_ASSET_ISSUER?.trim());
+}
+
 const checks = [
   ["VEILPASS_HOST_ORIGIN", isOriginAllowlist(process.env.VEILPASS_HOST_ORIGIN ?? "")],
   ["VEILPASS_LOGIN_ORIGIN", isExactOrigin(process.env.VEILPASS_LOGIN_ORIGIN ?? "")],
@@ -47,9 +56,7 @@ const checks = [
   ["VEILPASS_GATE_OWNER_SECRET", Boolean(process.env.VEILPASS_GATE_OWNER_SECRET)],
   ["NEXT_PUBLIC_VEILPASS_CONTRACT_ID", Boolean(process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID)],
   ["NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT", Boolean(process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT)],
-  ["VEILPASS_ASSET_CODE", Boolean(process.env.VEILPASS_ASSET_CODE)],
-  ["VEILPASS_ASSET_ISSUER", Boolean(process.env.VEILPASS_ASSET_ISSUER)],
-  ["VEILPASS_MIN_BALANCE", Boolean(process.env.VEILPASS_MIN_BALANCE)],
+  ["VEILPASS_ASSET_RULE", isAssetRule(process.env)],
 ];
 
 const failed = checks.filter(([, valid]) => !valid).map(([name]) => name);

@@ -15,7 +15,8 @@ export function buildLocalEnvText(values) {
     `VEILPASS_GATE_EPOCH=${values.gateEpoch}`,
     `VEILPASS_CREDENTIAL_ROOT=${values.credentialRoot}`,
     "",
-    "# Testnet asset eligibility rule",
+    "# Testnet eligibility rule",
+    `VEILPASS_ASSET_TYPE=${values.assetType}`,
     `VEILPASS_ASSET_CODE=${values.assetCode}`,
     `VEILPASS_ASSET_ISSUER=${values.assetIssuer}`,
     `VEILPASS_MIN_BALANCE=${values.minBalance}`,
@@ -38,8 +39,8 @@ export function buildSetupSummary({ envPath, funded, values }) {
     `Contract: ${values.contractId}`,
     `Gate: ${values.gateId} epoch ${values.gateEpoch}`,
     `Credential root: ${values.credentialRoot}`,
-    `Asset: ${values.assetCode}:${values.assetIssuer}`,
-    `Issuer funded: ${funded ? "yes" : "skipped"}`,
+    `Eligibility: ${values.assetType === "native" ? `native ${values.assetCode}` : `${values.assetCode}:${values.assetIssuer}`}`,
+    `Credential signer funded: ${funded ? "yes" : "skipped"}`,
     "Secrets were written only to .env.local and were not printed.",
   ].join("\n");
 }

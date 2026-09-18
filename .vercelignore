@@ -1,0 +1,26 @@
+# The Vercel project uses `frontend` as its Root Directory. Keep this root-level
+# ignore file as well because deployments are launched from the repository root.
+
+# Local dependencies and build/test artifacts
+node_modules
+node_modules-stale-after-frontend-move
+.next
+.next-stale-after-move
+.tmp-bb-inspect
+.veilpass-handoff
+frontend/node_modules
+frontend/.next
+frontend/.next*
+frontend/out
+frontend/build
+frontend/dist
+frontend/coverage
+frontend/playwright-report
+frontend/test-results
+frontend/*.tsbuildinfo
+
+# Local environment and deployment metadata
+.env*
+frontend/.env.local
+.vercel
+frontend/.vercel

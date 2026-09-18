@@ -16,7 +16,8 @@ export const DEFAULT_TESTNET_DEPLOYMENT = {
   gateId: "premium-holder",
   gateEpoch: 1,
   credentialRoot: "0000000000000000000000000000000000000000000000000000000000000000",
-  assetCode: "VPT",
+  assetType: "native",
+  assetCode: "XLM",
   minBalance: "1",
 };
 
@@ -30,14 +31,8 @@ function valueAfter(args, flag, fallback) {
 
 export { buildLocalEnvText, buildSetupSummary };
 
-async function fundWithFriendbot(publicKey) {
-  const response = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`);
-  if (!response.ok) throw new Error(`Friendbot returned ${response.status}`);
-}
-
 export async function runLocalEnvSetup(args = process.argv.slice(2), cwd = process.cwd()) {
   const force = args.includes("--force");
-  const skipFriendbot = args.includes("--skip-friendbot");
   const envPath = path.resolve(cwd, valueAfter(args, "--env-path", ".env.local"));
 
   if (!force && existsSync(envPath)) {
@@ -52,20 +47,14 @@ export async function runLocalEnvSetup(args = process.argv.slice(2), cwd = proce
     ...DEFAULT_TESTNET_DEPLOYMENT,
     hostOrigin: valueAfter(args, "--host-origin", DEFAULT_TESTNET_DEPLOYMENT.hostOrigin),
     loginOrigin: valueAfter(args, "--login-origin", DEFAULT_TESTNET_DEPLOYMENT.loginOrigin),
-    assetIssuer: issuer.publicKey(),
+    assetIssuer: "",
     simulatorKey: randomBytes(32).toString("hex"),
     issuerSecret: issuer.secret(),
     fixtureCredential: randomBytes(32).toString("hex"),
   };
 
-  let funded = false;
-  if (!skipFriendbot) {
-    await fundWithFriendbot(values.assetIssuer);
-    funded = true;
-  }
-
   await writeFile(envPath, buildLocalEnvText(values), { encoding: "utf8", flag: force ? "w" : "wx", mode: 0o600 });
-  return buildSetupSummary({ envPath, funded, values });
+  return buildSetupSummary({ envPath, funded: false, values });
 }
 
 // `process.argv[1]` is absent in some test/module-loader contexts. Guard it
