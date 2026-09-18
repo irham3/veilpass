@@ -62,8 +62,8 @@ For a reviewer or demo session, the shortest path is:
 4. Confirm same-origin IDs stay stable while cross-origin IDs differ.
 5. Open `/dashboard` to review the gate registry and operator surfaces.
 6. Open `/dashboard/enroll` with Freighter set to Stellar Testnet.
-7. Accept the disclosure, then select **Prepare demo wallet**. Freighter presents a Testnet `VPT` trustline transaction followed by a wallet-bound one-time claim.
-8. Complete enrollment and verify that the host receives only the minimized private result. No XLM-to-VPT swap or VPT purchase is required; this live step still requires the durable database and gate-root publisher environment values described below.
+7. Accept the disclosure, then select **Connect Freighter and enroll**. The default gate checks the wallet's native Testnet XLM balance; it does not create a custom-asset trustline or claim.
+8. Complete enrollment and verify that the host receives only the minimized private result. No swap, token purchase, or custom-asset setup is required; this live step still requires the durable database and gate-root publisher environment values described below.
 9. Check `frontend/docs/evidence/` for captured local test results, visuals, contract evidence, and proof boundary notes.
 
 ---
@@ -199,9 +199,9 @@ http://localhost:3000
 
 The generated `frontend/.env.local` supports the landing page, docs, fixture demo, dashboard, and live contract read path. It is ignored by git.
 
-For the public Testnet demo, use **Prepare demo wallet** on `/dashboard/enroll`. The browser creates the required VPT trustline with a transaction the wallet owner approves, signs an origin- and wallet-bound one-time claim, and then receives the fixed Testnet balance. It is deliberately a narrow fixture for the one asset-rule deliverable: users do not swap or purchase VPT, and SDK/host-dApp integrators never need to manage VPT.
+For the public Testnet demo, VeilPass uses a native XLM eligibility rule: the wallet must hold the configured minimum Testnet XLM balance. This satisfies the asset-based eligibility gate without requiring a custom token, an issuer, a trustline, a swap, or a faucet. SDK and host-dApp integrators never need to manage wallet balances or assets.
 
-`npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` remains an operator-only fallback for a pre-provisioned Testnet wallet. It is not part of the normal reviewer or developer journey.
+An operator may configure a credit asset such as USDC instead by setting `VEILPASS_ASSET_TYPE=credit` and supplying the exact code and issuer. That policy intentionally restores the holder's trustline requirement. The legacy `npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` command is only for a credit-asset test fixture and is not part of the native-XLM reviewer or developer journey.
 
 ---
 
@@ -234,7 +234,8 @@ NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT=
 VEILPASS_GATE_IDS=premium-holder
 VEILPASS_GATE_EPOCH=1
 VEILPASS_CREDENTIAL_ROOT=
-VEILPASS_ASSET_CODE=VPT
+VEILPASS_ASSET_TYPE=native
+VEILPASS_ASSET_CODE=XLM
 VEILPASS_ASSET_ISSUER=
 VEILPASS_MIN_BALANCE=1
 # Optional Testnet-only global safety cap; defaults to 100 claims per rolling 24 hours.
@@ -448,8 +449,8 @@ veilpass/
 The remaining wallet-controlled interaction is intentionally small and cannot be bypassed by the application:
 
 1. Open Freighter on Stellar Testnet and make sure the account has enough XLM for Stellar's Testnet base reserve and transaction fee.
-2. Open [`https://login.veilpass.dev/dashboard/enroll`](https://login.veilpass.dev/dashboard/enroll), read and accept the enrollment disclosure, then select **Prepare demo wallet**.
-3. Inspect and approve the VPT trustline transaction in Freighter, then inspect and approve the one-time claim message.
+2. Fund the Testnet account with at least the configured minimum XLM through Stellar Friendbot, then open [`https://login.veilpass.dev/dashboard/enroll`](https://login.veilpass.dev/dashboard/enroll), read and accept the enrollment disclosure, and select **Connect Freighter and enroll**.
+3. Inspect and approve the enrollment message in Freighter. Native XLM requires no custom asset trustline or claim transaction.
 4. Approve the separate enrollment message. The credential remains in that browser; App A and App B receive only scoped private IDs.
 
 The claim is deliberately limited to one fixed Testnet balance per wallet and is not a general token faucet, payment, transfer, or production asset distribution service.

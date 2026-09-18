@@ -1,5 +1,27 @@
 # VeilPass MVP local verification report
 
+## Current automated verification - 2026-09-17
+
+This section supersedes older test-count and dependency-audit statements below.
+
+- **Vitest:** 33 files and 132 tests pass across unit, component, integration, and security suites.
+- **Coverage gate:** 100% statements, 100% branches, 100% functions, and 100% lines. The CI thresholds are 100/100/100/100; generated HTML and LCOV reports are retained under `frontend/coverage/`.
+- **Playwright system:** 32 scenarios pass across desktop Chromium and Pixel 7 emulation. Coverage includes the two-origin flow, replay and revocation, security headers, hostile and oversized API input, session minimization, keyboard focus, responsive overflow, reduced motion, install surfaces, and axe checks.
+- **Security:** Four focused Vitest security tests and six tagged Playwright security scenarios pass. `npm audit --audit-level=moderate` reports zero known vulnerabilities across production and development dependencies.
+- **Build quality:** ESLint, TypeScript, all workspace package builds, and the Next.js production build pass on Next.js 16.3.5.
+- **Contract:** All three Soroban Rust tests pass.
+- **UI/UX review:** The landing was checked against the supplied [Apple Design Skill](https://github.com/dickwu/apple-design-skill) at desktop and mobile layouts. Navigation is a stable web-glass surface with a reduced-transparency fallback, primary viewport sections use dynamic viewport height, repetitive section labels were reduced, and the browser tests enforce focus visibility, accessibility, reduced motion, and horizontal-overflow constraints. Full findings and measured contrast values are in `docs/evidence/apple-design-review.md`.
+
+### Fresh non-video operator checks — 2026-09-17
+
+- `npm run production:acceptance` passed: hosted-login health, public App A/App B routes, distinct origin-bound challenges, hostile-origin rejection, and the configured native-XLM eligibility mode all passed.
+- `npm run contract:smoke` passed: active gate `premium-holder`, epoch `1`, owner matches the configured signer, canonical empty root, and fixture `is_revoked=false`.
+- `npm run env:validate` passed all required variable-shape checks without printing values.
+- `npm run db:migrate` passed when invoked with the existing local `DATABASE_URL`; a read-only query confirmed ten `veilpass` tables and four Drizzle migration records.
+- `npm run proof:check` passed circuit tests, witness generation, UltraHonk proving, and verification. `npm run pack:check` passed all four workspace tarball checks.
+- Historical VPT fixture issuance completed for the supplied public holder address: transaction `905ef4093e621cb78d1229e01d6bd52c22db704ccdb47a58984e5551a514f1dd`; Horizon confirmed `1.0000000 VPT`. The active local policy now uses native XLM, so this fixture is no longer part of the reviewer path.
+- Public enrollment was attempted in the Codex in-app browser after acknowledging the privacy disclosure. The browser has no Freighter extension, so the flow correctly stopped with `Freighter was not found` before any wallet signature.
+
 ## Current acceptance status — 2026-09-15
 
 This section supersedes earlier dated statements in this report that describe the database, npm publication, or public App A/App B deployment.
@@ -12,7 +34,7 @@ This section supersedes earlier dated statements in this report that describe th
 
 ### Remaining manual wallet evidence
 
-The only non-video acceptance step that cannot be executed by an agent is a user-owned Freighter action: add the Testnet VPT trustline, receive the demo asset, approve wallet access, and approve the enrollment message signature. This is intentionally non-automatable because VeilPass must not receive the wallet seed or bypass a user signature. Once the wallet owner performs those approvals, the existing App A/App B flow can demonstrate the final live private-ID, replay, expiry, and revocation evidence.
+The only non-video acceptance step that cannot be executed by an agent is a user-owned Freighter action: fund the Testnet wallet with the configured native XLM minimum, approve wallet access, and approve the enrollment message signature. This is intentionally non-automatable because VeilPass must not receive the wallet seed or bypass a user signature. Once the wallet owner performs those approvals, the existing App A/App B flow can demonstrate the final live private-ID, replay, expiry, and revocation evidence.
 
 Date: 2026-09-02
 Verified implementation revision: `4a9147c` (`fix(proof): pass fixture public inputs to verifier`), plus the working tree changes documented with this report.
@@ -62,16 +84,16 @@ The full development audit reports four moderate findings in Drizzle Kit's devel
 - `landing-desktop.png`
 - `demo-desktop.png`
 
-## External setup not performed
+## Historical setup notes (superseded where contradicted by the current sections above)
 
 - Freighter wallet trustline and holder funding were not performed because they require the user's Testnet wallet public key and wallet approval. Run `npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` after adding the generated `VPT` asset in Freighter.
-- No PostgreSQL integration run was performed because no `DATABASE_URL` service was provided; schema and atomic adapter are included and production fails closed without it.
+- Earlier local verification did not have a database connection. The current operator check above loads the configured `DATABASE_URL` and applies the migrations successfully; a live restart/concurrency acceptance trace is still not recorded.
 - No live Freighter enrollment or host-to-host sign-in was performed. Those paths require a user-controlled testnet wallet, a VPT trustline, asset funding, a configured issuer key, a production database, and the gate-owner signer for root publication.
-- The currently deployed Testnet root is not a canonical BN254 field root for this membership circuit, and the configured issuer signer is not the Testnet gate owner. The gate owner must approve an initial zero-root `update_root` transaction (or supply the separately scoped `VEILPASS_GATE_OWNER_SECRET`) before live credential issuance.
+- The active Testnet gate now reports the canonical empty root and the configured owner matches the on-chain owner. A non-empty root still requires a real wallet enrollment and owner-controlled root publication.
 
 ## Important scope boundary
 
-The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. The outstanding work is operational: owner-approved Testnet root initialization, durable database provisioning, independent public host deployments, live Freighter evidence, and the final review recording.
+The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. The only outstanding product acceptance is a wallet-owner-approved enrollment followed by live root publication, replay/expiry/revocation evidence, and the final review recording.
 
 ## Production configuration acceptance — 2026-09-14
 

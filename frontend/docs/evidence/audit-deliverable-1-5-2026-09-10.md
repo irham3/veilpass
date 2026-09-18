@@ -53,7 +53,7 @@ Suatu item tidak diberi status selesai penuh hanya karena UI atau fixture menamp
 | GitHub Release | **Belum ada** | Repository belum memiliki release/tag bundle yang memuat package artifact dan evidence. |
 | Next.js production build | **Lulus lokal** | Build selesai setelah akses Google Fonts tersedia. |
 | Playwright | **26 skenario menampilkan status lulus, teardown hang lokal** | Semua kasus desktop/mobile selesai lulus, tetapi command tidak menutup web server dengan bersih dan harus dihentikan manual. GitHub Actions browser job lulus. |
-| URL publik utama | **HTTP 200** | `/`, `/demo`, `/dashboard`, dan `/docs` tersedia pada `https://veilpass-stellar.vercel.app`. |
+| URL publik utama | **HTTP 200** | `/`, `/demo`, `/dashboard`, dan `/docs` tersedia pada `https://veilpass.dev`. |
 | Public challenge endpoint | **Gagal** | Request same-origin yang normal ke `/api/challenges` ditolak dengan `ORIGIN_MISMATCH`. |
 | Login origin yang tertanam pada host publik | **Gagal** | Host publik menunjuk ke `https://veilpass-psi.vercel.app`, tetapi `/`, `/login`, dan `/dashboard/enroll` pada origin tersebut merespons 404. |
 | Dua origin publik App A dan App B | **Belum ditemukan** | Repository hanya mendokumentasikan satu production URL. Pemisahan origin nyata saat ini baru tersedia lewat `app-a.localhost`, `app-b.localhost`, dan `login.localhost`. |
@@ -209,7 +209,7 @@ Yang sudah ada:
 Yang belum atau rusak:
 
 - Host publik menyematkan login origin `https://veilpass-psi.vercel.app`, tetapi origin itu mengembalikan HTTP 404 untuk halaman utama, `/login`, dan `/dashboard/enroll`.
-- `https://veilpass-stellar.vercel.app/api/challenges` menolak request dengan origin publik yang normal sebagai `ORIGIN_MISMATCH`.
+- `https://veilpass.dev/api/challenges` menolak request dengan origin publik yang normal sebagai `ORIGIN_MISMATCH`.
 - Halaman publik masih menampilkan teks `Simulated proof`, sehingga deployment bukan build final yang konsisten dengan source saat ini.
 
 ### 2.3 Freighter enrollment
@@ -282,7 +282,7 @@ Deliverable 2 **belum selesai secara publik**. Implementasi source sudah mencaku
 
 Yang sudah ada:
 
-- `https://veilpass-stellar.vercel.app`, `/demo`, `/dashboard`, dan `/docs` merespons HTTP 200.
+- `https://veilpass.dev`, `/demo`, `/dashboard`, dan `/docs` merespons HTTP 200.
 - Dashboard dapat membaca contract Testnet bila environment public contract benar.
 - Landing page dan demo menjelaskan privacy boundary sempit.
 

@@ -6,7 +6,7 @@ This checklist is the remaining operator-controlled portion of the delivery. It 
 2. Configure `DATABASE_URL`, `VEILPASS_ISSUER_SECRET`, and the separately scoped `VEILPASS_GATE_OWNER_SECRET` only in the VeilPass login service. Do not put either secret in a `NEXT_PUBLIC_` variable.
 3. As the on-chain gate owner, call `update_root` for `premium-holder` at its current epoch with `00` repeated 32 bytes. This establishes the empty sparse-Merkle-tree root. The dashboard's **Update root** tab provides the Freighter path; the service root publisher can then publish each issued root.
 4. Deploy three independent HTTPS origins: the VeilPass login service, App A, and App B. Set each host's exact `VEILPASS_HOST_ORIGIN` / `VEILPASS_LOGIN_ORIGIN` values and explicit host allowlist; never use wildcard origins.
-5. In Freighter on Stellar Testnet, add the configured VPT trustline and fund the holder account. The holder must approve the enrollment message itself.
+5. In Freighter on Stellar Testnet, fund the holder account with at least the configured native XLM minimum (for example through Friendbot). No VPT trustline or custom asset is required. The holder must approve the enrollment message itself.
 6. Enroll once. Confirm the new contract root event, issued credential, and durable tree records. Enroll a second test account and confirm the first browser refreshes its Merkle witness before login.
 7. Log in to App A twice and App B once. Confirm App A returns the same private app ID, App B returns a different one, and neither host response contains a Stellar address.
 8. Replay the prior proof and confirm `CHALLENGE_SPENT`; wait until the challenge expires and confirm rejection; revoke the issued `revocationHash` on the contract and confirm `CREDENTIAL_REVOKED`.
