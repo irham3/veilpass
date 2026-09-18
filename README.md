@@ -432,7 +432,7 @@ veilpass/
 
 ## MVP Boundaries
 
-- Stellar Testnet only.
+- Stellar Network.
 - Freighter only.
 - Eligibility is based on the configured testnet asset and gate policy.
 - The enrollment issuer sees the wallet address.
