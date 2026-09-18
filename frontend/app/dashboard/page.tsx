@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     try { const live = await readGateState({ contractId, sourceAccount, rpcUrl, gateId: "premium-holder" }); state = { owner: live.owner, policyHash: Buffer.from(live.policy_hash).toString("hex"), root: Buffer.from(live.credential_root).toString("hex"), epoch: live.epoch, updatedAt: new Date(Number(live.updated_at) * 1000).toISOString() }; freshness = "Read live from Stellar RPC"; } catch { freshness = "Contract configured, but gate state could not be read"; }
   }
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
       <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute left-[-15rem] top-8 size-[30rem] rounded-full opacity-25" />
         <div className="relative mx-auto grid max-w-[90rem] gap-5 lg:grid-cols-[16rem_1fr]">

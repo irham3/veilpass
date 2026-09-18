@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function DemoPage() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
       <main className="aperture-field relative overflow-hidden px-5 py-12 lg:px-8 lg:py-16">
         <div aria-hidden="true" className="aperture-ring absolute right-[-13rem] top-[-9rem] size-[32rem] rounded-full opacity-35" />
         <div className="relative mx-auto max-w-[90rem]">

@@ -55,6 +55,17 @@ function isPostgresUrl(value: string | undefined): boolean {
   }
 }
 
+function hasValidAssetRule(environment: RuntimeEnvironment): boolean {
+  const declaredType = environment.VEILPASS_ASSET_TYPE?.trim().toLowerCase();
+  const type = declaredType || (environment.VEILPASS_ASSET_ISSUER ? "credit" : "");
+  const minimum = Number.parseFloat(environment.VEILPASS_MIN_BALANCE ?? "1");
+  if (!Number.isFinite(minimum) || minimum <= 0) return false;
+  // An explicit native policy is XLM by definition. Do not let an obsolete
+  // credit-asset code left in a deployment environment make health fail.
+  if (type === "native") return true;
+  return type === "credit" && Boolean(environment.VEILPASS_ASSET_CODE?.trim()) && Boolean(environment.VEILPASS_ASSET_ISSUER?.trim());
+}
+
 /**
  * Returns only boolean readiness information and stable issue codes. It never
  * returns environment values, URLs, keys, or wallet addresses.
@@ -68,7 +79,7 @@ export function inspectRuntimeConfiguration(environment: RuntimeEnvironment = pr
     contractId: Boolean(environment.NEXT_PUBLIC_VEILPASS_CONTRACT_ID),
     sourceAccount: Boolean(environment.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT),
     gateIds: Boolean(environment.VEILPASS_GATE_IDS?.split(",").map((value) => value.trim()).filter(Boolean).length),
-    assetRule: Boolean(environment.VEILPASS_ASSET_CODE && environment.VEILPASS_ASSET_ISSUER && environment.VEILPASS_MIN_BALANCE),
+    assetRule: hasValidAssetRule(environment),
     issuerSecret: Boolean(environment.VEILPASS_ISSUER_SECRET),
     gateOwnerSecret: Boolean(environment.VEILPASS_GATE_OWNER_SECRET),
   };

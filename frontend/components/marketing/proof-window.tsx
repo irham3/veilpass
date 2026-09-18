@@ -57,7 +57,7 @@ export function ProofWindow() {
           </span>
           <span className="font-medium text-paper-50 text-[0.8125rem] sm:text-sm">Received by host</span>
         </div>
-        <span className="shrink-0 font-mono text-[0.6rem] text-paper-200 sm:text-[0.6875rem]">
+        <span className="shrink-0 font-mono text-[0.6875rem] text-paper-200 sm:text-xs">
           {selectedApp.origin}
         </span>
       </div>
@@ -102,7 +102,7 @@ export function ProofWindow() {
                       : "The address stops before the host boundary."}
                   </p>
                 </div>
-                <span className="rounded-full border border-line-dark px-2 py-1 font-mono text-[0.6rem] text-paper-200 sm:px-2.5 sm:text-[0.6875rem]">
+                <span className="rounded-full border border-line-dark px-2 py-1 font-mono text-[0.6875rem] text-paper-200 sm:px-2.5 sm:text-xs">
                   Stellar testnet
                 </span>
               </div>

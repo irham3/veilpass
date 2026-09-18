@@ -40,19 +40,19 @@ export function PayloadComparison() {
               </colgroup>
               <thead>
                 <tr className="border-b border-paper-50/10 bg-paper-50/[0.045] text-left font-semibold text-paper-200">
-                  <th scope="col" className="px-3 py-3 align-middle text-[0.6rem] uppercase tracking-[0.06em] sm:px-5 sm:py-4 sm:text-xs sm:tracking-[0.08em]">
+                  <th scope="col" className="px-3 py-3 align-middle text-[0.6875rem] uppercase tracking-[0.06em] sm:px-5 sm:py-4 sm:text-xs sm:tracking-[0.08em]">
                     Host can learn
                   </th>
                   <th scope="col" className="border-l border-paper-50/10 px-2 py-3 align-middle sm:px-3 sm:py-4 lg:px-5">
                     <span className="flex flex-col items-center justify-center gap-1 text-center sm:flex-row sm:gap-2">
                       <EyeIcon aria-hidden="true" size={16} className="sm:size-[18px]" />
-                      <span className="text-[0.6rem] uppercase tracking-[0.06em] sm:text-xs sm:normal-case sm:tracking-normal">Wallet</span>
+                      <span className="text-[0.6875rem] uppercase tracking-[0.06em] sm:text-xs sm:normal-case sm:tracking-normal">Wallet</span>
                     </span>
                   </th>
                   <th scope="col" className="border-l border-paper-50/10 bg-signal-400/10 px-2 py-3 align-middle text-signal-400 sm:px-3 sm:py-4 lg:px-5">
                     <span className="flex flex-col items-center justify-center gap-1 text-center sm:flex-row sm:gap-2">
                       <EyeSlashIcon aria-hidden="true" size={16} className="sm:size-[18px]" />
-                      <span className="text-[0.6rem] uppercase tracking-[0.06em] sm:text-xs sm:normal-case sm:tracking-normal">VeilPass</span>
+                      <span className="text-[0.6875rem] uppercase tracking-[0.06em] sm:text-xs sm:normal-case sm:tracking-normal">VeilPass</span>
                     </span>
                   </th>
                 </tr>

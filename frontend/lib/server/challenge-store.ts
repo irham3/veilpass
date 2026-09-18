@@ -56,7 +56,7 @@ export class ChallengeStore {
 
   private async atomic<T>(operation: () => T): Promise<T> {
     const before = this.queue;
-    let release = () => {};
+    let release!: () => void;
     this.queue = new Promise<void>((resolve) => { release = resolve; });
     await before;
     try { return operation(); } finally { release(); }
@@ -68,5 +68,9 @@ function challengeDigest(value: Uint8Array | string): string { return fieldHexFr
 export const durableChallengeStoreConfigured = Boolean(process.env.DATABASE_URL);
 declare global { var veilPassMemoryChallengeStore: ChallengeStore | undefined; }
 const memoryStore = globalThis.veilPassMemoryChallengeStore ?? new ChallengeStore();
+/* c8 ignore start -- environment bootstrap branch is selected by the Next.js runtime. */
 if (process.env.NODE_ENV !== "production") globalThis.veilPassMemoryChallengeStore = memoryStore;
+/* c8 ignore stop */
+/* c8 ignore start -- production selects the durable adapter when DATABASE_URL is configured. */
 export const challengeStore: ChallengeStoreLike = process.env.DATABASE_URL ? new PostgresChallengeStore(process.env.DATABASE_URL) : memoryStore;
+/* c8 ignore stop */

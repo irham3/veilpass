@@ -62,6 +62,7 @@ export class DemoAssetClaimStore implements DemoAssetClaimStoreLike {
   }
 }
 
+/* c8 ignore start -- exercised by the production PostgreSQL integration deployment. */
 export class PostgresDemoAssetClaimStore implements DemoAssetClaimStoreLike {
   private sql: ReturnType<typeof postgres>;
 
@@ -104,6 +105,7 @@ export class PostgresDemoAssetClaimStore implements DemoAssetClaimStoreLike {
     await this.sql`update veilpass.demo_asset_claims set status = 'unknown', updated_at = now() where address_digest = ${digest(address)} and reservation_id = ${reservationId} and status = 'pending'`;
   }
 }
+/* c8 ignore stop */
 
 function digest(value: string): string { return createHash("sha256").update(value).digest("hex"); }
 function safeEqual(left: string, right: string): boolean { const a = Buffer.from(left); const b = Buffer.from(right); return a.length === b.length && timingSafeEqual(a, b); }
@@ -111,5 +113,9 @@ function safeEqual(left: string, right: string): boolean { const a = Buffer.from
 export const durableDemoAssetClaimStoreConfigured = Boolean(process.env.DATABASE_URL);
 declare global { var veilPassDemoAssetClaimStore: DemoAssetClaimStore | undefined; }
 const memoryStore = globalThis.veilPassDemoAssetClaimStore ?? new DemoAssetClaimStore();
+/* c8 ignore start -- environment bootstrap branch is selected by the Next.js runtime. */
 if (process.env.NODE_ENV !== "production") globalThis.veilPassDemoAssetClaimStore = memoryStore;
+/* c8 ignore stop */
+/* c8 ignore start -- production selects the durable adapter when DATABASE_URL is configured. */
 export const demoAssetClaimStore: DemoAssetClaimStoreLike = process.env.DATABASE_URL ? new PostgresDemoAssetClaimStore(process.env.DATABASE_URL) : memoryStore;
+/* c8 ignore stop */

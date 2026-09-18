@@ -334,6 +334,12 @@
     @apply font-mono text-xs uppercase tracking-[0.16em] text-signal-400;
   }
 
+  /* Apple-adjacent web glass approximation. This is not an Apple platform material. */
+  .liquid-glass-web {
+    -webkit-backdrop-filter: blur(24px) saturate(155%);
+    backdrop-filter: blur(24px) saturate(155%);
+  }
+
   .spotlight-card {
     position: relative;
     overflow: hidden;
@@ -418,5 +424,13 @@
   .hero-aperture-motion::after,
   .hero-scanline {
     animation: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass-web {
+    background: #0b0f0e;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }

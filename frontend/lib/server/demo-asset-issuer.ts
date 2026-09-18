@@ -13,6 +13,8 @@ export type DemoAssetConfig = {
 
 /** Reads the Testnet-only demo rule. The issuer secret is deliberately never returned to a route response. */
 export function getDemoAssetConfig(): DemoAssetConfig | null {
+  const assetType = process.env.VEILPASS_ASSET_TYPE?.trim().toLowerCase() || (process.env.VEILPASS_ASSET_ISSUER ? "credit" : "native");
+  if (assetType !== "credit") return null;
   const assetCode = process.env.VEILPASS_ASSET_CODE?.trim();
   const assetIssuer = process.env.VEILPASS_ASSET_ISSUER?.trim();
   const amount = process.env.VEILPASS_MIN_BALANCE?.trim();

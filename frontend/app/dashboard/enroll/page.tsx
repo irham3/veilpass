@@ -23,14 +23,16 @@ function safeLoginReturnPath(value: string | string[] | undefined) {
 export default async function EnrollPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const returnTo = safeLoginReturnPath((await searchParams).returnTo);
   const rawMinimum = Number.parseFloat(process.env.VEILPASS_MIN_BALANCE ?? "1");
+  const assetType: "credit" | "native" = process.env.VEILPASS_ASSET_TYPE?.trim().toLowerCase() === "credit" ? "credit" : "native";
   const assetRule = {
-    code: process.env.VEILPASS_ASSET_CODE ?? "VPT",
-    issuer: process.env.VEILPASS_ASSET_ISSUER ?? "GDBCLMMSWLEQIZRTDBZGRQKNZYQBURTJXT6E3GFEQT7LFVC5XOOZHCGU",
+    type: assetType,
+    code: assetType === "native" ? "XLM" : process.env.VEILPASS_ASSET_CODE ?? "USDC",
+    issuer: assetType === "credit" ? process.env.VEILPASS_ASSET_ISSUER : undefined,
     minimum: Number.isFinite(rawMinimum) ? rawMinimum : 1,
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
       <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute right-[-12rem] top-4 size-[30rem] rounded-full opacity-30" />
         <div className="relative mx-auto max-w-5xl">

@@ -19,11 +19,16 @@ import { createCredentialSecrets } from "@/packages/proof/src/noir";
 
 const gateId = "premium-holder";
 const horizon = new Horizon.Server("https://horizon-testnet.stellar.org");
+export const FREIGHTER_INSTALL_URL = "https://freighter.app/";
 
-type AssetRule = { code: string; issuer: string; minimum: number };
+type AssetRule = { type: "native" | "credit"; code: string; issuer?: string; minimum: number };
 type Eligibility = { eligible?: boolean; hasTrustline?: boolean };
 type ApiError = { error?: string };
 type ClaimChallenge = { challengeId: string; message: string };
+
+export function isFreighterMissing(message: string): boolean {
+  return /freighter was not found/i.test(message);
+}
 
 async function responseJson<T>(response: Response): Promise<T | null> {
   return response.json().catch(() => null) as Promise<T | null>;
@@ -41,6 +46,7 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
   const [issue, setIssue] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busyAction, setBusyAction] = useState<"prepare" | "enroll" | null>(null);
+  const usesNativeXlm = assetRule.type === "native";
 
   async function copyAssetDetails() {
     try {
@@ -99,7 +105,9 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
     const challengeResponse = await fetch("/api/enrollment/challenge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address, gateId }) });
     const challenge = await responseJson<{ challengeId: string; message: string; gateId: string } & ApiError>(challengeResponse);
     if (!challengeResponse.ok || !challenge) {
-      if (challenge?.error === "NOT_ELIGIBLE") throw new Error(`The active Freighter account needs at least ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” to set up the Testnet fixture.`);
+      if (challenge?.error === "NOT_ELIGIBLE") throw new Error(usesNativeXlm
+        ? `The active Freighter account needs at least ${assetRule.minimum} XLM on Stellar Testnet.`
+        : `The active Freighter account needs at least ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” to set up the Testnet fixture.`);
       throw new Error("Enrollment issuer is not configured. Try again in a moment.");
     }
     setStatus("Approve the enrollment message in Freighter");
@@ -127,7 +135,9 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
       setIssue(null);
       const address = await connectTestnetWallet();
       setStatus(`Checking for ${assetRule.minimum} ${assetRule.code}`);
-      if (!(await readEligibility(address)).eligible) throw new Error(`This wallet does not yet have ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” — no swap or purchase is required.`);
+      if (!(await readEligibility(address)).eligible) throw new Error(usesNativeXlm
+        ? `This wallet needs at least ${assetRule.minimum} XLM on Stellar Testnet. Fund it with Friendbot, then try again.`
+        : `This wallet does not yet have ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” — no swap or purchase is required.`);
       await completeEnrollment(address);
     } catch (error) {
       setIssue(error instanceof Error ? error.message : "Enrollment failed.");
@@ -223,23 +233,23 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
             <ShieldCheckIcon aria-hidden="true" size={22} weight="duotone" className="mt-0.5 shrink-0 text-signal-400" />
             <div>
               <h3 id="wallet-requirements" className="text-lg font-semibold tracking-[-0.025em]">One Testnet eligibility rule</h3>
-              <p className="mt-1 text-sm leading-6 text-paper-200">This demo checks for at least {assetRule.minimum} {assetRule.code}. It is a Testnet fixture for the gate, not a VeilPass token sale or a requirement for host dApps.</p>
+              <p className="mt-1 text-sm leading-6 text-paper-200">{usesNativeXlm ? `This demo checks for at least ${assetRule.minimum} XLM on Stellar Testnet. No custom asset, trustline, swap, or purchase is required.` : `This demo checks for at least ${assetRule.minimum} ${assetRule.code}. It is a Testnet fixture for the gate, not a VeilPass token sale or a requirement for host dApps.`}</p>
             </div>
           </div>
           <ol className="mt-5 grid gap-4 text-sm leading-6 text-paper-200 sm:grid-cols-3">
             <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">1. Use Testnet</strong>Switch Freighter to Stellar Testnet before connecting.</li>
-            <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">2. Prepare demo wallet</strong>Approve one custom-asset trustline and a one-time wallet-bound claim.</li>
+            <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">2. {usesNativeXlm ? "Fund XLM" : "Prepare demo wallet"}</strong>{usesNativeXlm ? `Keep at least ${assetRule.minimum} XLM in the Testnet account. No trustline is needed.` : "Approve one custom-asset trustline and a one-time wallet-bound claim."}</li>
             <li className="border-t border-paper-50/10 pt-3"><strong className="block text-paper-50">3. Enroll privately</strong>VeilPass issues the local credential; host apps never receive the wallet address.</li>
           </ol>
-          <div className="mt-5 grid gap-3 rounded-xl border border-paper-50/10 bg-ink-950/60 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          {usesNativeXlm ? <div className="mt-5 rounded-xl border border-paper-50/10 bg-ink-950/60 p-3"><p className="font-mono text-xs text-paper-200">Native Testnet balance</p><p className="mt-1 font-mono text-xs leading-5 text-paper-50">XLM ≥ {assetRule.minimum}</p></div> : <div className="mt-5 grid gap-3 rounded-xl border border-paper-50/10 bg-ink-950/60 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
             <div className="min-w-0"><p className="font-mono text-xs text-paper-200">Testnet custom asset</p><p className="mt-1 break-all font-mono text-xs leading-5 text-paper-50">{assetRule.code}:{assetRule.issuer}</p></div>
             <Button type="button" variant="outline" size="default" onClick={copyAssetDetails} className="min-h-11 rounded-full border-paper-50/18 bg-transparent px-4 hover:bg-paper-50/8">{copied ? <CheckIcon aria-hidden="true" /> : <CopyIcon aria-hidden="true" />}{copied ? "Copied" : "Copy asset"}</Button>
-          </div>
+          </div>}
         </section>
 
         <Alert className="mt-5 rounded-[1.35rem] border-paper-50/12 bg-ink-950/50 p-5 text-paper-50">
           <AlertTitle>What enrollment reveals</AlertTitle>
-          <AlertDescription className="mt-2 leading-6 text-paper-200">The issuer sees your Stellar address to verify wallet control and its public Testnet balance. The demo balance is fixed at {assetRule.minimum} {assetRule.code}, once per wallet. Host apps do not receive that address. Clearing site data removes this browser credential.</AlertDescription>
+          <AlertDescription className="mt-2 leading-6 text-paper-200">The issuer sees your Stellar address to verify wallet control and its public Testnet balance. {usesNativeXlm ? `The gate requires at least ${assetRule.minimum} XLM.` : `The demo balance is fixed at ${assetRule.minimum} ${assetRule.code}, once per wallet.`} Host apps do not receive that address. Clearing site data removes this browser credential.</AlertDescription>
         </Alert>
 
         <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl p-1 text-sm leading-6 text-paper-200 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-ring">
@@ -247,15 +257,15 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
           <span>I understand what the issuer can observe and that this does not provide network anonymity.</span>
         </label>
 
-        {issue ? <Alert variant="destructive" className="mt-5 rounded-[1.35rem] border-alert-400/35 bg-alert-400/[0.08] p-5"><AlertTitle>Enrollment could not continue</AlertTitle><AlertDescription className="mt-2 leading-6">{issue}</AlertDescription></Alert> : null}
+        {issue ? <Alert variant="destructive" className="mt-5 rounded-[1.35rem] border-alert-400/35 bg-alert-400/[0.08] p-5"><AlertTitle>Enrollment could not continue</AlertTitle><AlertDescription className="mt-2 leading-6">{issue}</AlertDescription>{isFreighterMissing(issue) ? <a href={FREIGHTER_INSTALL_URL} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-full border border-paper-50/20 px-4 py-2 text-sm font-medium text-paper-50 underline-offset-4 transition-colors hover:border-paper-50/40 hover:bg-paper-50/10 hover:underline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring">Install or download Freighter ↗</a> : null}</Alert> : null}
 
         <div className="mt-6 border-t border-paper-50/10 pt-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button type="button" size="lg" className="min-h-12 rounded-full px-5" disabled={disabled} onClick={() => { setBusyAction("prepare"); void prepareDemoWallet(); }}><SparkleIcon aria-hidden="true" />{complete ? "Credential enrolled" : busyAction === "prepare" ? "Preparing Testnet wallet…" : "Prepare demo wallet"}</Button>
-            <Button type="button" size="lg" variant="outline" className="min-h-12 rounded-full border-paper-50/18 bg-transparent px-5 hover:bg-paper-50/8" disabled={disabled} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{busyAction === "enroll" ? "Checking wallet…" : `I already have ${assetRule.code} — enroll`}</Button>
+            {!usesNativeXlm ? <Button type="button" size="lg" className="min-h-12 rounded-full px-5" disabled={disabled} onClick={() => { setBusyAction("prepare"); void prepareDemoWallet(); }}><SparkleIcon aria-hidden="true" />{complete ? "Credential enrolled" : busyAction === "prepare" ? "Preparing Testnet wallet…" : "Prepare demo wallet"}</Button> : null}
+            <Button type="button" size="lg" variant={usesNativeXlm ? "default" : "outline"} className="min-h-12 rounded-full border-paper-50/18 bg-transparent px-5 hover:bg-paper-50/8" disabled={disabled} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{busyAction === "enroll" ? "Checking wallet…" : usesNativeXlm ? "Connect Freighter and enroll" : `I already have ${assetRule.code} — enroll`}</Button>
           </div>
           <p className="mt-3 text-sm leading-6 text-paper-200" aria-live="polite">{status}</p>
-          <p className="mt-1 text-xs leading-5 text-paper-300">No XLM-to-{assetRule.code} swap or {assetRule.code} purchase is required for this Testnet demo.</p>
+          <p className="mt-1 text-xs leading-5 text-paper-300">{usesNativeXlm ? "A Testnet XLM balance is all this gate checks; no asset trustline, swap, or purchase is required." : `No XLM-to-${assetRule.code} swap or ${assetRule.code} purchase is required for this Testnet demo.`}</p>
         </div>
       </div>
     </section>

@@ -31,7 +31,7 @@ export const docs: Record<string, DocPage> = {
     { heading: "MVP status", body: "This repository is testnet software. The hosted login generates a local Noir/UltraHonk membership proof and the verifier checks it with the pinned verification key. The separately labeled Simulated proof endpoint is only a non-production compatibility fixture; /api/verify never accepts it." },
   ]},
   quickstart: { title: "Quickstart", eyebrow: "Start here", intro: "Create one challenge on the host, open the VeilPass login surface, verify once, then establish an opaque cookie session.", sections: [
-    { heading: "Prerequisites", body: "Use Node.js 20 or later, a Freighter wallet connected to Stellar Testnet, and a testnet account funded with the asset required by your gate. Before starting a live service, run npm run env:validate; it reports configuration names only and never prints secret values." },
+    { heading: "Prerequisites", body: "Use Node.js 20 or later, a Freighter wallet connected to Stellar Testnet, and a Testnet account meeting the gate rule. The default rule is a native XLM minimum and requires no custom asset trustline; a deployment can instead configure an issued asset such as USDC. Before starting a live service, run npm run env:validate; it reports configuration names only and never prints secret values." },
     { heading: "Install", body: "Install the public SDK package from npm. The package opens the hosted login popup and returns only the minimized verifier result to the host application.", code: install, language: "bash" },
     { heading: "Client", body: "The popup channel validates the exact login origin, window source, request state, and response schema.", code: client },
     { heading: "Server", body: "Verification must happen on the host server. Supply a durable challenge/nullifier store and the pinned Noir verifier; a browser verdict is never sufficient.", code: server },
@@ -50,7 +50,7 @@ export const docs: Record<string, DocPage> = {
   ]},
   enrollment: { title: "Enrollment", eyebrow: "Issuer boundary", intro: "Enrollment is the one flow where the issuer observes the Stellar address and checks testnet eligibility.", sections: [
     { heading: "Disclosure", body: "Before Freighter connects, the UI must state that the issuer sees the address, the credential is stored locally, and losing browser data requires re-enrollment." },
-    { heading: "Wallet rules", body: "Require Stellar Testnet. Use Freighter for address access and message signing. Never request or store a secret key." },
+    { heading: "Wallet rules", body: "Require Stellar Testnet. The default native-XLM gate needs no custom asset trustline. Use Freighter for address access and message signing. Never request or store a secret key." },
   ]},
   contract: { title: "Gate contract", eyebrow: "Stellar testnet", intro: "The Soroban gate registry stores public policy configuration, credential roots, epochs, revocation state, and gate ownership. Routine login remains off-chain.", sections: [
     { heading: "Lifecycle", body: "An administrator creates a gate, updates its root at the expected epoch, rotates an epoch with a replacement root, or revokes a credential hash. Each state change emits an event. Routine login does not submit a transaction." },

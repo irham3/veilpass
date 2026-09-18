@@ -45,7 +45,7 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
   const page = docs[key];
   if (!page) notFound();
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
       <div className="aperture-field relative px-5 py-10 sm:py-12 lg:px-8 lg:py-20">
         <div aria-hidden="true" className="aperture-ring absolute right-[-14rem] top-6 size-[32rem] rounded-full opacity-25" />
         <div className="relative mx-auto grid max-w-7xl gap-5 lg:grid-cols-[16rem_1fr] lg:gap-6">

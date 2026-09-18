@@ -1,10 +1,10 @@
 export const siteConfig = {
   name: "VeilPass",
-  url: "https://veilpass-stellar.vercel.app",
+  url: "https://veilpass.dev",
   title: "VeilPass | Private wallet login for Stellar dApps",
   description:
     "VeilPass lets Stellar dApps verify wallet eligibility and recognize returning users without receiving the user's Stellar wallet address.",
-  socialTitle: "VeilPass — prove access, keep wallets private",
+  socialTitle: "VeilPass: prove access, keep wallets private",
   socialDescription:
     "A Stellar testnet MVP for origin-scoped wallet login. Hosts receive a scoped ID and access verdict, not the wallet address.",
   ogImageAlt:

@@ -90,7 +90,7 @@ const evidence = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink-950 text-paper-50">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
@@ -148,7 +148,7 @@ export default function Home() {
               <div aria-hidden="true" className="absolute -right-1 top-28 hidden h-32 w-32 rounded-full border border-signal-400/30 lg:block" />
 
               <div className="relative rounded-[1.75rem] border border-paper-50/12 bg-paper-50/4.5 p-2 shadow-[0_44px_130px_rgba(0,0,0,0.48)] sm:rounded-[2.55rem]">
-                <div className="absolute -top-4 left-6 hidden rounded-full border border-signal-400/25 bg-ink-950 px-3 py-1.5 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-signal-400 shadow-[0_18px_50px_rgba(0,0,0,0.34)] sm:left-8 sm:block sm:px-4 sm:py-2 sm:text-[0.68rem]">
+                <div className="absolute -top-4 left-6 hidden rounded-full border border-signal-400/25 bg-ink-950 px-3 py-1.5 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-signal-400 shadow-[0_18px_50px_rgba(0,0,0,0.34)] sm:left-8 sm:block sm:px-4 sm:py-2 sm:text-[0.72rem]">
                   Private aperture live
                 </div>
 
@@ -164,8 +164,8 @@ export default function Home() {
                       ["Wallet", "withheld"],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-[0.9rem] border border-paper-50/10 bg-paper-50/[0.035] px-2 py-2.5 sm:rounded-[1.2rem] sm:px-4 sm:py-3">
-                        <p className="text-[0.6rem] text-paper-200 sm:text-xs">{label}</p>
-                        <p className="mt-1 truncate font-mono text-[0.6rem] text-paper-50 sm:text-[0.72rem]">
+                        <p className="text-[0.6875rem] text-paper-200 sm:text-xs">{label}</p>
+                        <p className="mt-1 truncate font-mono text-[0.6875rem] text-paper-50 sm:text-[0.75rem]">
                           {value}
                         </p>
                       </div>
@@ -188,7 +188,6 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <Reveal className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
               <div>
-                <p className="eyebrow">Reviewer path</p>
                 <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tighter text-balance sm:text-4xl lg:text-6xl">
                   Inspect the boundary from three angles.
                 </h2>
@@ -229,7 +228,6 @@ export default function Home() {
             <Reveal className="rounded-[1.75rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5 sm:rounded-[2.1rem]">
               <div className="flex h-full flex-col justify-between rounded-[1.3rem] bg-ink-900/92 p-6 sm:rounded-[1.6rem] sm:p-9">
                 <div>
-                  <p className="eyebrow">Evidence package</p>
                   <h2 className="mt-4 text-3xl font-semibold tracking-tighter text-balance sm:text-4xl lg:text-5xl">
                     Built to be checked, not believed.
                   </h2>
@@ -270,7 +268,6 @@ export default function Home() {
         <section className="section-paper-slit border-y border-line-dark px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <Reveal className="mx-auto grid max-w-7xl gap-8 sm:gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
-              <p className="eyebrow">Host response</p>
               <h2 className="mt-4 text-3xl font-semibold tracking-tighter text-balance sm:text-4xl lg:text-5xl">
                 A small payload with hard edges.
               </h2>
@@ -296,7 +293,6 @@ export default function Home() {
           <div className="mx-auto max-w-7xl">
             <Reveal className="grid gap-10 sm:gap-12 lg:grid-cols-[0.8fr_1.2fr]">
               <div>
-                <p className="eyebrow">FAQ</p>
                 <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tighter text-balance sm:text-4xl lg:text-5xl">
                   Questions reviewers ask first
                 </h2>

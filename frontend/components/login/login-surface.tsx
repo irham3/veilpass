@@ -1,6 +1,7 @@
 "use client";
 
 import { EyeSlashIcon } from "@phosphor-icons/react/EyeSlash";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { credentialWitnessSchema, type StoredCredential } from "@/packages/crede
 import { proveMembership } from "@/packages/proof/src/noir";
 
 export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; state: string; hostOrigin: string }) {
+  const router = useRouter();
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [credential, setCredential] = useState<StoredCredential | null>(null);
   const [status, setStatus] = useState("Waiting for host challenge");
@@ -30,7 +32,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
 
   function enrollThisBrowser() {
     const returnTo = `${window.location.pathname}${window.location.search}`;
-    window.location.assign(`/dashboard/enroll?returnTo=${encodeURIComponent(returnTo)}`);
+    router.push(`/dashboard/enroll?returnTo=${encodeURIComponent(returnTo)}`);
   }
 
   async function prove() {
