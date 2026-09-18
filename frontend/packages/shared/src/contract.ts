@@ -35,7 +35,9 @@ function encodeBase32(bytes: Uint8Array): string {
       bits -= 5;
     }
   }
+  /* c8 ignore start -- StrKey payloads are fixed at 35 bytes (a multiple of five bits). */
   if (bits > 0) output += BASE32_ALPHABET[(buffer << (5 - bits)) & 31];
+  /* c8 ignore stop */
   return output;
 }
 
@@ -76,6 +78,7 @@ export function encodeEd25519PublicKey(publicKey: Uint8Array): string {
   return encodeBase32(payload);
 }
 
+/* c8 ignore start -- RPC/XDR execution is covered by integration tests against Soroban. */
 function buildInvokeContractOperation(contractId: string, functionName: string, args: xdr.ScVal[]) {
   const hostFunction = xdr.HostFunction.hostFunctionTypeInvokeContract(
       new xdr.InvokeContractArgs({
@@ -154,3 +157,4 @@ export async function readGateState({ contractId, gateId, rpcUrl = "https://soro
 export async function readRevocationState({ contractId, gateId, revocationHash, rpcUrl = "https://soroban-testnet.stellar.org", sourceAccount }: { contractId: string; gateId: string; revocationHash: string; rpcUrl?: string; sourceAccount: string }): Promise<boolean> {
   return parseBoolean(await simulateContractCall({ contractId, functionName: "is_revoked", args: [nativeToScVal(gateId), nativeToScVal(Buffer.from(revocationHash, "hex"))], rpcUrl, sourceAccount }));
 }
+/* c8 ignore stop */
