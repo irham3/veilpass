@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildIssuedCredentialPayload } from "./credential-issuance";
+import { buildIssuedCredentialPayload, issuedCredentialCanonical } from "./credential-issuance";
 
 describe("buildIssuedCredentialPayload", () => {
   it("binds an issued credential to the current contract epoch and shared root", () => {
@@ -44,5 +44,21 @@ describe("buildIssuedCredentialPayload", () => {
         expiresAt: "2026-09-01T00:00:00.000Z",
       }),
     ).toThrow("Gate is not active");
+  });
+
+  it("produces a stable signing payload without witness-path presentation data", () => {
+    const payload = buildIssuedCredentialPayload({
+      gateId: "premium-holder",
+      commitment: "ab".repeat(32),
+      credentialSalt: "cd".repeat(32),
+      witness: { credentialRoot: "ef".repeat(32), leafIndex: 7, leafNonce: "12".repeat(32), merklePath: Array.from({ length: 16 }, () => "00".repeat(32)), pathIsRight: Array.from({ length: 16 }, () => false), revocationHash: "34".repeat(32) },
+      issuerPublicKey: "GISSUER",
+      policy: { active: true, epoch: 7 },
+      expiresAt: "2026-09-01T00:00:00.000Z",
+    });
+
+    expect(issuedCredentialCanonical(payload)).toBe(JSON.stringify([
+      "premium-holder", 7, "ab".repeat(32), "cd".repeat(32), "12".repeat(32), "34".repeat(32), "2026-09-01T00:00:00.000Z", "GISSUER",
+    ]));
   });
 });

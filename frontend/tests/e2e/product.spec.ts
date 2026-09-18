@@ -1,5 +1,15 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function revealWholePage(page: Page) {
+  const viewportHeight = page.viewportSize()?.height ?? 720;
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < height; y += Math.max(320, viewportHeight - 120)) {
+    await page.evaluate((position) => window.scrollTo(0, position), y);
+    await page.waitForTimeout(60);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
 
 test("landing explains and demonstrates the narrow privacy boundary", async ({ page }, testInfo) => {
   await page.goto("/");
@@ -11,7 +21,10 @@ test("landing explains and demonstrates the narrow privacy boundary", async ({ p
   await expect(payload).not.toContainText("walletAddress");
   await expect(payload).toContainText("privateAppId");
   await expect(page.getByText(/does not provide network anonymity/i)).toBeVisible();
-  if (testInfo.project.name === "chromium") await page.screenshot({ path: "docs/evidence/landing-desktop.png", fullPage: true });
+  if (testInfo.project.name === "chromium") {
+    await revealWholePage(page);
+    await page.screenshot({ path: "docs/evidence/landing-desktop.png", fullPage: true });
+  }
 });
 
 test("landing FAQ opens privacy and deployment answers", async ({ page }) => {
@@ -112,7 +125,7 @@ test("reduced motion disables long transitions", async ({ browser }) => {
   await context.close();
 });
 
-test("security headers and trusted-origin API boundary are enforced", async ({ page, request }) => {
+test("@security security headers and trusted-origin API boundary are enforced", async ({ page, request }) => {
   const response = await page.goto("/");
   const headers = response?.headers() ?? {};
   expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
@@ -121,6 +134,48 @@ test("security headers and trusted-origin API boundary are enforced", async ({ p
   const rejected = await request.post("/api/challenges", { headers: { Origin: "https://evil.example" }, data: { gateId: "premium-holder" } });
   expect(rejected.status()).toBe(403);
   await expect(rejected.json()).resolves.toMatchObject({ ok: false, error: "ORIGIN_MISMATCH" });
+});
+
+test("@security public APIs reject oversized and structurally hostile input without leaking internals", async ({ request }) => {
+  const oversized = await request.post("/api/challenges", {
+    headers: {
+      Origin: "http://localhost:3000",
+      "Content-Type": "application/json",
+    },
+    data: { gateId: "premium-holder", padding: "x".repeat(4500) },
+  });
+  expect(oversized.status()).toBe(400);
+  const oversizedBody = await oversized.text();
+  expect(oversizedBody).not.toMatch(/stack|postgres|database|secret|node_modules/i);
+
+  const polluted = await request.post("/api/challenges", {
+    headers: { Origin: "http://localhost:3000" },
+    data: { gateId: "premium-holder", __proto__: { admin: true }, admin: true },
+  });
+  expect(polluted.status()).toBe(400);
+  await expect(polluted.json()).resolves.toMatchObject({ ok: false, error: "GATE_MISMATCH" });
+});
+
+test("@security session and error responses are non-cacheable and omit sensitive fields", async ({ request }) => {
+  const session = await request.get("/api/session");
+  expect(session.status()).toBe(401);
+  expect(session.headers()["cache-control"]).toContain("no-store");
+  const payload = await session.json();
+  expect(payload).toEqual({ authenticated: false });
+  expect(JSON.stringify(payload)).not.toMatch(/wallet|token|cookie|stack|secret/i);
+});
+
+test("@system landing content survives scrolling, keyboard focus, and viewport constraints", async ({ page }) => {
+  await page.goto("/");
+  await revealWholePage(page);
+
+  await expect(page.getByRole("heading", { name: "Built to be checked, not believed." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Questions reviewers ask first" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+
+  await page.keyboard.press("Tab");
+  await expect(page.locator(":focus-visible")).toHaveCount(1);
 });
 
 test("primary surfaces complete an initial render within the development-server sanity budget", async ({ page }) => {

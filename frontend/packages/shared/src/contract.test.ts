@@ -20,4 +20,12 @@ describe("Stellar contract read helpers", () => {
       "GCUSQB6ZWO633HV7M3EF6BCWSYQMTA65RJU4OMQ435OAQ3WJRIVA43VM",
     );
   });
+
+  test("rejects malformed StrKeys and payload lengths", () => {
+    expect(() => decodeContractId("not-a-strkey")).toThrow(/StrKey/i);
+    expect(() => decodeEd25519PublicKey("A")).toThrow(/StrKey/i);
+    expect(() => encodeEd25519PublicKey(new Uint8Array(31))).toThrow(/payload/i);
+    const valid = "CC7FUOFBIZ7UIOG7J66QJZCWU3L2MM4GW2HZUHMSF4ZBKOGCVZ4UYJZZ";
+    expect(() => decodeContractId(valid)).toThrow(/checksum|StrKey/i);
+  });
 });

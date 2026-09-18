@@ -12,6 +12,13 @@ describe("security headers", () => {
     expect(policy).toContain("object-src 'none'");
   });
 
+  it("allows the development-only eval and inline style escape hatches", () => {
+    const policy = createContentSecurityPolicy("dev-nonce", true);
+
+    expect(policy).toContain("script-src 'self' 'nonce-dev-nonce' 'strict-dynamic' 'wasm-unsafe-eval' 'unsafe-eval'");
+    expect(policy).toContain("style-src 'self' 'nonce-dev-nonce' 'unsafe-inline'");
+  });
+
   it("locks down referrers and unused device APIs", () => {
     expect(securityHeaders).toEqual(
       expect.arrayContaining([

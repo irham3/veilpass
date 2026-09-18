@@ -29,4 +29,21 @@ describe("verifyVeilPassProof", () => {
     await expect(verifyVeilPassProof({ ...args, proofResult: { ...base, publicInputs: { ...base.publicInputs, proofCreatedAt: "2026-08-02T08:59:00.000Z" } }, expectedOrigin: "https://app.example", now: () => Date.parse("2026-08-02T09:00:00.000Z") })).resolves.toMatchObject({ ok: false, error: "CREDENTIAL_EXPIRED" });
     await expect(verifyVeilPassProof({ ...args, expectedOrigin: "https://app.example" })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
   });
+
+  it("fails closed for every protocol boundary before consuming a challenge", async () => {
+    const store = { consume: async () => ({ ok: true as const }) };
+    const base = { challengeId: "challenge", proof: "proof", publicInputs: { gateId: "gate", epoch: 1, origin: "https://app.example", challengeHash: "hash", credentialCommitment: "commitment", credentialRoot: "root", privateAppId: "private", loginNullifier: "null", revocationHash: "rev", proofCreatedAt: "2026-08-02T08:00:00.000Z", proofExpiresAt: "2026-08-02T08:05:00.000Z" } };
+    const common = { expectedOrigin: "https://app.example", expectedGateId: "gate", store, policy: { active: true, epoch: 1, credentialRoot: "root" }, verifyProof: () => true, now: () => Date.parse("2026-08-02T08:00:00.000Z"), requestId: "boundary" };
+    await expect(verifyVeilPassProof({ ...common, proofResult: null })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: base, expectedOrigin: "not-an-origin" })).resolves.toMatchObject({ ok: false, error: "ORIGIN_MISMATCH" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: { ...base, publicInputs: { ...base.publicInputs, gateId: "other" } } })).resolves.toMatchObject({ ok: false, error: "GATE_MISMATCH" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: { ...base, publicInputs: { ...base.publicInputs, proofCreatedAt: "not-a-date" } } })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: { ...base, publicInputs: { ...base.publicInputs, proofCreatedAt: "2026-08-02T08:02:00.000Z" } } })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: { ...base, publicInputs: { ...base.publicInputs, proofExpiresAt: "2026-08-02T07:59:00.000Z" } } })).resolves.toMatchObject({ ok: false, error: "CREDENTIAL_EXPIRED" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: base, policy: { ...common.policy, credentialRoot: "different" } })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: base, policy: { ...common.policy, isRevoked: async () => true } })).resolves.toMatchObject({ ok: false, error: "CREDENTIAL_REVOKED" });
+    await expect(verifyVeilPassProof({ ...common, proofResult: base, verifyProof: () => false })).resolves.toMatchObject({ ok: false, error: "PROOF_INVALID" });
+    const consumed = { consume: async () => ({ ok: false as const, error: "CHALLENGE_EXPIRED" as const }) };
+    await expect(verifyVeilPassProof({ ...common, proofResult: base, store: consumed })).resolves.toMatchObject({ ok: false, error: "CHALLENGE_EXPIRED" });
+  });
 });

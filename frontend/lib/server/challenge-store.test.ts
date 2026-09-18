@@ -16,6 +16,16 @@ describe("ChallengeStore", () => {
     expect(JSON.stringify(stored)).not.toContain(issued.challenge);
   });
 
+  it("rejects an entropy source that is not exactly 32 bytes", async () => {
+    const store = new ChallengeStore({ randomBytes: () => Buffer.alloc(31) });
+    await expect(store.issue({ gateId: "gate-a", origin: "https://app.example" })).rejects.toThrow("exactly 32 bytes");
+  });
+
+  it("supports the default entropy and clock providers", async () => {
+    const issued = await new ChallengeStore().issue({ gateId: "gate-default", origin: "https://app.example" });
+    expect(Buffer.from(issued.challenge, "base64url")).toHaveLength(32);
+  });
+
   it("atomically consumes a challenge and nullifier once", async () => {
     const store = new ChallengeStore({ now: () => 1_000, randomBytes: () => Buffer.alloc(32, 8) });
     const issued = await store.issue({ gateId: "gate-a", origin: "https://app.example" });
@@ -41,5 +51,10 @@ describe("ChallengeStore", () => {
     now = 1_000 + 5 * 60_000 + 1;
     const expiringHash = challengeHash(expiring.challenge);
     await expect(store.consume({ ...expiring, challengeHash: expiringHash, loginNullifier: "late", proofExpiresAt: expiring.expiresAt })).resolves.toEqual({ ok: false, error: "CHALLENGE_EXPIRED" });
+
+    await expect(store.consume({ challengeId: "missing", challengeHash: freshHash, gateId: "gate-a", origin: "https://app.example", loginNullifier: "missing", proofExpiresAt: fresh.expiresAt })).resolves.toEqual({ ok: false, error: "PROOF_INVALID" });
+    const invalidExpiry = await store.issue({ gateId: "gate-a", origin: "https://app.example" });
+    await expect(store.consume({ ...invalidExpiry, challengeHash: challengeHash(invalidExpiry.challenge), loginNullifier: "invalid-expiry", proofExpiresAt: "not-a-date" })).resolves.toEqual({ ok: false, error: "PROOF_INVALID" });
+    await expect(store.consume({ ...invalidExpiry, challengeHash: challengeHash(invalidExpiry.challenge), loginNullifier: "future-expiry", proofExpiresAt: new Date(now + 6 * 60_000).toISOString() })).resolves.toEqual({ ok: false, error: "PROOF_INVALID" });
   });
 });

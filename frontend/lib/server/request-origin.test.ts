@@ -18,4 +18,8 @@ describe("resolveTrustedOrigin", () => {
     expect(resolveTrustedOrigin({ configuredOrigin: configured, requestUrl: "https://internal.example/api", originHeader: "https://app-b.example" })).toBe("https://app-b.example");
     expect(() => resolveTrustedOrigin({ configuredOrigin: configured, requestUrl: "https://internal.example/api", originHeader: "https://other.example" })).toThrow("origin mismatch");
   });
+
+  it("requires an Origin header for configured deployments", () => {
+    expect(() => resolveTrustedOrigin({ configuredOrigin: "https://app.example", requestUrl: "http://internal:3000/api", originHeader: null })).toThrow("origin mismatch");
+  });
 });

@@ -23,11 +23,15 @@ describe("ProofWindow", () => {
   it("changes the private ID across app origins", () => {
     render(<ProofWindow />);
     fireEvent.click(screen.getByRole("button", { name: "VeilPass login" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use App A" }));
     fireEvent.click(screen.getByRole("button", { name: "Use App B" }));
 
     const payload = screen.getByTestId("hero-payload");
     expect(payload).toHaveTextContent("vp_appB_19c8");
     expect(payload).not.toHaveTextContent("vp_appA_72f1");
+    expect(screen.getByText("feedback.example.test")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Standard wallet login" }));
     expect(screen.getByText("feedback.example.test")).toBeInTheDocument();
   });
 

@@ -11,8 +11,9 @@ const values = {
   gateId: "premium-holder",
   gateEpoch: 1,
   credentialRoot: "0000000000000000000000000000000000000000000000000000000000000000",
-  assetCode: "VPT",
-  assetIssuer: "GASSETISSUER",
+  assetType: "native",
+  assetCode: "XLM",
+  assetIssuer: "",
   minBalance: "1",
   simulatorKey: "simulator-secret",
   issuerSecret: "issuer-secret",
@@ -25,8 +26,9 @@ describe("local environment setup", () => {
 
     expect(text).toContain("NEXT_PUBLIC_VEILPASS_CONTRACT_ID=CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK");
     expect(text).toContain("VEILPASS_CREDENTIAL_ROOT=0000000000000000000000000000000000000000000000000000000000000000");
-    expect(text).toContain("VEILPASS_ASSET_CODE=VPT");
-    expect(text).toContain("VEILPASS_ASSET_ISSUER=GASSETISSUER");
+    expect(text).toContain("VEILPASS_ASSET_TYPE=native");
+    expect(text).toContain("VEILPASS_ASSET_CODE=XLM");
+    expect(text).toContain("VEILPASS_ASSET_ISSUER=");
     expect(text).toContain("VEILPASS_ISSUER_SECRET=issuer-secret");
     expect(text).not.toMatch(/^DATABASE_URL=/m);
   });
@@ -35,7 +37,7 @@ describe("local environment setup", () => {
     const summary = buildSetupSummary({ envPath: "D:/Work/00/Veilpass/frontend/.env.local", funded: true, values });
 
     expect(summary).toContain(".env.local");
-    expect(summary).toContain("GASSETISSUER");
+    expect(summary).toContain("native XLM");
     expect(summary).toContain("CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK");
     expect(summary).not.toContain("issuer-secret");
     expect(summary).not.toContain("simulator-secret");
