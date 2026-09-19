@@ -38,5 +38,12 @@ export async function publishCredentialRoot({ gateId, expectedEpoch, newRoot }: 
     expected_epoch: expectedEpoch,
     new_root: Buffer.from(canonicalFieldHex(newRoot), "hex"),
   });
-  await transaction.signAndSend();
+  const submitted = await transaction.signAndSend();
+  const result = submitted.result;
+  if (result.isErr()) throw new Error(`Gate root update was rejected: ${result.unwrapErr().message}`);
+
+  const updated = await readGateState({ contractId, gateId, rpcUrl, sourceAccount: owner.publicKey() });
+  if (updated.epoch !== expectedEpoch || Buffer.from(updated.credential_root).toString("hex") !== canonicalFieldHex(newRoot)) {
+    throw new Error("Gate root update was not confirmed on Testnet");
+  }
 }

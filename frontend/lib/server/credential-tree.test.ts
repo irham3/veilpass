@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { credentialLeaf, merkleWitnessForLeaf, InMemoryCredentialTreeStore } from "./credential-tree";
+import { CredentialTreeIssueError, credentialLeaf, merkleWitnessForLeaf, InMemoryCredentialTreeStore } from "./credential-tree";
 
 const zero = "00".repeat(32);
 const expiry = "2027-01-01T00:00:00.000Z";
 
 describe("credential Merkle tree", () => {
+  it("marks durable issuance failures with a safe operational stage", () => {
+    const error = new CredentialTreeIssueError("persist_tree", "database write failed");
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("CredentialTreeIssueError");
+    expect(error.stage).toBe("persist_tree");
+    expect(error.reason).toBe("database write failed");
+  });
+
   it("publishes a new root before committing an issued witness and refreshes old paths", async () => {
     const store = new InMemoryCredentialTreeStore();
     let root = zero;

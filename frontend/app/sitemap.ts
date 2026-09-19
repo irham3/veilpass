@@ -3,7 +3,9 @@ import type { MetadataRoute } from "next";
 import { docNav } from "@/lib/docs/content";
 import { absoluteUrl } from "@/lib/seo";
 
-const lastModified = new Date("2026-08-02T00:00:00.000Z");
+// This is a release timestamp, not a generated "now" value: search engines
+// should only see a sitemap change when the public content actually changed.
+const lastModified = new Date("2026-09-19T00:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const docs = docNav.map(([slug]) => ({

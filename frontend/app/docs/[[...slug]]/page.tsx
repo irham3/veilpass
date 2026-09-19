@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { CodeBlock } from "@/components/docs/code-block";
 import { Reveal } from "@/components/motion/reveal";
 import { docNav, docs } from "@/lib/docs/content";
-import { siteConfig } from "@/lib/seo";
+import { absoluteUrl, siteConfig } from "@/lib/seo";
 
 export function generateStaticParams() { return docNav.map(([slug]) => ({ slug: slug ? [slug] : [] })); }
 
@@ -29,11 +29,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug?: st
       description: page.intro,
       url: path,
       siteName: siteConfig.name,
+      images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: siteConfig.ogImageAlt }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${page.title} | VeilPass docs`,
       description: page.intro,
+      images: [{ url: absoluteUrl("/twitter-image"), alt: siteConfig.ogImageAlt }],
     },
   };
 }

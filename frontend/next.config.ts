@@ -4,6 +4,15 @@ import { securityHeaders } from "./lib/security/headers";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   transpilePackages: ["@veilpass/shared", "@veilpass/sdk", "@veilpass/server"],
+  // Barretenberg loads its threaded WASM artifact with fs at runtime. Next's
+  // tracer sees the JavaScript import but not that dynamic file read, so make
+  // it an explicit production-function dependency. Without this inclusion,
+  // enrollment can validate a Freighter signature and then fail while it
+  // builds the private Merkle witness on a serverless instance.
+  serverExternalPackages: ["@aztec/bb.js"],
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/@aztec/bb.js/dest/node/barretenberg_wasm/**"],
+  },
   async rewrites() {
     return {
       beforeFiles: [

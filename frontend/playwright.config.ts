@@ -11,5 +11,12 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: { command: "npm run dev -- --hostname 0.0.0.0", url: "http://localhost:3000", reuseExistingServer: false, timeout: 120_000 },
+  webServer: {
+    command: "npm run dev -- --hostname 0.0.0.0",
+    url: "http://localhost:3000",
+    // Local contributors can opt in when their development server is already
+    // running; CI still always starts the exact server under test.
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "true",
+    timeout: 120_000,
+  },
 });

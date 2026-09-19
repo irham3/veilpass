@@ -29,6 +29,14 @@ export type CredentialTreeIssueInput = {
   publishRoot: (root: string) => Promise<void>;
 };
 
+/** A safe, server-log-only marker for the exact durable issuance step that failed. */
+export class CredentialTreeIssueError extends Error {
+  constructor(readonly stage: string, readonly reason?: string) {
+    super(`Credential tree issuance failed at ${stage}`);
+    this.name = "CredentialTreeIssueError";
+  }
+}
+
 export interface CredentialTreeStoreLike {
   issue(input: CredentialTreeIssueInput): Promise<MerkleWitness>;
   witnessForCredential(input: { gateId: string; credentialCommitment: string; expectedRoot: string }): Promise<MerkleWitness | null>;
@@ -183,24 +191,63 @@ export class PostgresCredentialTreeStore implements CredentialTreeStoreLike {
   constructor(url: string) { this.sql = postgres(url, { max: 6, idle_timeout: 20, prepare: false }); }
 
   async issue(input: CredentialTreeIssueInput): Promise<MerkleWitness> {
-    return this.sql.begin(async (tx) => {
-      await tx.unsafe("select pg_advisory_xact_lock(hashtext($1))", [input.gateId]);
-      const nodes = await loadNodes(tx, input.gateId);
+    // Root publication can take several seconds on Soroban. Keep a session
+    // advisory lock during that call, but never keep a PostgreSQL transaction
+    // open across the network boundary: managed Postgres services can abort an
+    // idle transaction and leave the client with a generic issuance failure.
+    let stage = "reserve_connection";
+    let connection: Awaited<ReturnType<typeof this.sql.reserve>> | undefined;
+    let locked = false;
+    try {
+      connection = await this.sql.reserve();
+      stage = "acquire_gate_lock";
+      await connection.unsafe("select pg_advisory_lock(hashtext($1))", [input.gateId]);
+      locked = true;
+      stage = "load_tree";
+      const nodes = await loadNodes(connection, input.gateId);
       if (nodeValue(nodes, CREDENTIAL_TREE_DEPTH, 0) !== canonicalFieldHex(input.expectedRoot)) throw new Error("Credential tree is out of sync with the contract root");
+      stage = "build_witness";
       const leafIndex = chooseIndex(nodes);
       const leafNonce = randomFieldHex(randomBytes(32));
       const revocationHash = randomFieldHex(randomBytes(32));
       const leaf = await credentialLeaf({ credentialCommitment: input.credentialCommitment, gateIdHash: await deterministicGateIdHash(input.gateId), epoch: input.epoch, credentialExpirySeconds: expirySeconds(input.expiresAt), leafNonce, revocationHash });
       const witness = await merkleWitnessForLeaf(nodes, leafIndex, leaf);
+      stage = "publish_contract_root";
       await input.publishRoot(witness.credentialRoot);
-      await writeLeaf(nodes, leafIndex, leaf);
-      await saveNodes(tx, input.gateId, nodes);
-      await tx.unsafe(
-        "insert into veilpass.credential_merkle_credentials (commitment, gate_id, epoch, expires_at, credential_salt, leaf_nonce, revocation_hash, leaf_index, credential_root) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-        [canonicalFieldHex(input.credentialCommitment), input.gateId, input.epoch, new Date(input.expiresAt), canonicalFieldHex(input.credentialSalt), leafNonce, revocationHash, leafIndex, witness.credentialRoot],
-      );
+      stage = "persist_tree";
+      // `reserve()` returns a dedicated query connection, not the postgres.js
+      // client API that owns `.begin()`. Keep its session-level gate lock while
+      // using the pool client for the short atomic persistence transaction.
+      await this.sql.begin(async (tx) => {
+        await writeLeaf(nodes, leafIndex, leaf);
+        await saveNodes(tx, input.gateId, nodes);
+        await tx.unsafe(
+          "insert into veilpass.credential_merkle_credentials (commitment, gate_id, epoch, expires_at, credential_salt, leaf_nonce, revocation_hash, leaf_index, credential_root) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+          [canonicalFieldHex(input.credentialCommitment), input.gateId, input.epoch, new Date(input.expiresAt), canonicalFieldHex(input.credentialSalt), leafNonce, revocationHash, leafIndex, witness.credentialRoot],
+        );
+      });
       return { ...witness, leafNonce, revocationHash };
-    });
+    } catch (error) {
+      // The contract root is deliberately published before a credential can
+      // be returned. If the following durable write fails, compensate while
+      // the per-gate advisory lock is still held so Testnet never keeps an
+      // orphaned root that has no matching credential record.
+      if (stage === "persist_tree") {
+        stage = "rollback_contract_root";
+        try {
+          await input.publishRoot(canonicalFieldHex(input.expectedRoot));
+          stage = "persist_tree";
+        } catch {
+          // The stage marker below intentionally records the more serious
+          // rollback failure without returning implementation details.
+        }
+      }
+      const reason = error instanceof Error ? error.message.slice(0, 500) : "non_error_throw";
+      throw new CredentialTreeIssueError(stage, reason);
+    } finally {
+      if (locked && connection) await connection.unsafe("select pg_advisory_unlock(hashtext($1))", [input.gateId]).catch(() => undefined);
+      connection?.release();
+    }
   }
 
   async witnessForCredential({ gateId, credentialCommitment, expectedRoot }: { gateId: string; credentialCommitment: string; expectedRoot: string }): Promise<MerkleWitness | null> {

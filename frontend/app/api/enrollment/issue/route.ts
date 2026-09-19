@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { durableEnrollmentStoreConfigured, enrollmentStore } from "@/lib/server/enrollment-store";
 import { buildIssuedCredentialPayload, issuedCredentialCanonical } from "@/lib/server/credential-issuance";
-import { credentialTreeStore, durableCredentialTreeStoreConfigured } from "@/lib/server/credential-tree";
+import { CredentialTreeIssueError, credentialTreeStore, durableCredentialTreeStoreConfigured } from "@/lib/server/credential-tree";
 import { getGatePolicy } from "@/lib/server/gate-policy";
 import { gateRootPublisherConfigured, publishCredentialRoot } from "@/lib/server/root-publisher";
 import { resolveTrustedOrigin } from "@/lib/server/request-origin";
@@ -14,6 +14,12 @@ import { readJsonLimited } from "@/lib/server/request-body";
 import { canonicalFieldHex } from "@/packages/shared/src/field";
 
 const schema = z.object({ challengeId: z.string().uuid(), address: z.string().min(1).max(128), message: z.string().min(1).max(1024), gateId: z.string().min(1).max(128), signature: z.string().min(1).max(1024), commitment: z.string().regex(/^[a-f0-9]{64}$/), credentialSalt: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+
+function unavailable(id: string, stage: string, reason?: string) {
+  console.error(JSON.stringify({ event: "enrollment_issue_failed", requestId: id, stage, ...(reason ? { reason } : {}) }));
+  return publicError("SERVICE_UNAVAILABLE", id, 503);
+}
+
 export async function POST(request: NextRequest) {
   const id = requestId();
   if (process.env.NODE_ENV === "production" && (!durableEnrollmentStoreConfigured || !durableCredentialTreeStoreConfigured || !gateRootPublisherConfigured)) return publicError("SERVICE_UNAVAILABLE", id, 503);
@@ -44,7 +50,11 @@ export async function POST(request: NextRequest) {
       expectedRoot: policy.credentialRoot,
       publishRoot: async (root) => publishCredentialRoot({ gateId: parsed.data.gateId, expectedEpoch: policy.epoch, newRoot: root }),
     });
-  } catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
+  } catch (error) {
+    const stage = error instanceof CredentialTreeIssueError ? error.stage : "unknown";
+    const reason = error instanceof CredentialTreeIssueError ? error.reason : undefined;
+    return unavailable(id, `credential_tree.${stage}`, reason);
+  }
   let payload;
   try {
     payload = buildIssuedCredentialPayload({
@@ -56,7 +66,7 @@ export async function POST(request: NextRequest) {
       policy,
       expiresAt,
     });
-  } catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
+  } catch { return unavailable(id, "credential_payload"); }
   const issuerSignature = issuer.sign(createHash("sha256").update(issuedCredentialCanonical(payload)).digest()).toString("base64");
   return NextResponse.json({ ...payload, issuerSignature }, { status: 201, headers: { "Cache-Control": "no-store" } });
 }

@@ -23,11 +23,19 @@ export const FREIGHTER_INSTALL_URL = "https://freighter.app/";
 
 type AssetRule = { type: "native" | "credit"; code: string; issuer?: string; minimum: number };
 type Eligibility = { eligible?: boolean; hasTrustline?: boolean };
-type ApiError = { error?: string };
+type ApiError = { error?: string; requestId?: string };
 type ClaimChallenge = { challengeId: string; message: string };
 
 export function isFreighterMissing(message: string): boolean {
   return /freighter was not found/i.test(message);
+}
+
+export function enrollmentIssueMessage(error?: string, requestId?: string): string {
+  if (error === "CHALLENGE_SPENT") return "This enrollment request has expired or was already used. Connect Freighter again to create a fresh request.";
+  if (error === "ORIGIN_MISMATCH") return "This enrollment page was opened from an untrusted origin. Return to VeilPass and try again.";
+  if (error === "PROOF_INVALID") return "Freighter could not verify the enrollment signature. Approve the fresh request in Freighter, then try again.";
+  if (error === "SERVICE_UNAVAILABLE") return `VeilPass could not finish enrollment right now. Your wallet was not enrolled and no funds were moved. Wait a moment, then connect Freighter again.${requestId ? ` Support reference: ${requestId}.` : ""}`;
+  return "VeilPass could not finish enrollment. Connect Freighter again to create a fresh request.";
 }
 
 async function responseJson<T>(response: Response): Promise<T | null> {
@@ -118,8 +126,12 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ challengeId: challenge.challengeId, address, message: challenge.message, gateId: challenge.gateId, signature: signedMessageText(signed.signedMessage), commitment, credentialSalt }),
     });
+    if (!issueResponse.ok) {
+      const errorBody = await responseJson<ApiError>(issueResponse);
+      throw new Error(enrollmentIssueMessage(errorBody?.error, errorBody?.requestId));
+    }
     const issued = issuedCredentialSchema.safeParse(await responseJson<unknown>(issueResponse));
-    if (!issued.success) throw new Error("Issuer could not create the credential. Try again in a moment.");
+    if (!issued.success) throw new Error("Issuer returned an unexpected response shape. Try again in a moment.");
     await saveCredential({ ...issued.data, subjectSecret, storedAt: new Date().toISOString() });
     setComplete(true);
     if (returnTo) {

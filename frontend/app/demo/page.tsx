@@ -3,7 +3,7 @@ import { DemoBench } from "@/components/demo/demo-bench";
 import { Reveal } from "@/components/motion/reveal";
 import { Button } from "@/components/ui/button";
 import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
-import { siteConfig } from "@/lib/seo";
+import { absoluteUrl, siteConfig } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Two-origin wallet privacy demo",
@@ -18,12 +18,14 @@ export const metadata: Metadata = {
       "Inspect the exact host payload for origin-scoped Stellar wallet login.",
     url: "/demo",
     siteName: siteConfig.name,
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: siteConfig.ogImageAlt }],
   },
   twitter: {
     card: "summary_large_image",
     title: "VeilPass two-origin privacy demo",
     description:
       "Inspect the exact host payload for origin-scoped Stellar wallet login.",
+    images: [{ url: absoluteUrl("/twitter-image"), alt: siteConfig.ogImageAlt }],
   },
 };
 
