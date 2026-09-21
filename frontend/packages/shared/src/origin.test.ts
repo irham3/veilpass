@@ -7,6 +7,7 @@ describe("normalizeOrigin", () => {
     ["HTTPS://Example.COM:443/", "https://example.com"],
     ["https://example.com:8443/", "https://example.com:8443"],
     ["http://localhost:3000/", "http://localhost:3000"],
+    ["http://app-a.localhost:3000/", "http://app-a.localhost:3000"],
     ["http://127.0.0.1:3000", "http://127.0.0.1:3000"],
     ["http://[::1]:3000", "http://[::1]:3000"],
   ])("normalizes %s", (input, expected) => {

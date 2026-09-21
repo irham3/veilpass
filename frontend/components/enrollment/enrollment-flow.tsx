@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon } from "@phosphor-icons/react/Check";
+import { CircleNotchIcon } from "@phosphor-icons/react/CircleNotch";
 import { CopyIcon } from "@phosphor-icons/react/Copy";
 import { ShieldCheckIcon } from "@phosphor-icons/react/ShieldCheck";
 import { SparkleIcon } from "@phosphor-icons/react/Sparkle";
@@ -328,11 +329,6 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
           <AlertDescription className="mt-2 leading-6 text-paper-200">The issuer sees your Stellar address to verify wallet control and its public Testnet balance. {usesNativeXlm ? `The gate requires at least ${assetRule.minimum} XLM.` : `The demo balance is fixed at ${assetRule.minimum} ${assetRule.code}, once per wallet.`} Host apps do not receive that address. Clearing site data removes this browser credential.</AlertDescription>
         </Alert>
 
-        <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl p-1 text-sm leading-6 text-paper-200 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-ring">
-          <Checkbox checked={disclosed} onCheckedChange={(value) => setDisclosed(value === true)} className="mt-1" />
-          <span>I understand what the issuer can observe and that this does not provide network anonymity.</span>
-        </label>
-
         <section aria-labelledby="enrollment-progress-title" className="mt-6 rounded-[1.35rem] border border-paper-50/12 bg-ink-950/55 p-4 sm:p-5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
             <div>
@@ -368,12 +364,16 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
 
         {complete && !returnTo ? <Alert className="mt-5 rounded-[1.35rem] border-signal-400/35 bg-signal-400/[0.08] p-5 text-paper-50"><AlertTitle>Credential stored in this browser</AlertTitle><AlertDescription className="mt-2 leading-6 text-paper-200">Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.</AlertDescription><div className="mt-4 flex flex-wrap gap-3"><Button asChild size="default" className="rounded-full"><a href={publicAppLinks.appA}>Continue to App A</a></Button><Button asChild size="default" variant="outline" className="rounded-full border-paper-50/18 bg-transparent text-paper-50 hover:bg-paper-50/8"><a href={publicAppLinks.appB}>Continue to App B</a></Button></div></Alert> : null}
 
-        <div className="mt-6 border-t border-paper-50/10 pt-6">
+        <div className="mt-6 rounded-[1.35rem] border border-paper-50/12 bg-ink-950/40 p-4 sm:p-5">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl text-sm leading-6 text-paper-200 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-ring">
+            <Checkbox checked={disclosed} onCheckedChange={(value) => setDisclosed(value === true)} className="mt-1" />
+            <span>I understand what the issuer can observe and that this does not provide network anonymity.</span>
+          </label>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            {!usesNativeXlm ? <Button type="button" size="lg" className="min-h-12 rounded-full px-5 disabled:opacity-100 disabled:border-transparent disabled:bg-paper-200/10 disabled:text-paper-200/70" disabled={disabled} onClick={() => { setBusyAction("prepare"); void prepareDemoWallet(); }}><SparkleIcon aria-hidden="true" />{complete ? "Credential enrolled" : busyAction === "prepare" ? "Preparing Testnet wallet…" : "Prepare demo wallet"}</Button> : null}
-            <Button type="button" size="lg" variant={usesNativeXlm ? "default" : "outline"} className={`min-h-12 rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-100 disabled:border-paper-50/8 disabled:bg-paper-200/8 disabled:text-paper-200/65 ${usesNativeXlm ? "" : "border-paper-50/18 bg-transparent hover:bg-paper-50/8"}`} disabled={disabled} aria-describedby={!disclosed ? "enrollment-button-help" : undefined} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{enrollLabel}</Button>
+            {!usesNativeXlm ? <Button type="button" size="lg" className="mt-4 min-h-12 rounded-full px-5 disabled:opacity-100 disabled:border-transparent disabled:bg-paper-200/10 disabled:text-paper-200/70" disabled={disabled} aria-busy={busyAction === "prepare"} onClick={() => { setBusyAction("prepare"); void prepareDemoWallet(); }}><SparkleIcon aria-hidden="true" />{complete ? "Credential enrolled" : busyAction === "prepare" ? "Preparing Testnet wallet…" : "Prepare demo wallet"}{busyAction === "prepare" ? <CircleNotchIcon aria-hidden="true" className="animate-spin motion-reduce:animate-none" /> : null}</Button> : null}
+            <Button type="button" size="lg" variant={usesNativeXlm ? "default" : "outline"} className={`mt-4 min-h-12 rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-100 disabled:border-paper-50/8 disabled:bg-paper-200/8 disabled:text-paper-200/65 ${usesNativeXlm ? "" : "border-paper-50/18 bg-transparent hover:bg-paper-50/8"}`} disabled={disabled} aria-busy={busyAction === "enroll"} aria-describedby={!disclosed ? "enrollment-button-help" : undefined} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{enrollLabel}{busyAction === "enroll" ? <CircleNotchIcon aria-hidden="true" className="animate-spin motion-reduce:animate-none" /> : null}</Button>
           </div>
-          {!disclosed ? <p id="enrollment-button-help" className="mt-3 text-sm leading-6 text-signal-400">First, check the disclosure box directly above the progress panel. The button will then become available.</p> : <p className="mt-3 text-sm leading-6 text-paper-200">After clicking, watch the Current status panel above and complete any Freighter request before returning to this tab.</p>}
+          {!disclosed ? <p id="enrollment-button-help" className="mt-3 text-sm leading-6 text-signal-400">First, check the disclosure box above this button. The button will then become available.</p> : <p className="mt-3 text-sm leading-6 text-paper-200">After clicking, watch the Current status panel above and complete any Freighter request before returning to this tab.</p>}
           <p className="mt-1 text-xs leading-5 text-paper-300">{usesNativeXlm ? "A Testnet XLM balance is all this gate checks; no asset trustline, swap, or purchase is required." : `No XLM-to-${assetRule.code} swap or ${assetRule.code} purchase is required for this Testnet demo.`}</p>
         </div>
       </div>

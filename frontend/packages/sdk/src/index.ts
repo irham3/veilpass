@@ -23,14 +23,28 @@ export class VeilPass {
     const popup = window.open(url, "veilpass-login", "popup,width=520,height=720");
     if (!popup) throw new VeilPassError("POPUP_BLOCKED", "Allow the VeilPass login window and try again.");
     return new Promise((resolve, reject) => {
-      const cleanup = () => { window.removeEventListener("message", onMessage); window.clearTimeout(timeout); };
+      let settled = false;
+      let challengePromise: ReturnType<typeof createChallenge> | null = null;
+      const cleanup = () => {
+        settled = true;
+        window.removeEventListener("message", onMessage);
+        window.clearTimeout(timeout);
+        window.clearInterval(closedPoll);
+      };
+      const sendChallenge = () => {
+        challengePromise ??= createChallenge();
+        void challengePromise.then((challenge) => {
+          if (!settled && !popup.closed) popup.postMessage({ type: "veilpass:challenge", state, challenge }, this.loginOrigin);
+        }).catch((error) => {
+          if (settled) return;
+          cleanup();
+          popup.close();
+          reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Could not create a login challenge"));
+        });
+      };
       const onMessage = (event: MessageEvent) => {
         if (event.origin === this.loginOrigin && event.source === popup && event.data?.type === "veilpass:ready" && event.data?.state === state) {
-          void createChallenge().then((challenge) => {
-            popup.postMessage({ type: "veilpass:challenge", state, challenge }, this.loginOrigin);
-          }).catch((error) => {
-            cleanup(); popup.close(); reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Could not create a login challenge"));
-          });
+          sendChallenge();
           return;
         }
         const result = validatePopupMessage({ event, popup, loginOrigin: this.loginOrigin, state });
@@ -42,6 +56,11 @@ export class VeilPass {
         }).catch((error) => { cleanup(); popup.close(); reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Verification unavailable")); });
       };
       const timeout = window.setTimeout(() => { cleanup(); popup.close(); reject(new VeilPassError("TIMEOUT", "VeilPass login timed out.")); }, timeoutMs);
+      const closedPoll = window.setInterval(() => {
+        if (!popup.closed) return;
+        cleanup();
+        reject(new VeilPassError("POPUP_CLOSED", "The VeilPass login window was closed before login finished."));
+      }, 400);
       window.addEventListener("message", onMessage);
     });
   }

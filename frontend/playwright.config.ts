@@ -14,6 +14,11 @@ export default defineConfig({
   webServer: {
     command: "npm run build && npm run start -- --hostname 0.0.0.0",
     url: "http://localhost:3000",
+    env: {
+      VEILPASS_HOST_ORIGIN: "http://localhost:3000,http://app-a.localhost:3000,http://app-b.localhost:3000",
+      VEILPASS_LOGIN_ORIGIN: "http://localhost:3000",
+      NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN: "http://localhost:3000",
+    },
     // Local contributors can opt in when their development server is already
     // running; CI builds and starts the production server under test.
     reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "true",

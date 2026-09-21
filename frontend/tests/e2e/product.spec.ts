@@ -107,6 +107,55 @@ test("App A and App B resolve as distinct local host origins", async ({ page }) 
   await expect(page.getByText("http://app-b.localhost:3000", { exact: true })).toBeVisible();
 });
 
+test("hosted login retains its opener and enables a stored local credential", async ({ page }) => {
+  await page.goto("http://app-a.localhost:3000");
+  const [popup] = await Promise.all([
+    page.waitForEvent("popup"),
+    page.getByRole("button", { name: "Login with VeilPass" }).click(),
+  ]);
+  await popup.waitForLoadState("domcontentloaded");
+  await expect.poll(() => popup.evaluate(() => Boolean(window.opener))).toBe(true);
+  await expect(popup.getByText("Secure challenge received. Ready to continue.")).toBeVisible();
+
+  const field = "a".repeat(64);
+  const timestamp = new Date().toISOString();
+  await popup.evaluate(async ({ field, timestamp }) => {
+    const database = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("veilpass-credential-v1", 1);
+      request.onupgradeneeded = () => request.result.createObjectStore("credentials");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction("credentials", "readwrite");
+      transaction.objectStore("credentials").put({
+        gateId: "premium-holder",
+        epoch: 1,
+        commitment: field,
+        credentialSalt: field,
+        credentialRoot: field,
+        leafNonce: field,
+        merklePath: Array.from({ length: 16 }, () => field),
+        pathIsRight: Array.from({ length: 16 }, () => false),
+        revocationHash: field,
+        expiresAt: "2030-01-01T00:00:00.000Z",
+        issuerPublicKey: "test-key",
+        issuerSignature: "test-signature",
+        subjectSecret: "test-secret",
+        storedAt: timestamp,
+      }, "premium-holder");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+    database.close();
+  }, { field, timestamp });
+
+  const reloadResponse = await popup.reload();
+  expect(reloadResponse?.headers()["cross-origin-opener-policy"]).toBe("unsafe-none");
+  await expect(popup.getByRole("button", { name: "Continue with local credential" })).toBeEnabled();
+  await popup.close();
+});
+
 for (const route of ["/", "/demo", "/dashboard", "/docs"]) {
   test(`@a11y ${route} has no serious accessibility violations`, async ({ page }) => {
     await page.goto(route);
@@ -149,7 +198,7 @@ test("landing and enrollment explain every Freighter step before the first click
 
   const blockedButton = page.getByRole("button", { name: "Check the box above to continue" });
   await expect(blockedButton).toBeDisabled();
-  await expect(page.getByText("First, check the disclosure box directly above the progress panel.")).toBeVisible();
+  await expect(page.getByText("First, check the disclosure box above this button.")).toBeVisible();
   await page.getByRole("checkbox").click();
   await expect(page.getByRole("button", { name: "Connect Freighter and enroll" })).toBeEnabled();
   await expect(page.getByText("After clicking, watch the Current status panel above")).toBeVisible();

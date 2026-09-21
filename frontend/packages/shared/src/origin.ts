@@ -3,6 +3,7 @@ export type NormalizedOrigin = `${"http" | "https"}://${string}`;
 function isLoopback(hostname: string) {
   return (
     hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
     hostname === "127.0.0.1" ||
     hostname === "[::1]"
   );

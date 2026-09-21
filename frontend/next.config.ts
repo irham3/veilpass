@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { securityHeaders } from "./lib/security/headers";
+import { popupOpenerHeaders, securityHeaders } from "./lib/security/headers";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -31,6 +31,14 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      {
+        source: "/login",
+        headers: popupOpenerHeaders,
+      },
+      {
+        source: "/dashboard/enroll",
+        headers: popupOpenerHeaders,
       },
     ];
   },

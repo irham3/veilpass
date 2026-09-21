@@ -40,6 +40,7 @@ const verified = {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -86,6 +87,14 @@ describe("VeilPass browser login", () => {
       { type: "veilpass:challenge", state, challenge },
       "https://login.example",
     ));
+
+    window.dispatchEvent(new MessageEvent("message", {
+      origin: "https://login.example",
+      source: popup,
+      data: { type: "veilpass:ready", state },
+    }));
+    await vi.waitFor(() => expect(popup.postMessage).toHaveBeenCalledTimes(2));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
 
     window.dispatchEvent(new MessageEvent("message", {
       origin: "https://login.example",
@@ -141,6 +150,53 @@ describe("VeilPass browser login", () => {
     const timeoutPromise = new VeilPass({ loginOrigin: "https://login.example" }).login({ gateId: "premium-holder", timeoutMs: 1 });
     await expect(timeoutPromise).rejects.toMatchObject({ code: "TIMEOUT" });
     expect(timeoutPopup.close).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a popup closed while its challenge request is still resolving", async () => {
+    vi.useFakeTimers();
+    const popup = { postMessage: vi.fn(), close: vi.fn(), closed: false } as unknown as Window;
+    let openedUrl = "";
+    let resolveChallenge!: (response: Response) => void;
+    vi.spyOn(window, "open").mockImplementation((url) => { openedUrl = String(url); return popup; });
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Promise<Response>((resolve) => { resolveChallenge = resolve; })));
+
+    const promise = new VeilPass({ loginOrigin: "https://login.example" }).login({ gateId: "premium-holder", timeoutMs: 5_000 });
+    const result = promise.then((value) => value, (error: unknown) => error);
+    const state = new URL(openedUrl).searchParams.get("state");
+    window.dispatchEvent(new MessageEvent("message", { origin: "https://login.example", source: popup, data: { type: "veilpass:ready", state } }));
+    await Promise.resolve();
+
+    await vi.advanceTimersByTimeAsync(400);
+    (popup as unknown as { closed: boolean }).closed = true;
+    resolveChallenge(new Response(JSON.stringify(challenge), { status: 201 }));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(popup.postMessage).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(400);
+    expect(await result).toMatchObject({ code: "POPUP_CLOSED" });
+  });
+
+  it("ignores a late challenge failure after the login has timed out", async () => {
+    vi.useFakeTimers();
+    const popup = { postMessage: vi.fn(), close: vi.fn(), closed: false } as unknown as Window;
+    let openedUrl = "";
+    let rejectChallenge!: (reason: unknown) => void;
+    vi.spyOn(window, "open").mockImplementation((url) => { openedUrl = String(url); return popup; });
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => new Promise<Response>((_, reject) => { rejectChallenge = reject; })));
+
+    const promise = new VeilPass({ loginOrigin: "https://login.example" }).login({ gateId: "premium-holder", timeoutMs: 100 });
+    const result = promise.then((value) => value, (error: unknown) => error);
+    const state = new URL(openedUrl).searchParams.get("state");
+    window.dispatchEvent(new MessageEvent("message", { origin: "https://login.example", source: popup, data: { type: "veilpass:ready", state } }));
+    await Promise.resolve();
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(await result).toMatchObject({ code: "TIMEOUT" });
+    rejectChallenge(new Error("late challenge failure"));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(popup.close).toHaveBeenCalledOnce();
   });
 
   it("normalizes transport failures while verifying a proof", async () => {

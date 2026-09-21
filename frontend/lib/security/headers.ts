@@ -30,3 +30,12 @@ export const securityHeaders: Array<{ key: string; value: string }> = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
+
+// The hosted login intentionally communicates with an exact, cross-origin
+// opener. Its postMessage channel additionally binds origin, Window source,
+// request state, challenge origin, and gate ID. A stricter COOP value on both
+// origins would sever window.opener before that application-level binding can
+// run.
+export const popupOpenerHeaders: Array<{ key: string; value: string }> = [
+  { key: "Cross-Origin-Opener-Policy", value: "unsafe-none" },
+];
