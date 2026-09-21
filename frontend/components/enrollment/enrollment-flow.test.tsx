@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { enrollmentIssueMessage, FREIGHTER_INSTALL_URL, isFreighterMissing } from "./enrollment-flow";
+import { enrollmentButtonLabel, enrollmentIssueMessage, FREIGHTER_INSTALL_URL, isFreighterMissing } from "./enrollment-flow";
 
 describe("Freighter enrollment recovery", () => {
   it("detects the missing-extension error", () => {
@@ -17,5 +17,13 @@ describe("Freighter enrollment recovery", () => {
     expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE", "req-123")).toContain("req-123");
     expect(enrollmentIssueMessage("CHALLENGE_SPENT")).toContain("fresh request");
     expect(enrollmentIssueMessage("PROOF_INVALID")).toContain("selected Freighter account");
+  });
+
+  it("explains why the enrollment button cannot be clicked and what happens while it runs", () => {
+    expect(enrollmentButtonLabel({ disclosed: false, complete: false, busy: false, phase: "ready", usesNativeXlm: true })).toBe("Check the box above to continue");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "connecting", usesNativeXlm: true })).toBe("Waiting for Freighter…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "signing", usesNativeXlm: true })).toBe("Approve the message in Freighter…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "issuing", usesNativeXlm: true })).toBe("Finishing enrollment…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: true, busy: false, phase: "complete", usesNativeXlm: true })).toBe("Credential enrolled");
   });
 });

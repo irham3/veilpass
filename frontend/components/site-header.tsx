@@ -3,7 +3,6 @@
 import { ArrowRightIcon } from "@phosphor-icons/react/ArrowRight";
 import { ListIcon } from "@phosphor-icons/react/List";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -18,11 +17,7 @@ const links = [
 ];
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const onEnrollmentPage = pathname === "/dashboard/enroll";
-  const primaryAction = onEnrollmentPage
-    ? { href: publicAppLinks.appA, label: "Open App A" }
-    : { href: enrollmentUrl, label: "Enroll with Freighter" };
+  const primaryAction = { href: enrollmentUrl, label: "Enroll with Freighter" };
 
   return (
     <header
@@ -85,7 +80,7 @@ export function SiteHeader() {
           className="group hidden min-h-11 rounded-full px-4 pr-1.5 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] sm:inline-flex xl:hidden"
         >
           <a href={primaryAction.href}>
-            {onEnrollmentPage ? "Open App A" : "Enroll"}
+            Enroll
             <span aria-hidden="true" className="ml-1 grid size-7 place-items-center rounded-full bg-ink-950/12 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
               <ArrowRightIcon size={15} />
             </span>

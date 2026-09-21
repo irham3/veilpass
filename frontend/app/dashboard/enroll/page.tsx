@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { EnrollmentFlow } from "@/components/enrollment/enrollment-flow";
-import { Reveal } from "@/components/motion/reveal";
 import { publicAppLinks } from "@/lib/public-app-links";
 
 export const metadata: Metadata = {
@@ -33,10 +32,10 @@ export default async function EnrollPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
-      <main className="aperture-field relative px-5 py-14 lg:px-8 lg:py-20">
+      <main className="aperture-field relative px-5 py-10 lg:px-8 lg:py-14">
         <div aria-hidden="true" className="aperture-ring absolute right-[-12rem] top-4 size-[30rem] rounded-full opacity-30" />
         <div className="relative mx-auto max-w-5xl">
-          <Reveal>
+          <div>
             <Link href={returnTo ?? publicAppLinks.home} className="smooth-link text-sm text-paper-200 hover:text-paper-50">
               {returnTo ? "Back to private login" : "Back to VeilPass"}
             </Link>
@@ -46,13 +45,14 @@ export default async function EnrollPage({ searchParams }: { searchParams: Promi
                 Create a local credential.
               </h1>
               <p className="mt-4 max-w-xl text-base leading-7 text-paper-200 sm:text-lg">
-                Freighter proves wallet control. The host still gets no wallet address.
+                Freighter will ask for a wallet connection and then one message signature. Keep this tab open until it says <strong className="font-semibold text-paper-50">Credential stored</strong>; the host still gets no wallet address.
               </p>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-paper-200">Already authorized VeilPass before? The connection prompt may be skipped. Watch the on-page progress panel for the exact active step.</p>
             </div>
-          </Reveal>
-          <Reveal delay="short" className="mt-8">
+          </div>
+          <div className="mt-6">
             <EnrollmentFlow assetRule={assetRule} returnTo={returnTo} />
-          </Reveal>
+          </div>
         </div>
       </main>
     </div>

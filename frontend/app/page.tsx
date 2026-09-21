@@ -88,6 +88,33 @@ const evidence = [
   ["Docs", "Privacy model and limitations stay visible"],
 ] as const;
 
+const enrollmentJourney = [
+  {
+    icon: WalletIcon,
+    step: "Before you click",
+    title: "Unlock Freighter on Testnet",
+    text: "Keep one account selected, check the required XLM balance on the enrollment page, then tick the disclosure box. The button stays disabled until you do.",
+  },
+  {
+    icon: FingerprintSimpleIcon,
+    step: "Freighter approval 1",
+    title: "Allow the wallet connection",
+    text: "Freighter may ask VeilPass to read the active public address. Approve it. If you already allowed VeilPass, this prompt can be skipped automatically.",
+  },
+  {
+    icon: ShieldCheckIcon,
+    step: "Freighter approval 2",
+    title: "Sign one readable message",
+    text: "Approve the enrollment message without switching accounts. It is an off-chain signature—not a transaction—and it cannot move your funds.",
+  },
+  {
+    icon: LockKeyIcon,
+    step: "Finish",
+    title: "Wait for “Credential stored”",
+    text: "Keep the tab open while VeilPass issues and saves the credential locally. After the success message appears, open App A or App B to log in privately.",
+  },
+] as const;
+
 export default function Home() {
   return (
     <div className="min-h-[100dvh] overflow-x-hidden bg-ink-950 text-paper-50">
@@ -174,6 +201,52 @@ export default function Home() {
                   </div>
                 </div>
               </Reveal>
+            </div>
+          </section>
+
+          {/* ── Enrollment journey ─────────────────────────────────────── */}
+          <section aria-labelledby="enrollment-journey-title" className="section-ink-slab border-y border-paper-50/8 px-4 py-16 sm:px-6 sm:py-24 lg:px-8 lg:py-28">
+            <div className="mx-auto max-w-7xl">
+              <Reveal className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
+                <div>
+                  <p className="eyebrow">Enrollment, step by step</p>
+                  <h2 id="enrollment-journey-title" className="mt-4 max-w-2xl text-3xl font-semibold tracking-tighter text-balance sm:text-4xl lg:text-5xl">
+                    What happens after you click enroll?
+                  </h2>
+                </div>
+                <div className="max-w-2xl lg:justify-self-end">
+                  <p className="text-base leading-7 text-paper-200 sm:text-lg sm:leading-8">
+                    You will approve at most two Freighter prompts, then wait for one explicit success message. The page shows the active step the entire time.
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-paper-200">
+                    No popup? Open Freighter from the browser toolbar, unlock it, and return to the enrollment tab. Do not refresh while a signature request is open.
+                  </p>
+                </div>
+              </Reveal>
+
+              <div className="mt-10 grid gap-4 sm:mt-12 md:grid-cols-2 xl:grid-cols-4">
+                {enrollmentJourney.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <Reveal key={item.title} as="article" delay={index % 2 === 0 ? "none" : "short"} className="rounded-[1.6rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5">
+                      <div className="h-full rounded-[1.15rem] bg-ink-950/82 p-5 sm:p-6">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="grid size-10 place-items-center rounded-xl bg-signal-400/10 text-signal-400"><Icon aria-hidden="true" size={21} weight="duotone" /></span>
+                          <span className="font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-paper-200">{index + 1} / 4</span>
+                        </div>
+                        <p className="mt-7 font-mono text-[0.6875rem] uppercase tracking-[0.13em] text-signal-400">{item.step}</p>
+                        <h3 className="mt-2 text-xl font-semibold tracking-[-0.035em]">{item.title}</h3>
+                        <p className="mt-3 text-sm leading-6 text-paper-200">{item.text}</p>
+                      </div>
+                    </Reveal>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button asChild size="lg" className="min-h-12 rounded-full px-5"><a href={enrollmentUrl}>Start guided enrollment</a></Button>
+                <Link href="/docs/enrollment" className="smooth-link w-fit px-2 py-2 text-sm text-paper-200 hover:text-paper-50">Read enrollment troubleshooting</Link>
+              </div>
             </div>
           </section>
 

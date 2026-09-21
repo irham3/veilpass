@@ -1,15 +1,11 @@
 // @vitest-environment jsdom
 
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { publicAppLinks } from "@/lib/public-app-links";
 
 import { SiteHeader } from "./site-header";
-
-vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
-}));
 
 describe("SiteHeader", () => {
   it("keeps the product navigation concise and sends visitors to the dedicated origins", () => {
@@ -29,5 +25,14 @@ describe("SiteHeader", () => {
 
     expect(header).toHaveClass("h-20");
     expect(bar).toHaveClass("h-15", "max-w-7xl", "liquid-glass-web", "backdrop-blur-xl");
+  });
+
+  it("keeps the enrollment call to action stable on every route", () => {
+    render(<SiteHeader />);
+
+    for (const link of screen.getAllByRole("link", { name: /Enroll/ })) {
+      expect(link).toHaveAttribute("href", `${publicAppLinks.login}/dashboard/enroll`);
+    }
+    expect(screen.queryByRole("link", { name: "Open App A" })).not.toBeInTheDocument();
   });
 });

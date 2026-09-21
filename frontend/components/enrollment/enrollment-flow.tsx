@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { publicAppLinks } from "@/lib/public-app-links";
 import { issuedCredentialSchema } from "@/packages/credential/src/schema";
 import { saveCredential } from "@/packages/credential/src/store";
 import { createCredentialSecrets } from "@/packages/proof/src/noir";
@@ -25,6 +26,44 @@ type AssetRule = { type: "native" | "credit"; code: string; issuer?: string; min
 type Eligibility = { eligible?: boolean; hasTrustline?: boolean };
 type ApiError = { error?: string; requestId?: string };
 type ClaimChallenge = { challengeId: string; message: string };
+type EnrollmentPhase = "ready" | "connecting" | "checking" | "preparing" | "signing" | "issuing" | "saving" | "complete";
+
+const enrollmentSteps = [
+  { label: "Connect wallet", detail: "Allow address access" },
+  { label: "Check eligibility", detail: "Confirm Testnet and balance" },
+  { label: "Sign message", detail: "Approve the off-chain request" },
+  { label: "Save credential", detail: "Wait for local confirmation" },
+] as const;
+
+function phaseStep(phase: EnrollmentPhase) {
+  if (phase === "connecting") return 0;
+  if (phase === "checking" || phase === "preparing") return 1;
+  if (phase === "signing") return 2;
+  if (phase === "issuing" || phase === "saving" || phase === "complete") return 3;
+  return -1;
+}
+
+export function enrollmentButtonLabel(input: { disclosed: boolean; complete: boolean; busy: boolean; phase: EnrollmentPhase; usesNativeXlm: boolean }) {
+  if (!input.disclosed) return "Check the box above to continue";
+  if (input.complete) return "Credential enrolled";
+  if (!input.busy) return input.usesNativeXlm ? "Connect Freighter and enroll" : "Enroll this wallet";
+  if (input.phase === "connecting") return "Waiting for Freighter…";
+  if (input.phase === "signing") return "Approve the message in Freighter…";
+  if (input.phase === "issuing" || input.phase === "saving") return "Finishing enrollment…";
+  return "Checking wallet…";
+}
+
+async function withTimeout<T>(promise: Promise<T>, milliseconds: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 export function isFreighterMissing(message: string): boolean {
   return /freighter was not found/i.test(message);
@@ -55,11 +94,13 @@ function assertExpectedSigner(expectedAddress: string, signerAddress: string) {
 export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; returnTo?: string }) {
   const router = useRouter();
   const [disclosed, setDisclosed] = useState(false);
-  const [status, setStatus] = useState("Choose a Testnet wallet setup option");
+  const [status, setStatus] = useState("Check the disclosure box, then connect Freighter.");
   const [complete, setComplete] = useState(false);
   const [issue, setIssue] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busyAction, setBusyAction] = useState<"prepare" | "enroll" | null>(null);
+  const [phase, setPhase] = useState<EnrollmentPhase>("ready");
+  const [walletLabel, setWalletLabel] = useState<string | null>(null);
   const usesNativeXlm = assetRule.type === "native";
 
   async function copyAssetDetails() {
@@ -73,12 +114,16 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
   }
 
   async function connectTestnetWallet() {
-    setStatus("Checking Freighter");
-    const connection = await isConnected();
+    setPhase("connecting");
+    setStatus("Waiting for Freighter. Approve the connection request, or open the extension from your browser toolbar if no window appears.");
+    const connection = await withTimeout(isConnected(), 10_000, "Freighter did not respond. Open or unlock the extension, then try again.");
     if (!connection.isConnected || connection.error) throw new Error("Freighter was not found. Install or unlock Freighter, then try again.");
-    const access = await requestAccess();
+    const access = await withTimeout(requestAccess(), 60_000, "Freighter did not return an account. Open the extension, finish or cancel the pending request, then try again.");
     if (access.error || !access.address) throw new Error("Wallet access was rejected.");
-    const network = await getNetworkDetails();
+    setWalletLabel(`${access.address.slice(0, 6)}…${access.address.slice(-6)}`);
+    setPhase("checking");
+    setStatus("Wallet connected. Confirming Stellar Testnet and the required balance.");
+    const network = await withTimeout(getNetworkDetails(), 10_000, "Freighter did not report its network. Reopen the extension and confirm Stellar Testnet.");
     if (network.error || network.networkPassphrase !== Networks.TESTNET) throw new Error("Switch Freighter to Stellar Testnet, then try again.");
     return access.address;
   }
@@ -113,9 +158,10 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
   }
 
   async function completeEnrollment(address: string) {
-    setStatus("Creating a local credential secret");
+    setPhase("preparing");
+    setStatus("Wallet is eligible. Creating a credential secret locally in this browser.");
     const { subjectSecret, credentialSalt, commitment } = await createCredentialSecrets();
-    setStatus("Creating a one-time enrollment request");
+    setStatus("Creating a fresh one-time enrollment request.");
     const challengeResponse = await fetch("/api/enrollment/challenge", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address, gateId }) });
     const challenge = await responseJson<{ challengeId: string; message: string; gateId: string } & ApiError>(challengeResponse);
     if (!challengeResponse.ok || !challenge) {
@@ -124,10 +170,13 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
         : `The active Freighter account needs at least ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” to set up the Testnet fixture.`);
       throw new Error("Enrollment issuer is not configured. Try again in a moment.");
     }
-    setStatus("Approve the enrollment message in Freighter");
-    const signed = await signMessage(challenge.message, { networkPassphrase: Networks.TESTNET, address });
+    setPhase("signing");
+    setStatus("Freighter needs one more approval. Review and sign the enrollment message; this is not a transaction and cannot move funds.");
+    const signed = await withTimeout(signMessage(challenge.message, { networkPassphrase: Networks.TESTNET, address }), 90_000, "The signature request timed out. Open Freighter, cancel any old request, then connect again for a fresh challenge.");
     if (signed.error || !signed.signedMessage) throw new Error("Enrollment message signing was rejected.");
     assertExpectedSigner(address, signed.signerAddress);
+    setPhase("issuing");
+    setStatus("Signature approved. VeilPass is issuing the credential and updating the Testnet gate.");
     const issueResponse = await fetch("/api/enrollment/issue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -139,8 +188,11 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
     }
     const issued = issuedCredentialSchema.safeParse(await responseJson<unknown>(issueResponse));
     if (!issued.success) throw new Error("Issuer returned an unexpected response shape. Try again in a moment.");
+    setPhase("saving");
+    setStatus("Credential issued. Saving it only in this browser.");
     await saveCredential({ ...issued.data, subjectSecret, storedAt: new Date().toISOString() });
     setComplete(true);
+    setPhase("complete");
     if (returnTo) {
       setStatus("Credential stored. Returning to private login…");
       window.setTimeout(() => router.replace(returnTo), 500);
@@ -153,14 +205,15 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
     try {
       setIssue(null);
       const address = await connectTestnetWallet();
-      setStatus(`Checking for ${assetRule.minimum} ${assetRule.code}`);
+      setPhase("checking");
+      setStatus(`Checking this wallet for at least ${assetRule.minimum} ${assetRule.code} on Stellar Testnet.`);
       if (!(await readEligibility(address)).eligible) throw new Error(usesNativeXlm
         ? `This wallet needs at least ${assetRule.minimum} XLM on Stellar Testnet. Fund it with Friendbot, then try again.`
         : `This wallet does not yet have ${assetRule.minimum} ${assetRule.code}. Select “Prepare demo wallet” — no swap or purchase is required.`);
       await completeEnrollment(address);
     } catch (error) {
       setIssue(error instanceof Error ? error.message : "Enrollment failed.");
-      setStatus("Enrollment needs attention");
+      setStatus("Enrollment paused. Follow the recovery message below, then start again with a fresh request.");
     } finally {
       setBusyAction(null);
     }
@@ -170,7 +223,8 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
     try {
       setIssue(null);
       const address = await connectTestnetWallet();
-      setStatus(`Checking for ${assetRule.minimum} ${assetRule.code}`);
+      setPhase("checking");
+      setStatus(`Checking this wallet for at least ${assetRule.minimum} ${assetRule.code} on Stellar Testnet.`);
       let eligibility = await readEligibility(address);
       if (eligibility.eligible) {
         await completeEnrollment(address);
@@ -226,13 +280,15 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
       await completeEnrollment(address);
     } catch (error) {
       setIssue(error instanceof Error ? error.message : "Demo wallet setup failed.");
-      setStatus("Wallet setup needs attention");
+      setStatus("Wallet setup paused. Follow the recovery message below, then start again.");
     } finally {
       setBusyAction(null);
     }
   }
 
   const disabled = !disclosed || complete || busyAction !== null;
+  const activeStep = phaseStep(phase);
+  const enrollLabel = enrollmentButtonLabel({ disclosed, complete, busy: busyAction === "enroll", phase, usesNativeXlm });
 
   return (
     <section className="rounded-[1.75rem] border border-paper-50/10 bg-paper-50/[0.035] p-1.5 shadow-[0_28px_90px_rgba(0,0,0,0.24)] sm:rounded-[2rem]">
@@ -277,14 +333,47 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
           <span>I understand what the issuer can observe and that this does not provide network anonymity.</span>
         </label>
 
+        <section aria-labelledby="enrollment-progress-title" className="mt-6 rounded-[1.35rem] border border-paper-50/12 bg-ink-950/55 p-4 sm:p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
+            <div>
+              <h3 id="enrollment-progress-title" className="font-semibold tracking-[-0.02em]">What happens after you click</h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-paper-200">Keep this tab open. Freighter may show a connection approval, then a message-signing approval. If the connection was approved before, it can go straight to the signature request.</p>
+            </div>
+            {walletLabel ? <span className="w-fit shrink-0 rounded-full border border-paper-50/12 px-3 py-1.5 font-mono text-xs text-paper-200">Account {walletLabel}</span> : null}
+          </div>
+
+          <ol className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {enrollmentSteps.map((step, index) => {
+              const done = phase === "complete" || index < activeStep;
+              const current = index === activeStep && phase !== "complete";
+              return (
+                <li key={step.label} aria-current={current ? "step" : undefined} className={`rounded-xl border p-3 transition-colors duration-150 ${done ? "border-signal-400/28 bg-signal-400/[0.07]" : current ? "border-signal-400/45 bg-signal-400/[0.1]" : "border-paper-50/8 bg-paper-50/[0.025]"}`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${done ? "bg-signal-400 text-ink-950" : current ? "border border-signal-400 text-signal-400" : "border border-paper-50/20 text-paper-200"}`}>{done ? <CheckIcon aria-hidden="true" size={14} weight="bold" /> : index + 1}</span>
+                    <strong className="text-sm text-paper-50">{step.label}</strong>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-paper-200">{step.detail}</p>
+                </li>
+              );
+            })}
+          </ol>
+
+          <div role="status" aria-live="assertive" className={`mt-4 rounded-xl border px-4 py-3 ${busyAction ? "border-signal-400/35 bg-signal-400/[0.08]" : "border-paper-50/8 bg-paper-50/[0.025]"}`}>
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-signal-400">Current status</p>
+            <p className="mt-1 text-sm leading-6 text-paper-50">{status}</p>
+          </div>
+        </section>
+
         {issue ? <Alert variant="destructive" className="mt-5 rounded-[1.35rem] border-alert-400/35 bg-alert-400/[0.08] p-5"><AlertTitle>Enrollment could not continue</AlertTitle><AlertDescription className="mt-2 leading-6">{issue}</AlertDescription>{isFreighterMissing(issue) ? <a href={FREIGHTER_INSTALL_URL} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-11 items-center rounded-full border border-paper-50/20 px-4 py-2 text-sm font-medium text-paper-50 underline-offset-4 transition-colors hover:border-paper-50/40 hover:bg-paper-50/10 hover:underline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-ring">Install or download Freighter ↗</a> : null}</Alert> : null}
+
+        {complete && !returnTo ? <Alert className="mt-5 rounded-[1.35rem] border-signal-400/35 bg-signal-400/[0.08] p-5 text-paper-50"><AlertTitle>Credential stored in this browser</AlertTitle><AlertDescription className="mt-2 leading-6 text-paper-200">Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.</AlertDescription><div className="mt-4 flex flex-wrap gap-3"><Button asChild size="default" className="rounded-full"><a href={publicAppLinks.appA}>Continue to App A</a></Button><Button asChild size="default" variant="outline" className="rounded-full border-paper-50/18 bg-transparent text-paper-50 hover:bg-paper-50/8"><a href={publicAppLinks.appB}>Continue to App B</a></Button></div></Alert> : null}
 
         <div className="mt-6 border-t border-paper-50/10 pt-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {!usesNativeXlm ? <Button type="button" size="lg" className="min-h-12 rounded-full px-5 disabled:opacity-100 disabled:border-transparent disabled:bg-paper-200/10 disabled:text-paper-200/70" disabled={disabled} onClick={() => { setBusyAction("prepare"); void prepareDemoWallet(); }}><SparkleIcon aria-hidden="true" />{complete ? "Credential enrolled" : busyAction === "prepare" ? "Preparing Testnet wallet…" : "Prepare demo wallet"}</Button> : null}
-            <Button type="button" size="lg" variant={usesNativeXlm ? "default" : "outline"} className={`min-h-12 rounded-full px-5 disabled:opacity-100 disabled:border-transparent disabled:bg-paper-200/10 disabled:text-paper-200/70 ${usesNativeXlm ? "" : "border-paper-50/18 bg-transparent hover:bg-paper-50/8"}`} disabled={disabled} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{busyAction === "enroll" ? "Checking wallet…" : usesNativeXlm ? "Connect Freighter and enroll" : `I already have ${assetRule.code} — enroll`}</Button>
+            <Button type="button" size="lg" variant={usesNativeXlm ? "default" : "outline"} className={`min-h-12 rounded-full px-5 disabled:cursor-not-allowed disabled:opacity-100 disabled:border-paper-50/8 disabled:bg-paper-200/8 disabled:text-paper-200/65 ${usesNativeXlm ? "" : "border-paper-50/18 bg-transparent hover:bg-paper-50/8"}`} disabled={disabled} aria-describedby={!disclosed ? "enrollment-button-help" : undefined} onClick={() => { setBusyAction("enroll"); void enrollExistingWallet(); }}>{enrollLabel}</Button>
           </div>
-          <p className="mt-3 text-sm leading-6 text-paper-200" aria-live="polite">{status}</p>
+          {!disclosed ? <p id="enrollment-button-help" className="mt-3 text-sm leading-6 text-signal-400">First, check the disclosure box directly above the progress panel. The button will then become available.</p> : <p className="mt-3 text-sm leading-6 text-paper-200">After clicking, watch the Current status panel above and complete any Freighter request before returning to this tab.</p>}
           <p className="mt-1 text-xs leading-5 text-paper-300">{usesNativeXlm ? "A Testnet XLM balance is all this gate checks; no asset trustline, swap, or purchase is required." : `No XLM-to-${assetRule.code} swap or ${assetRule.code} purchase is required for this Testnet demo.`}</p>
         </div>
       </div>

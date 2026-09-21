@@ -136,6 +136,37 @@ test("@security security headers and trusted-origin API boundary are enforced", 
   await expect(rejected.json()).resolves.toMatchObject({ ok: false, error: "ORIGIN_MISMATCH" });
 });
 
+test("landing and enrollment explain every Freighter step before the first click", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "What happens after you click enroll?" })).toBeVisible();
+  await expect(page.getByText("Approve the enrollment message without switching accounts.")).toBeVisible();
+  await expect(page.getByText(/not a transaction—and it cannot move your funds/i)).toBeVisible();
+
+  await page.goto("/dashboard/enroll");
+  const header = page.locator("header");
+  await expect(header.locator('a[href$="/dashboard/enroll"]').first()).toHaveAttribute("href", /dashboard\/enroll$/);
+  await expect(header.getByRole("link", { name: "Open App A" })).toHaveCount(0);
+
+  const blockedButton = page.getByRole("button", { name: "Check the box above to continue" });
+  await expect(blockedButton).toBeDisabled();
+  await expect(page.getByText("First, check the disclosure box directly above the progress panel.")).toBeVisible();
+  await page.getByRole("checkbox").click();
+  await expect(page.getByRole("button", { name: "Connect Freighter and enroll" })).toBeEnabled();
+  await expect(page.getByText("After clicking, watch the Current status panel above")).toBeVisible();
+});
+
+test("docs navigation stays oriented without replaying route-entry animation", async ({ page }) => {
+  await page.goto("/docs");
+  await expect(page.locator(".route-transition")).toHaveCount(0);
+  const docsNav = page.getByRole("navigation", { name: "Documentation" });
+  await expect(docsNav).toBeVisible();
+  await docsNav.getByRole("link", { name: "Enrollment" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Enrollment" })).toBeVisible();
+  await expect(docsNav.getByRole("link", { name: "Enrollment" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "Before clicking" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "If no Freighter window appears" })).toBeVisible();
+});
+
 test("@security public APIs reject oversized and structurally hostile input without leaking internals", async ({ request }) => {
   const oversized = await request.post("/api/challenges", {
     headers: {
