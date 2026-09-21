@@ -1,4 +1,4 @@
-import { Keypair, StrKey } from "@stellar/stellar-sdk";
+import { StrKey } from "@stellar/stellar-sdk";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -8,6 +8,7 @@ import { resolveTrustedOrigin } from "@/lib/server/request-origin";
 import { readJsonLimited } from "@/lib/server/request-body";
 import { publicError, requestId } from "@/lib/server/responses";
 import { checkTestnetEligibility } from "@/lib/stellar/eligibility";
+import { verifyStellarMessageSignature } from "@/lib/stellar/message-signature";
 
 const schema = z.object({ challengeId: z.string().uuid(), address: z.string().max(128), message: z.string().min(1).max(1_024), signature: z.string().min(1).max(1_024) }).strict();
 
@@ -28,13 +29,7 @@ export async function POST(request: NextRequest) {
 
   const parsed = schema.safeParse(await readJsonLimited(request, 8_192).catch(() => null));
   if (!parsed.success || !StrKey.isValidEd25519PublicKey(parsed.data.address)) return publicError("PROOF_INVALID", id, 400);
-  let signatureValid = false;
-  try {
-    signatureValid = Keypair.fromPublicKey(parsed.data.address).verify(Buffer.from(parsed.data.message), Buffer.from(parsed.data.signature, "base64"));
-  } catch {
-    signatureValid = false;
-  }
-  if (!signatureValid) return publicError("PROOF_INVALID", id, 400);
+  if (!verifyStellarMessageSignature(parsed.data)) return publicError("PROOF_INVALID", id, 400);
 
   const config = getDemoAssetConfig();
   if (!config) return publicError("SERVICE_UNAVAILABLE", id, 503);

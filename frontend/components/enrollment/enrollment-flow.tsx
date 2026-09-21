@@ -33,7 +33,7 @@ export function isFreighterMissing(message: string): boolean {
 export function enrollmentIssueMessage(error?: string, requestId?: string): string {
   if (error === "CHALLENGE_SPENT") return "This enrollment request has expired or was already used. Connect Freighter again to create a fresh request.";
   if (error === "ORIGIN_MISMATCH") return "This enrollment page was opened from an untrusted origin. Return to VeilPass and try again.";
-  if (error === "PROOF_INVALID") return "Freighter could not verify the enrollment signature. Approve the fresh request in Freighter, then try again.";
+  if (error === "PROOF_INVALID") return "The enrollment signature did not match the selected Freighter account. Keep the same Testnet account selected, then connect again.";
   if (error === "SERVICE_UNAVAILABLE") return `VeilPass could not finish enrollment right now. Your wallet was not enrolled and no funds were moved. Wait a moment, then connect Freighter again.${requestId ? ` Support reference: ${requestId}.` : ""}`;
   return "VeilPass could not finish enrollment. Connect Freighter again to create a fresh request.";
 }
@@ -44,6 +44,12 @@ async function responseJson<T>(response: Response): Promise<T | null> {
 
 function signedMessageText(signedMessage: string | Buffer) {
   return typeof signedMessage === "string" ? signedMessage : signedMessage.toString("base64");
+}
+
+function assertExpectedSigner(expectedAddress: string, signerAddress: string) {
+  if (!signerAddress || signerAddress !== expectedAddress) {
+    throw new Error("Freighter signed with a different account. Select the same Testnet account and connect again.");
+  }
 }
 
 export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; returnTo?: string }) {
@@ -121,6 +127,7 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
     setStatus("Approve the enrollment message in Freighter");
     const signed = await signMessage(challenge.message, { networkPassphrase: Networks.TESTNET, address });
     if (signed.error || !signed.signedMessage) throw new Error("Enrollment message signing was rejected.");
+    assertExpectedSigner(address, signed.signerAddress);
     const issueResponse = await fetch("/api/enrollment/issue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -198,6 +205,7 @@ export function EnrollmentFlow({ assetRule, returnTo }: { assetRule: AssetRule; 
       setStatus("Approve the one-time Testnet claim in Freighter");
       const signed = await signMessage(challenge.message, { networkPassphrase: Networks.TESTNET, address });
       if (signed.error || !signed.signedMessage) throw new Error("Demo asset claim signing was rejected.");
+      assertExpectedSigner(address, signed.signerAddress);
       setStatus(`Issuing ${assetRule.minimum} ${assetRule.code} on Testnet`);
       const issueResponse = await fetch("/api/demo-asset/issue", {
         method: "POST",

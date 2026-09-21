@@ -178,13 +178,11 @@ test("@system landing content survives scrolling, keyboard focus, and viewport c
   await expect(page.locator(":focus-visible")).toHaveCount(1);
 });
 
-test("primary surfaces complete an initial render within the development-server sanity budget", async ({ page }) => {
+test("primary surfaces complete an initial render within the server sanity budget", async ({ page }) => {
   await page.goto("/demo");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Watch one credential");
   await page.goto("/demo");
   const duration = await page.evaluate(() => performance.getEntriesByType("navigation").map((entry) => entry.duration)[0] ?? Number.POSITIVE_INFINITY);
-  // Playwright starts Next's development server, where an initial Turbopack
-  // compilation can legitimately take longer than a production navigation.
-  // This is a responsiveness guard, not a production-performance benchmark.
+  // This is a broad responsiveness guard, not a detailed performance benchmark.
   expect(duration).toBeLessThan(8_000);
 });

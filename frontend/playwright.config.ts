@@ -12,10 +12,10 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "npm run dev -- --hostname 0.0.0.0",
+    command: "npm run build && npm run start -- --hostname 0.0.0.0",
     url: "http://localhost:3000",
     // Local contributors can opt in when their development server is already
-    // running; CI still always starts the exact server under test.
+    // running; CI builds and starts the production server under test.
     reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "true",
     timeout: 120_000,
   },

@@ -16,6 +16,6 @@ describe("Freighter enrollment recovery", () => {
     expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE", "req-123")).toContain("no funds were moved");
     expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE", "req-123")).toContain("req-123");
     expect(enrollmentIssueMessage("CHALLENGE_SPENT")).toContain("fresh request");
-    expect(enrollmentIssueMessage("PROOF_INVALID")).toContain("Freighter");
+    expect(enrollmentIssueMessage("PROOF_INVALID")).toContain("selected Freighter account");
   });
 });
