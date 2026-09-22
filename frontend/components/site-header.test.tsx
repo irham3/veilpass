@@ -13,7 +13,7 @@ describe("SiteHeader", () => {
 
     expect(screen.queryByText("Live apps")).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Overview" })[0]).toHaveAttribute("href", publicAppLinks.home);
-    expect(screen.getAllByRole("link", { name: "Two-app demo" })[0]).toHaveAttribute("href", `${publicAppLinks.home}/demo`);
+    expect(screen.getAllByRole("link", { name: "Two-app demo" })[0]).toHaveAttribute("href", `${publicAppLinks.home}/#two-app-demo`);
     expect(screen.getAllByRole("link", { name: "Gate dashboard" })[0]).toHaveAttribute("href", `${publicAppLinks.login}/dashboard`);
     expect(screen.getAllByRole("link", { name: "Enroll with Freighter" })[0]).toHaveAttribute("href", `${publicAppLinks.login}/dashboard/enroll`);
   });

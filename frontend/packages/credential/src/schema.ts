@@ -17,6 +17,9 @@ export const issuedCredentialSchema = z.object({
   commitment: field,
   credentialSalt: field,
   credentialRoot: field,
+  // Credentials issued before leaf indexes were persisted remain valid. A
+  // fresh witness supplies the index and the next local save upgrades them.
+  leafIndex: z.number().int().min(0).max(65_535).optional(),
   leafNonce: field,
   merklePath: z.array(field).length(16),
   pathIsRight: z.array(z.boolean()).length(16),

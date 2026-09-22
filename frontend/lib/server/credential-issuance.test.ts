@@ -23,6 +23,7 @@ describe("buildIssuedCredentialPayload", () => {
       commitment: "ab".repeat(32),
       credentialSalt: "cd".repeat(32),
       credentialRoot: "ef".repeat(32),
+      leafIndex: 7,
       leafNonce: "12".repeat(32),
       merklePath: Array.from({ length: 16 }, () => "00".repeat(32)),
       pathIsRight: Array.from({ length: 16 }, () => false),

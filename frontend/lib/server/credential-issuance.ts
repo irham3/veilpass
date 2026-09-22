@@ -28,6 +28,7 @@ export function buildIssuedCredentialPayload({
     commitment,
     credentialSalt,
     credentialRoot: witness.credentialRoot,
+    leafIndex: witness.leafIndex,
     leafNonce: witness.leafNonce,
     merklePath: witness.merklePath,
     pathIsRight: witness.pathIsRight,
@@ -37,7 +38,19 @@ export function buildIssuedCredentialPayload({
   };
 }
 
-export function issuedCredentialCanonical(payload: ReturnType<typeof buildIssuedCredentialPayload>): string {
+type SignedCredentialFields = Pick<
+  ReturnType<typeof buildIssuedCredentialPayload>,
+  | "gateId"
+  | "epoch"
+  | "commitment"
+  | "credentialSalt"
+  | "leafNonce"
+  | "revocationHash"
+  | "expiresAt"
+  | "issuerPublicKey"
+>;
+
+export function issuedCredentialCanonical(payload: SignedCredentialFields): string {
   return JSON.stringify([
     payload.gateId,
     payload.epoch,

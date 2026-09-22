@@ -6,6 +6,7 @@ import { ShieldCheckIcon } from "@phosphor-icons/react/dist/ssr/ShieldCheck";
 import { WalletIcon } from "@phosphor-icons/react/dist/ssr/Wallet";
 import Link from "next/link";
 
+import { DemoBench } from "@/components/demo/demo-bench";
 import { Reveal } from "@/components/motion/reveal";
 import { LandingScrollMagnet } from "@/components/motion/landing-scroll-magnet";
 import { LandingFaq } from "@/components/marketing/landing-faq";
@@ -13,7 +14,7 @@ import { PayloadComparison } from "@/components/marketing/payload-comparison";
 import { PrivacyBoundary } from "@/components/marketing/privacy-boundary";
 import { ProofWindow } from "@/components/marketing/proof-window";
 import { Button } from "@/components/ui/button";
-import { enrollmentUrl, publicAppLinks } from "@/lib/public-app-links";
+import { enrollmentUrl } from "@/lib/public-app-links";
 import { absoluteUrl, landingFaqItems, siteConfig } from "@/lib/seo";
 
 const homeJsonLd = [
@@ -105,7 +106,7 @@ const enrollmentJourney = [
     icon: ShieldCheckIcon,
     step: "Freighter approval 2",
     title: "Sign one readable message",
-    text: "Approve the enrollment message without switching accounts. It is an off-chain signature—not a transaction—and it cannot move your funds.",
+    text: "Approve the enrollment message without switching accounts. It is an off-chain signature, not a transaction, and it cannot move your funds.",
   },
   {
     icon: LockKeyIcon,
@@ -128,14 +129,14 @@ export default function Home() {
           <section data-scroll-magnet="hero" className="aperture-field relative isolate flex min-h-[calc(100dvh-5rem)] items-center overflow-hidden px-4 pb-12 pt-10 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8 lg:pb-12 lg:pt-10">
             <div aria-hidden="true" className="hero-aperture-motion" />
             <div aria-hidden="true" className="hero-scanline" />
-            {/* Ring — smaller on mobile so it doesn't cause overflow */}
+            {/* Ring is smaller on mobile so it does not cause overflow. */}
             <div aria-hidden="true" className="aperture-ring absolute -right-24 -top-24 size-64 rounded-full opacity-40 blur-[0.2px] sm:-right-36 sm:-top-28 sm:size-96 lg:-right-44 lg:-top-32 lg:size-136 lg:opacity-50" />
-            {/* Ornamental gradient line — hidden on mobile to prevent overflow */}
+            {/* Ornamental gradient line is hidden on mobile to prevent overflow. */}
             <div aria-hidden="true" className="absolute bottom-24 left-[5%] hidden h-px w-2xl -rotate-6 bg-linear-to-r from-transparent via-signal-400/40 to-transparent sm:block" />
 
             <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 sm:gap-12 lg:-translate-y-2 lg:grid-cols-[0.86fr_1.14fr] lg:items-center xl:-translate-y-4">
               <Reveal className="max-w-3xl">
-                {/* H1 — clamp rebalanced so minimum is smaller on narrow viewports */}
+                {/* H1 clamp keeps the minimum smaller on narrow viewports. */}
                 <h1 className="mt-6 max-w-4xl text-[clamp(2.6rem,7vw,5.95rem)] font-semibold leading-[0.9] tracking-[-0.06em] text-balance sm:mt-7 sm:text-[clamp(3rem,6vw,5.95rem)] sm:leading-[0.88] sm:tracking-[-0.07em]">
                   Prove access. Keep wallets private.
                 </h1>
@@ -161,11 +162,11 @@ export default function Home() {
                     variant="outline"
                     className="min-h-12 w-full rounded-full border-paper-50/16 bg-paper-50/5 text-paper-50 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-paper-50/10 sm:w-auto"
                   >
-                    <a href={publicAppLinks.appA}>Open App A</a>
+                    <a href="#two-app-demo">Try App A and App B here</a>
                   </Button>
                 </div>
                 <p className="mt-4 text-sm text-paper-200">
-                  Already enrolled? Open <a className="smooth-link text-signal-400" href={publicAppLinks.appA}>App A</a> or <a className="smooth-link text-signal-400" href={publicAppLinks.appB}>App B</a> to compare their separate private IDs.
+                  Already enrolled? Use the two tabs below to compare their separate private IDs without leaving this page.
                 </p>
               </Reveal>
 
@@ -246,6 +247,14 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button asChild size="lg" className="min-h-12 rounded-full px-5"><a href={enrollmentUrl}>Start guided enrollment</a></Button>
                 <Link href="/docs/enrollment" className="smooth-link w-fit px-2 py-2 text-sm text-paper-200 hover:text-paper-50">Read enrollment troubleshooting</Link>
+              </div>
+
+              <div id="two-app-demo" className="mt-12 scroll-mt-28 border-t border-paper-50/10 pt-10 sm:mt-16 sm:pt-12">
+                <div className="mb-7 max-w-3xl">
+                  <h3 className="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">Try App A and App B without leaving the page</h3>
+                  <p className="mt-3 text-sm leading-6 text-paper-200 sm:text-base sm:leading-7">Switch between the two host tabs, compare the payloads, replay a challenge, and revoke the simulated credential. Use the live link only when you want to test the production origin.</p>
+                </div>
+                <DemoBench />
               </div>
             </div>
           </section>

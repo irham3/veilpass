@@ -27,6 +27,28 @@ test("landing explains and demonstrates the narrow privacy boundary", async ({ p
   }
 });
 
+test("landing keeps the App A and App B demo directly below enrollment", async ({ page }) => {
+  await page.goto("/");
+
+  const enrollment = page.getByRole("link", { name: "Start guided enrollment" });
+  const demo = page.locator("#two-app-demo");
+  await expect(enrollment).toBeVisible();
+  await expect(demo).toBeVisible();
+  await expect(page.getByRole("tab", { name: /App A/ })).toHaveAttribute("data-state", "active");
+  await expect(page.getByRole("tab", { name: /App B/ })).toBeVisible();
+
+  const enrollmentBox = await enrollment.boundingBox();
+  const demoBox = await demo.boundingBox();
+  expect(enrollmentBox).not.toBeNull();
+  expect(demoBox).not.toBeNull();
+  expect(demoBox!.y).toBeGreaterThan(enrollmentBox!.y);
+
+  await page.getByRole("tab", { name: /App B/ }).click();
+  await expect(page.getByRole("heading", { name: "Private feedback" })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: "Open live App B" })).toHaveAttribute("target", "_blank");
+});
+
 test("landing FAQ opens privacy and deployment answers", async ({ page }) => {
   await page.goto("/");
 
@@ -69,7 +91,7 @@ test("five-step two-origin reviewer script", async ({ page }, testInfo) => {
   const appA = await payload.textContent();
   await page.getByRole("button", { name: "Login with VeilPass" }).click();
   expect(await payload.textContent()).toBe(appA);
-  await page.getByRole("button", { name: /App B/ }).click();
+  await page.getByRole("tab", { name: /App B/ }).click();
   await page.getByRole("button", { name: "Login with VeilPass" }).click();
   await expect(payload).toContainText("vp_appB_19c8");
   expect(await payload.textContent()).not.toBe(appA);
@@ -88,7 +110,7 @@ test("host surfaces exclude a known wallet from private login state", async ({ p
   page.on("response", async (response) => { if (response.url().includes("/api/")) responseBodies.push(await response.text().catch(() => "")); });
   await page.goto("/demo");
   await page.getByRole("button", { name: "Login with VeilPass" }).click();
-  await page.getByRole("button", { name: /App B/ }).click();
+  await page.getByRole("tab", { name: /App B/ }).click();
   await page.getByRole("button", { name: "Login with VeilPass" }).click();
   const rendered = await page.locator("body").innerText();
   const local = await page.evaluate(() => JSON.stringify(localStorage));
@@ -109,13 +131,14 @@ test("App A and App B resolve as distinct local host origins", async ({ page }) 
 
 test("hosted login retains its opener and enables a stored local credential", async ({ page }) => {
   await page.goto("http://app-a.localhost:3000");
+  const challengeResponse = page.waitForResponse((response) => response.url().endsWith("/api/challenges") && response.status() === 201);
   const [popup] = await Promise.all([
     page.waitForEvent("popup"),
     page.getByRole("button", { name: "Login with VeilPass" }).click(),
   ]);
   await popup.waitForLoadState("domcontentloaded");
   await expect.poll(() => popup.evaluate(() => Boolean(window.opener))).toBe(true);
-  await expect(popup.getByText("Secure challenge received. Ready to continue.")).toBeVisible();
+  await challengeResponse;
 
   const field = "a".repeat(64);
   const timestamp = new Date().toISOString();
@@ -189,7 +212,7 @@ test("landing and enrollment explain every Freighter step before the first click
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "What happens after you click enroll?" })).toBeVisible();
   await expect(page.getByText("Approve the enrollment message without switching accounts.")).toBeVisible();
-  await expect(page.getByText(/not a transaction—and it cannot move your funds/i)).toBeVisible();
+  await expect(page.getByText(/not a transaction, and it cannot move your funds/i)).toBeVisible();
 
   await page.goto("/dashboard/enroll");
   const header = page.locator("header");

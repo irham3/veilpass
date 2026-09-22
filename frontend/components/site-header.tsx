@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: publicAppLinks.home, label: "Overview" },
-  { href: `${publicAppLinks.home}/demo`, label: "Two-app demo" },
+  { href: `${publicAppLinks.home}/#two-app-demo`, label: "Two-app demo" },
   { href: `${publicAppLinks.home}/docs`, label: "Docs" },
   { href: `${publicAppLinks.login}/dashboard`, label: "Gate dashboard" },
 ];
