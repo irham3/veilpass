@@ -38,6 +38,7 @@ export class VeilPass {
           if (!settled && !popup.closed) popup.postMessage({ type: "veilpass:challenge", state, challenge }, this.loginOrigin);
         }).catch((error) => {
           if (settled) return;
+          console.error("[VeilPass SDK] createChallenge failed:", error);
           cleanup();
           popup.close();
           reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Could not create a login challenge"));
@@ -52,10 +53,17 @@ export class VeilPass {
         if (!result || settled || verificationStarted) return;
         verificationStarted = true;
         void fetch("/api/verify", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) }).then(async (response) => {
-          const verified = verifyResultSchema.parse(await response.json());
+          const raw = await response.json();
+          const verified = verifyResultSchema.parse(raw);
           cleanup(); popup.close();
-          if (verified.ok) resolve(verified); else reject(new VeilPassError(verified.error, `VeilPass login failed: ${verified.error}`));
-        }).catch((error) => { cleanup(); popup.close(); reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Verification unavailable")); });
+          if (verified.ok) resolve(verified); else {
+            console.error("[VeilPass SDK] /api/verify returned verification failure:", verified.error, raw);
+            reject(new VeilPassError(verified.error, `VeilPass login failed: ${verified.error}`));
+          }
+        }).catch((error) => {
+          console.error("[VeilPass SDK] /api/verify request failed:", error);
+          cleanup(); popup.close(); reject(new VeilPassError("SERVICE_UNAVAILABLE", error instanceof Error ? error.message : "Verification unavailable"));
+        });
       };
       const timeout = window.setTimeout(() => { cleanup(); popup.close(); reject(new VeilPassError("TIMEOUT", "VeilPass login timed out.")); }, timeoutMs);
       const closedPoll = window.setInterval(() => {

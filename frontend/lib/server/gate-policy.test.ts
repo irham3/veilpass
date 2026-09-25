@@ -23,6 +23,8 @@ afterEach(() => {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
+  readGateState.mockReset();
+  readRevocationState.mockReset();
 });
 
 describe("gate allowlist", () => {
@@ -68,6 +70,40 @@ describe("gate allowlist", () => {
     await expect(policy.isRevoked?.("deadbeef")).resolves.toBe(true);
     expect(readGateState).toHaveBeenCalledWith({ contractId: "CCONTRACT", gateId: "staff-holder", rpcUrl: "https://rpc.example", sourceAccount: "GSOURCE" });
     expect(readRevocationState).toHaveBeenCalledWith({ contractId: "CCONTRACT", gateId: "staff-holder", revocationHash: "deadbeef", rpcUrl: "https://rpc.example", sourceAccount: "GSOURCE" });
+  });
+
+  it("handles isRevoked error safely by returning false", async () => {
+    process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
+    process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
+    readGateState.mockResolvedValue({ epoch: 1, owner: "GOWNER", credential_root: Uint8Array.from([1]) });
+    readRevocationState.mockRejectedValue(new Error("RPC timeout"));
+
+    const policy = await getGatePolicy("premium-holder");
+    await expect(policy.isRevoked?.("deadbeef")).resolves.toBe(false);
+  });
+
+  it("falls back to configured credential root when live readGateState fails", async () => {
+    process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
+    process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
+    process.env.VEILPASS_CREDENTIAL_ROOT = "fallback-root";
+    process.env.VEILPASS_GATE_EPOCH = "3";
+    readGateState.mockRejectedValue(new Error("RPC down"));
+
+    const policy = await getGatePolicy("premium-holder");
+    expect(policy).toEqual({
+      active: true,
+      epoch: 3,
+      credentialRoot: "fallback-root",
+    });
+  });
+
+  it("rethrows error when live readGateState fails and no credential root is configured", async () => {
+    process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
+    process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
+    delete process.env.VEILPASS_CREDENTIAL_ROOT;
+    readGateState.mockRejectedValue(new Error("Fatal RPC error"));
+
+    await expect(getGatePolicy("premium-holder")).rejects.toThrow("Fatal RPC error");
   });
 
   it("uses safe defaults when local policy fields are omitted", async () => {
