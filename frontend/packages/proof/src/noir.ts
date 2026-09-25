@@ -65,8 +65,9 @@ function expectedProofFields(input: { credential: StoredCredential; gateIdHash: 
   ].map(canonicalFieldHex);
 }
 
-/** Generate an UltraHonk membership proof entirely in the hosted-login page. */
-export async function proveMembership({ challenge, credential, onStatus }: { challenge: ChallengeResponse; credential: StoredCredential; onStatus?: (message: string) => void }): Promise<ProofResult> {
+/** Generate an UltraHonk membership proof entirely in the hosted-login page.
+ * @param _api - Optional pre-initialised Barretenberg instance (for testing only). */
+export async function proveMembership({ challenge, credential, onStatus, _api }: { challenge: ChallengeResponse; credential: StoredCredential; onStatus?: (message: string) => void; _api?: Barretenberg }): Promise<ProofResult> {
   const createdAt = new Date();
   const proofCreatedAt = createdAt.toISOString();
   const proofExpiresAt = new Date(Math.min(Date.parse(challenge.expiresAt), Date.parse(credential.expiresAt))).toISOString();
@@ -79,7 +80,8 @@ export async function proveMembership({ challenge, credential, onStatus }: { cha
   const challengeHash = await hashBytesToFieldHex(base64urlToBytes(challenge.challenge));
 
   onStatus?.("Initializing the local proving engine");
-  const api = await Barretenberg.new();
+  const ownedApi = !_api;
+  const api = _api ?? await Barretenberg.new();
   try {
     const privateAppId = await pedersenHash(api, [credential.subjectSecret, gateIdHash, originHash]);
     const loginNullifier = await pedersenHash(api, [credential.subjectSecret, challengeHash]);
@@ -124,7 +126,7 @@ export async function proveMembership({ challenge, credential, onStatus }: { cha
     if (generated.publicInputs.map(canonicalFieldHex).join("") !== expected.join("")) throw new Error("Proof public inputs did not match the bound login request");
     return proofResultSchema.parse({ challengeId: challenge.challengeId, proof: base64(generated.proof), publicInputs });
   } finally {
-    await api.destroy();
+    if (ownedApi) await api.destroy();
   }
 }
 
