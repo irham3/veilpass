@@ -1,5 +1,13 @@
 # Proposal delivery status
 
+## Current status — 2026-09-25
+
+This section supersedes the older completion claims below. Source implementation and local automated checks are strong, but Deliverables 1–3 **cannot yet be marked 100% complete or production ready for other developers**. Freighter access was approved in live Chrome, but enrollment failed while the deployed CSP blocked Barretenberg's embedded WASM `data:` fetch. This checkout fixes that CSP and its browser regression passes; the fix still needs release and an actual enrollment retry. The remaining acceptance evidence is a live Freighter enrollment and App A/App B login sequence, live replay/expiry/revocation with transaction links, redacted host network capture, short review video, and a matching public release of the current source/packages. The expanded Vitest inventory is 37.01% statements, not 100%; see [test report](test-report.md).
+
+The current Testnet gate root is `273348dff2a3aea95053c4db8579ddacf1051b6d59d07516abb566e75ab4c9d2` at epoch 1. A read-only query of the locally configured PostgreSQL tree returned that same root and five credential records. This removes the earlier *local* root-mismatch suspicion, but does not prove the public deployment uses this database or that the full wallet flow succeeds. Do not overwrite this active root with zero at the same epoch.
+
+This checkout prepares `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` version `0.2.0` and their tarballs; publication, production deployment, and matching-version acceptance remain separate release steps. Follow the [full demo and developer release guide](demo-end-to-end-guide-2026-09-25.md) and record real results before updating these statuses.
+
 ## Current operational status — 2026-09-17
 
 This section supersedes older deployment-status rows below.

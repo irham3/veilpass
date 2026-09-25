@@ -15,16 +15,18 @@ VeilPass uses a layered test model so each boundary is checked at the cheapest r
 
 ## Coverage gate
 
-`npm run test:coverage` measures the security-critical TypeScript core and requires complete coverage:
+`npm run test:coverage` measures the selected security-critical TypeScript core and requires complete coverage of that selection:
 
 - statements: 100%
 - branches: 100%
 - functions: 100%
 - lines: 100%
 
-The generated HTML and LCOV reports live under `coverage/`. CI uploads that directory on every run. PostgreSQL adapters and Soroban RPC execution are explicitly marked as integration boundaries in coverage; their production paths are exercised by the integration, security, and contract smoke suites without pretending a local unit mock proves a live database or Testnet deployment.
+The generated HTML and LCOV reports live under `coverage/`. CI uploads that directory on every run. **This is not whole-project coverage.** The selection excludes much of the App Router, browser UI, PostgreSQL adapters, proof browser worker, scripts, Rust, and Noir.
 
-The current verified baseline is 32 Vitest files with 130 passing tests and 32 Playwright scenarios across desktop and mobile. Update this line whenever tests are added or removed.
+`npm run test:coverage:all` measures all first-party application, component, library, package-source, script, and runtime-config TypeScript/TSX/MJS modules with Vitest V8. It includes files that received zero Vitest execution. CI uploads `coverage-all/` separately. Browser Playwright tests exercise UI and route behavior but their browser/server execution is **not merged** into this V8 percentage; Rust and Noir require their own coverage tools. A green full-inventory command means tests passed and a report was generated, not that 100% was reached. The dated [test report](evidence/test-report.md) records the actual figures and gaps.
+
+Verified on 25 September 2026 before the final config inventory expansion: 39 Vitest files, 164 passing tests; selected core 100% of 546 statements; broad V8 inventory 35.23% statements, 34.89% branches, 32.20% functions, 34.80% lines; 44/44 Playwright desktop/mobile scenarios. Re-run commands for the current commit before release.
 
 ## Local release check
 
@@ -34,6 +36,7 @@ Run the same high-signal checks used by CI:
 npm run lint
 npm run typecheck
 npm run test:coverage
+npm run test:coverage:all
 npm run test:system
 npm run test:security:deps
 npm run build

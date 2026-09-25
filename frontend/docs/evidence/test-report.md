@@ -1,10 +1,34 @@
 # VeilPass MVP local verification report
 
-## Current automated verification - 2026-09-17
+## Current verification — 2026-09-25 (supersedes older status summaries below)
+
+The results below are from this checkout with uncommitted changes. They do not establish that the public Vercel deployment or the npm `0.1.0` packages contain these changes.
+
+**Live Chrome finding:** Freighter access was approved on the public enrollment page. Eligibility returned HTTP 200, then enrollment stopped while initializing the browser proving engine with `Failed to fetch`. A same-origin Chrome diagnostic confirmed that the deployed CSP rejected `fetch(data:...)`; the pinned Barretenberg build loads its WASM from an embedded `data:` URL. This checkout now allows `data:` in `connect-src`. The regression failed on desktop and mobile before the fix and passed 2/2 afterward. The public domain has not received the fix, so live enrollment and subsequent acceptance remain blocked.
+
+**Additional fixes:** the SDK now ignores duplicate proof messages while a verification request is in flight, avoiding a second one-time challenge consumption. The host UI restores an existing server cookie session after reload. The popup disables proof submission after a rejected challenge, and its privacy copy names the proof public inputs accurately. Focused SDK, host UI, and popup browser tests pass.
+
+| Check | Result | Limit |
+| --- | --- | --- |
+| `npm run test:coverage` | 42 files, **172/172** tests; selected 34-module core: **100%** statements (548/548), branches (406/406), functions (120/120), lines (434/434) | This is a curated denominator, not the entire project. |
+| `npm run test:coverage:all` | 42 files, **172/172** tests; 125 TypeScript/TSX/MJS production/config modules: **37.01%** statements (777/2099), **36.73%** branches (543/1478), **33.20%** functions (170/512), **36.69%** lines (633/1725) | Playwright, Rust, and Noir execution are not merged into this number. This fails a claim of full-project 100% coverage. |
+| CSP WASM regression | Failed 2/2 before fix; passed 2/2 after fix (desktop and mobile) | Proves the data URL fetch boundary on the local build, not a full live credential issuance. |
+| `npm run test:e2e` | **46/46** desktop Chromium and Pixel 7 scenarios, including landing/docs motion, navigation, accessibility, security, and embedded WASM fetch | Simulated reviewer bench and browser UI tests do not replace a completed public Freighter enrollment and login. |
+| Browser enrollment with simulated wallet/issuer | **2/2** additional desktop/mobile scenarios; real Barretenberg WASM generated the local commitment and IndexedDB save completed | Freighter responses and issuer HTTP responses were intercepted for this test; no live signature or Testnet root transaction occurred. |
+| `npm run lint`, `npm run typecheck`, `npm run build`, `npm run pack:check` | Passed after the SDK and session display fixes; four package tarballs built | Local build and packages are not yet the public release. |
+| `npm run contract:test`, `npm run proof:check`, `npm run pack:check` | 3/3 Rust tests, 2/2 Noir tests and UltraHonk fixture verification, four tarball checks passed | No Rust/Noir percentage coverage and no live Freighter signature. Package `shared`, `sdk`, and `server` `0.2.0` tarballs are prepared but not published. |
+| `npm audit --audit-level=moderate` | Zero reported vulnerabilities | Dependency advisories can change after this audit. |
+| `npm run production:acceptance` | Passed public health, App A/B exact-origin challenges, hostile-origin rejection, navigation, and native XLM policy | Safe boundary probes only; no real login/verify/session/revoke. |
+| `npm run contract:smoke` | Passed; gate `premium-holder`, epoch 1, root `273348dff2a3aea95053c4db8579ddacf1051b6d59d07516abb566e75ab4c9d2` | Read-only Testnet state. |
+| Read-only configured PostgreSQL query | Merkle tree root is the same `273348…4c9d2`; 5 credential rows | Confirms this local DB configuration is internally consistent with the observed chain root. It does not prove the public deployment uses the same DB or that any credential can log in now. |
+
+**Acceptance still required:** one recorded Freighter enrollment and actual App A twice/App B once login, a redacted host network capture, live expiry/replay/revocation checks, corresponding Testnet transaction links, review video, and proof that the public deployment and published packages match the verified commit. The [demo guide](demo-end-to-end-guide-2026-09-25.md) is the exact operator script and evidence ledger. Older sections below are historical and contain stale counts/root values.
+
+## Current automated verification - 2026-09-19
 
 This section supersedes older test-count and dependency-audit statements below.
 
-- **Vitest:** 33 files and 132 tests pass across unit, component, integration, and security suites.
+- **Vitest:** 33 files and 136 tests pass across unit, component, integration, and security suites.
 - **Coverage gate:** 100% statements, 100% branches, 100% functions, and 100% lines. The CI thresholds are 100/100/100/100; generated HTML and LCOV reports are retained under `frontend/coverage/`.
 - **Playwright system:** 32 scenarios pass across desktop Chromium and Pixel 7 emulation. Coverage includes the two-origin flow, replay and revocation, security headers, hostile and oversized API input, session minimization, keyboard focus, responsive overflow, reduced motion, install surfaces, and axe checks.
 - **Security:** Four focused Vitest security tests and six tagged Playwright security scenarios pass. `npm audit --audit-level=moderate` reports zero known vulnerabilities across production and development dependencies.
@@ -21,6 +45,8 @@ This section supersedes older test-count and dependency-audit statements below.
 - `npm run proof:check` passed circuit tests, witness generation, UltraHonk proving, and verification. `npm run pack:check` passed all four workspace tarball checks.
 - Historical VPT fixture issuance completed for the supplied public holder address: transaction `905ef4093e621cb78d1229e01d6bd52c22db704ccdb47a58984e5551a514f1dd`; Horizon confirmed `1.0000000 VPT`. The active local policy now uses native XLM, so this fixture is no longer part of the reviewer path.
 - Public enrollment was attempted in the Codex in-app browser after acknowledging the privacy disclosure. The browser has no Freighter extension, so the flow correctly stopped with `Freighter was not found` before any wallet signature.
+
+> **Active policy note (2026-09-19):** native XLM is the default eligibility rule. Any older VPT/trustline/issuer commands in the historical sections below are retained as audit history only and must not be used for the current reviewer flow. For the active flow, fund the Freighter Testnet account with XLM and connect it directly.
 
 ## Current acceptance status — 2026-09-15
 

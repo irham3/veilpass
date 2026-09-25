@@ -1,5 +1,7 @@
 # VeilPass — Release dan Konfigurasi Cloud Runbook
 
+> **Pembaruan 25 September 2026:** status di bawah adalah riwayat rilis 0.1.0, bukan bukti bahwa perubahan checkout saat ini telah terdeploy. Source `shared`, `sdk`, dan `server` disiapkan sebagai 0.2.0 dan lulus `pack:check`, tetapi belum diterbitkan. Root Testnet aktif `273348dff2a3aea95053c4db8579ddacf1051b6d59d07516abb566e75ab4c9d2` cocok dengan database yang dikonfigurasi lokal. Acceptance wallet live, video, dan network capture belum dicatat. Lihat [panduan demo dan gerbang rilis](demo-end-to-end-guide-2026-09-25.md) sebelum deploy/tag baru.
+
 **Tanggal pemeriksaan:** 14 September 2026
 **Tujuan:** menutup gap konfigurasi untuk Deliverable 1–3 tanpa mengungkap seed, password, token, atau data wallet.
 
@@ -264,10 +266,12 @@ Setelah setiap perubahan environment, buka tab **Deployments**, klik menu `...` 
 
 ## 6. Wallet, asset eligibility, dan acceptance test publik
 
+> **Policy update:** reviewer default memakai native XLM Testnet. Langkah trustline dan `npm run asset:issue` di bawah hanya berlaku bila operator sengaja mengubah deployment ke `VEILPASS_ASSET_TYPE=credit`; untuk mode aktif, cukup fund XLM dan connect Freighter.
+
 1. Di browser pengguna, instal/buka **Freighter** dan pilih network **Testnet**.
 2. Buat atau pilih wallet Testnet. Salin hanya public address yang diawali `G`; seed yang diawali `S` tidak pernah dibagikan.
-3. Dapatkan test XLM dari Stellar Friendbot bila akun belum aktif, lalu tambahkan trustline asset demo bila flow aplikasi meminta.
-4. Berikan public `G...` address kepada operator. Operator dapat menjalankan `npm run asset:issue -- <G_PUBLIC_ADDRESS>` dari environment yang menyimpan issuer secret; pemilik wallet kemudian melihat asset/balance pada Freighter.
+3. Dapatkan test XLM dari Stellar Friendbot bila akun belum aktif. Pada mode native-XLM aktif, tidak ada trustline atau issuer distribution.
+4. Pada mode credit-asset yang sengaja dikonfigurasi, barulah berikan public `G...` address kepada operator dan jalankan `npm run asset:issue -- <G_PUBLIC_ADDRESS>` dari environment issuer yang aman.
 5. Buka App A → klik **Sign in with VeilPass** → popup login → pilih/approve Freighter → enrollment bila belum ada → login.
 6. Catat `privateAppId`, `gate`, `epoch`, `expiry`, dan hasil eligibility. Pastikan response host tidak memuat Stellar address.
 7. Login ulang di App A. Pastikan `privateAppId` stabil untuk App A.

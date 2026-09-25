@@ -58,12 +58,12 @@ For a reviewer or demo session, the shortest path is:
 
 1. Open [https://veilpass.dev](https://veilpass.dev).
 2. Review the landing page privacy language; it should not claim anonymity.
-3. Open `/demo` and compare App A and App B behavior.
-4. Confirm same-origin IDs stay stable while cross-origin IDs differ.
+3. Open `/demo` for the clearly labeled simulation, then use the live App A and App B origins for acceptance.
+4. Confirm same-origin IDs stay stable while cross-origin IDs differ in the live host results.
 5. Open `/dashboard` to review the gate registry and operator surfaces.
 6. Open `/dashboard/enroll` with Freighter set to Stellar Testnet.
 7. Accept the disclosure, then select **Connect Freighter and enroll**. The default gate checks the wallet's native Testnet XLM balance; it does not create a custom-asset trustline or claim.
-8. Complete enrollment and verify that the host receives only the minimized private result. No swap, token purchase, or custom-asset setup is required; this live step still requires the durable database and gate-root publisher environment values described below.
+8. Complete enrollment and verify that the host receives a minimized success result without a wallet address. Its verification request still carries the proof and public inputs. No swap, token purchase, or custom-asset setup is required; this live step still requires the durable database and gate-root publisher environment values described below.
 9. Check `frontend/docs/evidence/` for captured local test results, visuals, contract evidence, and proof boundary notes.
 
 ---
@@ -160,7 +160,7 @@ flowchart LR
 | --- | --- | --- |
 | `POST` | `/api/challenges` | Creates a digest-only host challenge |
 | `POST` | `/api/verify` | Consumes a challenge and returns the minimized verifier result |
-| `POST` | `/api/session` | Creates or clears the opaque HTTP-only session |
+| `GET` | `/api/session` | Reads the opaque HTTP-only session created by successful `POST /api/verify` |
 | `POST` | `/api/credentials/witness` | Refreshes a signed credential's Merkle path at the current contract root |
 | `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
 | `POST` | `/api/enrollment/challenge` | Creates the enrollment challenge for Freighter signing |
@@ -274,7 +274,7 @@ Current Testnet deployment:
 | Source account | `GDVP7QVOCQ4L4CDNXVWD53ATXGYDXTDOYVFPJ3UA5OTWJW7XGXSNFXRJ` |
 | Gate ID | `premium-holder` |
 | Epoch | `1` |
-| Credential root | `0000000000000000000000000000000000000000000000000000000000000000` |
+| Credential root | Read the current value with `npm run contract:smoke`; it changes after enrollment and must match the durable Merkle tree. |
 
 Commands:
 
@@ -319,9 +319,9 @@ Production enrollment intentionally fails closed until all of the following are 
 
 - `DATABASE_URL` for durable challenge, nullifier, enrollment, and Merkle-tree records;
 - `VEILPASS_GATE_OWNER_SECRET`, held only by the service that is authorized to publish `update_root` transactions; and
-- a gate whose current root is the zero field (`00` repeated 32 bytes) or whose durable tree state has already been initialized to the on-chain root.
+- a gate whose current root matches the durable Merkle tree. A fresh empty tree requires an empty root in a new epoch; do not overwrite an active root just to make enrollment pass.
 
-`VEILPASS_GATE_OWNER_SECRET` is distinct from `VEILPASS_ISSUER_SECRET`. It is never sent to the browser. The deployed Testnet gate must be initialized or updated by its actual owner before the first enrollment; the dashboard exposes an explicit same-epoch **Update root** operation for that owner flow.
+`VEILPASS_GATE_OWNER_SECRET` is distinct from `VEILPASS_ISSUER_SECRET`. It is never sent to the browser. The deployed Testnet gate must be initialized by its actual owner before the first enrollment. If the active on-chain root differs from an empty local tree, restore the matching tree or rotate to a fresh epoch with the owner; overwriting the current root in place can invalidate existing credentials.
 
 The exact final acceptance sequence, including two public origins, Freighter approval, rejection cases, and the review recording, is in [the live acceptance checklist](frontend/docs/evidence/live-acceptance-checklist.md).
 
@@ -380,12 +380,12 @@ Expected current results:
 | --- | --- |
 | ESLint | Pass |
 | TypeScript | Pass |
-| Vitest | 58 tests passing |
+| Vitest | Run `npm test` for the current count; see the dated test report for verified results. |
 | Noir fixture | Pinned circuit test, witness, UltraHonk proof, and verification pass |
 | Soroban Rust tests | 3 tests passing |
 | Stellar Testnet smoke | Pass |
-| Playwright e2e | 26 tests passing |
-| Axe accessibility checks | 8 tests passing |
+| Playwright e2e | Run `npm run test:e2e` for the current count; see the dated test report for verified results. |
+| Axe accessibility checks | Included in `npm run test:a11y`; see the dated test report for verified results. |
 | Production build | Pass locally and on Vercel |
 | Runtime dependency audit | 0 vulnerabilities |
 

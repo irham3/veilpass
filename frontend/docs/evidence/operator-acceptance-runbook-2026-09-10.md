@@ -1,7 +1,9 @@
 # VeilPass — Runbook Penyelesaian Live Acceptance
 
+> **Pembaruan 25 September 2026:** gunakan [panduan demo end-to-end](demo-end-to-end-guide-2026-09-25.md) dan [test report terbaru](test-report.md) untuk langkah dan status aktif. Root Testnet saat ini nonzero dan cocok dengan database yang dikonfigurasi lokal; jangan me-reset root pada epoch yang sama. Workflow `.github/workflows/release-packages.yml` **menerbitkan npm secara otomatis ketika tag `v*` didorong**, setelah `pack:check`; setiap langkah rilis harus meninjau versi dan otorisasi penerbitan terlebih dahulu. Klaim atau langkah lama di bawah yang berbeda dari catatan ini adalah riwayat, bukan instruksi aktif.
+
 **Tanggal:** 10 September 2026
-**Status:** pekerjaan yang dapat dilakukan sepenuhnya dari kode sudah diterapkan; acceptance publik masih membutuhkan akses operator ke database, domain/deployment, dan wallet Testnet pemilik gate.
+**Status:** implementation dan public deployment sudah diterapkan. Acceptance publik hanya membutuhkan aksi pemilik wallet: fund XLM Testnet, connect Freighter, dan approve enrollment signature. Bagian VPT/issuer di bawah adalah prosedur historis untuk mode credit-asset, bukan reviewer default.
 **Baca bersama:** [audit implementasi Deliverable 1–5](audit-deliverable-1-5-2026-09-10.md)
 
 ## Ringkasan keputusan
@@ -95,6 +97,8 @@ Untuk otomatisasi service, baru pasang `VEILPASS_GATE_OWNER_SECRET` pada environ
 - `npm run contract:smoke` masih lulus setelah perubahan.
 
 ## 3. Siapkan aset dan enrollment Freighter
+
+> **Default aktif — native XLM:** bagian credit-asset lama di bawah tidak diperlukan. Pilih Stellar Testnet, fund account dengan minimal `VEILPASS_MIN_BALANCE` XLM melalui Friendbot, lalu buka `/dashboard/enroll` dan pilih **Connect Freighter and enroll**. Tidak ada trustline, issuer, `asset:issue`, atau claim asset yang dibutuhkan.
 
 1. Pada Freighter, pilih **Stellar Testnet** dan gunakan account Testnet terpisah untuk demo.
 2. Tambahkan trustline terhadap code dan issuer aset gate yang dikonfigurasi.

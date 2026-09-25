@@ -1,5 +1,7 @@
 # Audit Implementasi Deliverable VeilPass
 
+> **Arsip audit 10 September 2026.** Nilai root, hitungan test, status deployment, dan acceptance di bawah adalah snapshot historis. Untuk keadaan 25 September 2026 gunakan [audit Deliverable 1–3](audit-deliverables-1-3-2026-09-25.md), [laporan test](test-report.md), dan [panduan demo](demo-end-to-end-guide-2026-09-25.md).
+
 **Tanggal audit:** 10 September 2026
 **Repository:** `irham3/veilpass`
 **Branch dan revisi:** `master` pada `c1bbc6c6a39610be14b7cf41329aa8cdff4821fc`
