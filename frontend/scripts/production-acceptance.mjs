@@ -43,7 +43,7 @@ for (const [label, origin, expectedText] of [["App A", appA, "Holder dashboard"]
   const response = await fetch(origin);
   const html = await response.text();
   if (!response.ok || !html.includes(expectedText)) throw new Error(`${label} public host route failed`);
-  for (const expectedLink of [enrollment, `${home}/demo`]) {
+  for (const expectedLink of [enrollment, `${home}/#two-app-demo`]) {
     if (!html.includes(expectedLink)) throw new Error(`${label} navigation is missing ${expectedLink}`);
   }
 }

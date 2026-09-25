@@ -17,6 +17,7 @@
 /playwright-report/
 /test-results/
 /frontend/coverage
+/frontend/coverage-all/
 /frontend/playwright-report/
 /frontend/test-results/
 /contracts/**/target/

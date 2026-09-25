@@ -22,6 +22,6 @@ export default defineConfig({
     // Local contributors can opt in when their development server is already
     // running; CI builds and starts the production server under test.
     reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "true",
-    timeout: 120_000,
+    timeout: 240_000,
   },
 });

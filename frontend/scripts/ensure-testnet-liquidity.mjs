@@ -27,6 +27,9 @@ export function findMatchingOffer(records, assetCode, assetIssuer) {
 }
 
 function requireLiquidityConfig(environment) {
+  if (environment.VEILPASS_ASSET_TYPE?.trim().toLowerCase() === "native") {
+    throw new Error("asset:liquidity is only for an issued credit-asset fixture; native XLM eligibility needs no issuer liquidity");
+  }
   for (const key of [
     "VEILPASS_ASSET_CODE",
     "VEILPASS_ASSET_ISSUER",

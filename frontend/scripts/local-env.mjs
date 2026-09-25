@@ -29,8 +29,6 @@ function valueAfter(args, flag, fallback) {
   return value;
 }
 
-export { buildLocalEnvText, buildSetupSummary };
-
 export async function runLocalEnvSetup(args = process.argv.slice(2), cwd = process.cwd()) {
   const force = args.includes("--force");
   const envPath = path.resolve(cwd, valueAfter(args, "--env-path", ".env.local"));

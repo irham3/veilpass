@@ -25,6 +25,10 @@ describe("testnet asset issuer", () => {
     expect(() => requireIssueConfig({ VEILPASS_ASSET_CODE: "VPT" })).toThrow(/VEILPASS_ASSET_ISSUER/);
   });
 
+  test("explains that native XLM does not use the credit-asset issuer script", () => {
+    expect(() => requireIssueConfig({ VEILPASS_ASSET_TYPE: "native" })).toThrow(/only for an issued credit-asset fixture/);
+  });
+
   test("summarizes the issued asset without printing the issuer secret", () => {
     const summary = buildIssueSummary({
       assetCode: "VPT",

@@ -19,6 +19,9 @@ function parseEnvText(text) {
 }
 
 function requireConfig(env) {
+  if (env.VEILPASS_ASSET_TYPE?.trim().toLowerCase() === "native") {
+    throw new Error("asset:seed is only for an issued credit-asset fixture; native XLM eligibility needs no issuer or trustline step");
+  }
   for (const key of ["VEILPASS_ASSET_CODE", "VEILPASS_ASSET_ISSUER", "VEILPASS_ISSUER_SECRET"]) {
     if (!env[key]) throw new Error(`Missing ${key} in .env.local`);
   }

@@ -23,6 +23,9 @@ export function parseEnvText(text) {
 }
 
 export function requireIssueConfig(env) {
+  if (env.VEILPASS_ASSET_TYPE?.trim().toLowerCase() === "native") {
+    throw new Error("asset:issue is only for an issued credit-asset fixture; native XLM eligibility needs no issuer or distribution step");
+  }
   for (const key of REQUIRED_ENV_KEYS) {
     if (!env[key]) throw new Error(`Missing ${key} in .env.local`);
   }

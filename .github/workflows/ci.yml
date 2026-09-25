@@ -46,6 +46,8 @@ jobs:
         run: npm run typecheck
       - name: Unit, integration, and coverage gate
         run: npm run test:coverage
+      - name: Whole TypeScript source coverage inventory
+        run: npm run test:coverage:all
       - name: Dependency security audit
         run: npm run test:security:deps
       - name: Upload coverage report
@@ -54,6 +56,13 @@ jobs:
         with:
           name: coverage-report
           path: frontend/coverage
+          if-no-files-found: error
+      - name: Upload whole-source coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-all-report
+          path: frontend/coverage-all
           if-no-files-found: error
       - name: Soroban contract tests
         run: npm run contract:test

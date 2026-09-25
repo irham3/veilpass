@@ -129,6 +129,39 @@ test("App A and App B resolve as distinct local host origins", async ({ page }) 
   await expect(page.getByText("http://app-b.localhost:3000", { exact: true })).toBeVisible();
 });
 
+test("landing examples and footer links match the documented API", async ({ page }) => {
+  await page.goto("/");
+  const example = page.locator("section.section-paper-slit code");
+  await expect(example).toContainText('"eligible": true');
+  await expect(example).toContainText('"expiresAt": "');
+
+  const footer = page.locator("footer");
+  for (const [label, path, heading] of [
+    ["Security", "/docs/threat-model", "Threat model"],
+    ["Privacy model", "/docs/privacy", "Privacy model"],
+    ["Identity limits", "/docs/identity", "Identity semantics"],
+  ]) {
+    const link = footer.getByRole("link", { name: label });
+    await expect(link).toHaveAttribute("href", path);
+    await link.click();
+    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+    await page.goto("/");
+  }
+});
+
+test("landing reveals remain readable after scrolling and with reduced motion", async ({ page, browser }) => {
+  await page.goto("/");
+  const section = page.getByRole("heading", { name: "Questions reviewers ask first" });
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.locator("xpath=ancestor::*[contains(@class,'reveal-motion')][1]")).toHaveCSS("opacity", "1");
+
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const reducedPage = await context.newPage();
+  await reducedPage.goto("/");
+  await expect(reducedPage.locator(".reveal-motion").first()).toHaveCSS("opacity", "1");
+  await context.close();
+});
+
 test("hosted login retains its opener and enables a stored local credential", async ({ page }) => {
   await page.goto("http://app-a.localhost:3000");
   const challengeResponse = page.waitForResponse((response) => response.url().endsWith("/api/challenges") && response.status() === 201);
@@ -208,6 +241,57 @@ test("@security security headers and trusted-origin API boundary are enforced", 
   await expect(rejected.json()).resolves.toMatchObject({ ok: false, error: "ORIGIN_MISMATCH" });
 });
 
+test("pinned Barretenberg WASM can load its embedded data artifact under CSP", async ({ page }) => {
+  await page.goto("/dashboard/enroll");
+  const result = await page.evaluate(async () => {
+    try {
+      const response = await fetch("data:text/plain;base64,dmVpbHBhc3M=");
+      return await response.text();
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  });
+  expect(result).toBe("veilpass");
+});
+
+test("browser enrollment creates a real local commitment with a simulated wallet and issuer", async ({ page }) => {
+  const field = "0".repeat(64);
+  const wallet = `G${"A".repeat(55)}`;
+  await page.addInitScript(({ wallet }) => {
+    Object.defineProperty(window, "freighter", { configurable: true, value: true });
+    window.addEventListener("message", (event) => {
+      const request = event.data as { source?: string; messageId?: number; type?: string };
+      if (request.source !== "FREIGHTER_EXTERNAL_MSG_REQUEST") return;
+      const response = request.type === "REQUEST_ACCESS"
+        ? { publicKey: wallet }
+        : request.type === "REQUEST_NETWORK_DETAILS"
+          ? { networkDetails: { network: "TESTNET", networkPassphrase: "Test SDF Network ; September 2015" } }
+          : request.type === "REQUEST_ALLOWED_STATUS"
+            ? { isAllowed: true }
+            : request.type === "SUBMIT_BLOB"
+              ? { signedBlob: "dGVzdC1zaWduYXR1cmU=", signerAddress: wallet }
+              : {};
+      window.postMessage({ source: "FREIGHTER_EXTERNAL_MSG_RESPONSE", messagedId: request.messageId, ...response }, window.location.origin);
+    });
+  }, { wallet });
+  await page.route("**/api/enrollment/eligibility", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ eligible: true }) }));
+  await page.route("**/api/enrollment/challenge", (route) => route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ challengeId: "11111111-1111-4111-8111-111111111111", gateId: "premium-holder", message: "VeilPass local browser test" }) }));
+  await page.route("**/api/enrollment/issue", async (route) => {
+    const request = route.request().postDataJSON() as { commitment: string; credentialSalt: string };
+    await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({
+      gateId: "premium-holder", epoch: 1, commitment: request.commitment, credentialSalt: request.credentialSalt,
+      credentialRoot: field, leafIndex: 0, leafNonce: field, merklePath: Array.from({ length: 16 }, () => field),
+      pathIsRight: Array.from({ length: 16 }, () => false), revocationHash: field,
+      expiresAt: "2030-01-01T00:00:00.000Z", issuerPublicKey: "test-issuer", issuerSignature: "test-signature",
+    }) });
+  });
+
+  await page.goto("/dashboard/enroll");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Connect Freighter and enroll" }).click();
+  await expect(page.getByText("Credential stored in this browser", { exact: true }).first()).toBeVisible({ timeout: 60_000 });
+});
+
 test("landing and enrollment explain every Freighter step before the first click", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "What happens after you click enroll?" })).toBeVisible();
@@ -227,13 +311,25 @@ test("landing and enrollment explain every Freighter step before the first click
   await expect(page.getByText("After clicking, watch the Current status panel above")).toBeVisible();
 });
 
-test("docs navigation stays oriented without replaying route-entry animation", async ({ page }) => {
+test("docs navigation stays oriented without replaying route-entry animation", async ({ page }, testInfo) => {
   await page.goto("/docs");
   await expect(page.locator(".route-transition")).toHaveCount(0);
+  if (testInfo.project.name === "mobile") {
+    const article = page.getByRole("heading", { level: 1, name: "Developer documentation" });
+    const box = await article.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y).toBeLessThan(page.viewportSize()!.height);
+  }
+  await page.screenshot({ path: `docs/evidence/docs-${testInfo.project.name}.png`, fullPage: true });
+  if (testInfo.project.name === "mobile") await page.locator("details summary").click();
   const docsNav = page.getByRole("navigation", { name: "Documentation" });
   await expect(docsNav).toBeVisible();
   await docsNav.getByRole("link", { name: "Enrollment" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Enrollment" })).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    await expect(page.locator("details summary")).toContainText("Enrollment");
+    await page.locator("details summary").click();
+  }
   await expect(docsNav.getByRole("link", { name: "Enrollment" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Before clicking" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "If no Freighter window appears" })).toBeVisible();
