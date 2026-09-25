@@ -8,6 +8,7 @@ import {
 
 const verified = {
   ok: true as const,
+  eligible: true as const,
   privateAppId: "vp_7f4e9d",
   gateId: "premium-holder",
   epoch: 3,

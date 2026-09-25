@@ -4,6 +4,8 @@ import { Barretenberg, UltraHonkBackend, UltraHonkVerifierBackend } from "@aztec
 import { Noir } from "@noir-lang/noir_js";
 import { describe, expect, it } from "vitest";
 
+import { verifyVeilPassProof } from "@/packages/server/src/verifier";
+import { ChallengeStore } from "./challenge-store";
 import { fieldHexFromBytes, fieldHexToNoir, hashBytesToFieldHex, hashTextToFieldHex, u64ToFieldHex } from "@/packages/shared/src/field";
 import { verifyNoirMembershipProof } from "./zk-verifier";
 
@@ -28,6 +30,8 @@ describe("pinned Noir verifier", () => {
       const gateId = "premium-holder";
       const origin = "http://app-a.localhost:3000";
       const rawChallenge = Uint8Array.from({ length: 32 }, (_, index) => index + 1);
+      const store = new ChallengeStore({ now: () => now, randomBytes: () => rawChallenge });
+      const issuedChallenge = await store.issue({ gateId, origin });
       const gateIdHash = await hashTextToFieldHex(`veilpass:gate:${gateId}`);
       const originHash = await hashTextToFieldHex(`veilpass:origin:${origin}`);
       const challengeHash = await hashBytesToFieldHex(rawChallenge);
@@ -51,12 +55,28 @@ describe("pinned Noir verifier", () => {
       const expected = [commitment, root, gateIdHash, u64ToFieldHex(epoch), originHash, challengeHash, u64ToFieldHex(seconds(proofExpiresAt)), u64ToFieldHex(seconds(proofCreatedAt)), privateAppId, loginNullifier, revocationHash];
       expect(generated.publicInputs).toEqual(expected.map((value) => `0x${value}`));
       const proofResult = {
-        challengeId: "proof-fixture",
+        challengeId: issuedChallenge.challengeId,
         proof: Buffer.from(generated.proof).toString("base64"),
         publicInputs: { gateId, epoch, origin, challengeHash, credentialCommitment: commitment, credentialRoot: root, privateAppId, loginNullifier, revocationHash, proofCreatedAt, proofExpiresAt },
       };
       await expect(verifyNoirMembershipProof(proofResult)).resolves.toBe(true);
       await expect(verifyNoirMembershipProof({ ...proofResult, publicInputs: { ...proofResult.publicInputs, origin: "http://app-b.localhost:3000" } })).resolves.toBe(false);
+      const verify = (overrides: Record<string, unknown> = {}) => verifyVeilPassProof({
+        proofResult,
+        expectedOrigin: origin,
+        expectedGateId: gateId,
+        store,
+        policy: { active: true, epoch, credentialRoot: root, isRevoked: async () => false },
+        verifyProof: verifyNoirMembershipProof,
+        now: () => now,
+        requestId: "real-proof-test",
+        ...overrides,
+      });
+      await expect(verify()).resolves.toMatchObject({ ok: true, eligible: true, privateAppId });
+      await expect(verify()).resolves.toMatchObject({ ok: false, error: "CHALLENGE_SPENT" });
+      await expect(verify({ expectedOrigin: "http://app-b.localhost:3000" })).resolves.toMatchObject({ ok: false, error: "ORIGIN_MISMATCH" });
+      await expect(verify({ now: () => now + 121_000 })).resolves.toMatchObject({ ok: false, error: "CREDENTIAL_EXPIRED" });
+      await expect(verify({ policy: { active: true, epoch, credentialRoot: root, isRevoked: async () => true } })).resolves.toMatchObject({ ok: false, error: "CREDENTIAL_REVOKED" });
     } finally {
       await api.destroy();
     }

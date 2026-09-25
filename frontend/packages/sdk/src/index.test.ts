@@ -32,6 +32,7 @@ const proof = {
 
 const verified = {
   ok: true,
+  eligible: true,
   privateAppId: "vp_private",
   gateId: "premium-holder",
   epoch: 1,
@@ -113,6 +114,30 @@ describe("VeilPass browser login", () => {
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe("VeilPassError");
     expect(error.code).toBe("PROOF_INVALID");
+  });
+
+  it("submits a trusted proof only once when the popup repeats its message", async () => {
+    const popup = { postMessage: vi.fn(), close: vi.fn() } as unknown as Window;
+    let openedUrl = "";
+    vi.spyOn(window, "open").mockImplementation((url) => { openedUrl = String(url); return popup; });
+    let resolveVerification!: (response: Response) => void;
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(challenge), { status: 201 }))
+      .mockImplementationOnce(() => new Promise<Response>((resolve) => { resolveVerification = resolve; }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const promise = new VeilPass({ loginOrigin: "https://login.example" }).login({ gateId: "premium-holder" });
+    const state = new URL(openedUrl).searchParams.get("state");
+    window.dispatchEvent(new MessageEvent("message", { origin: "https://login.example", source: popup, data: { type: "veilpass:ready", state } }));
+    await vi.waitFor(() => expect(popup.postMessage).toHaveBeenCalled());
+    const proofMessage = { type: "veilpass:proof", state, payload: proof };
+    window.dispatchEvent(new MessageEvent("message", { origin: "https://login.example", source: popup, data: proofMessage }));
+    window.dispatchEvent(new MessageEvent("message", { origin: "https://login.example", source: popup, data: proofMessage }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    resolveVerification(new Response(JSON.stringify(verified), { status: 200 }));
+    await expect(promise).resolves.toEqual(verified);
+    expect(popup.close).toHaveBeenCalledOnce();
   });
 
   it("surfaces challenge creation failures from the trusted login popup", async () => {

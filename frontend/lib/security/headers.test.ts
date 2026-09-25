@@ -10,6 +10,8 @@ describe("security headers", () => {
     expect(policy).not.toContain("'unsafe-inline'");
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("connect-src 'self' data: https://soroban-testnet.stellar.org https://horizon-testnet.stellar.org");
+    expect(policy).not.toContain("connect-src *");
   });
 
   it("allows the development-only eval and inline style escape hatches", () => {

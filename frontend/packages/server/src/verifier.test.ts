@@ -14,7 +14,7 @@ describe("verifyVeilPassProof", () => {
     const proofResult = createSimulatedProof({ challengeId: challenge.challengeId, publicInputs: { gateId: "premium-holder", epoch: 7, origin: "https://app.example", challengeHash, credentialCommitment: "commitment-a", credentialRoot: "root-a", privateAppId: "vp_private", loginNullifier: "nullifier-1", revocationHash: "rev-a", proofCreatedAt: "2026-08-02T08:00:00.000Z", proofExpiresAt: "2026-08-02T08:05:00.000Z" }, key: "test-key" });
     const policy = { active: true, epoch: 7, credentialRoot: "root-a", revocationHash: "rev-a" };
     const verified = await verifyVeilPassProof({ proofResult, expectedOrigin: "https://app.example", expectedGateId: "premium-holder", store, policy, verifyProof: (result) => verifySimulatedProof({ proofResult: result, key: "test-key" }), now: () => Date.parse("2026-08-02T08:00:00.000Z"), requestId: "request-1" });
-    expect(verified).toEqual({ ok: true, privateAppId: "vp_private", gateId: "premium-holder", epoch: 7, origin: "https://app.example", expiresAt: "2026-08-02T08:05:00.000Z" });
+    expect(verified).toEqual({ ok: true, eligible: true, privateAppId: "vp_private", gateId: "premium-holder", epoch: 7, origin: "https://app.example", expiresAt: "2026-08-02T08:05:00.000Z" });
     expect(JSON.stringify(verified)).not.toMatch(/proof|nullifier|root|revocation|wallet/i);
     await expect(verifyVeilPassProof({ proofResult, expectedOrigin: "https://app.example", expectedGateId: "premium-holder", store, policy, verifyProof: (result) => verifySimulatedProof({ proofResult: result, key: "test-key" }), now: () => Date.parse("2026-08-02T08:00:00.000Z"), requestId: "request-2" })).resolves.toEqual({ ok: false, error: "CHALLENGE_SPENT", requestId: "request-2" });
   });
