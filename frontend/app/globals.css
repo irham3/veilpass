@@ -271,31 +271,13 @@
   }
 
   .reveal-motion {
-    opacity: 0;
-    transform: translate3d(0, 42px, 0);
-    filter: blur(10px);
-    transition:
-      opacity 760ms cubic-bezier(0.32, 0.72, 0, 1),
-      transform 760ms cubic-bezier(0.32, 0.72, 0, 1),
-      filter 760ms cubic-bezier(0.32, 0.72, 0, 1);
+    opacity: 1;
   }
 
   .reveal-motion[data-visible="true"] {
     opacity: 1;
     transform: translate3d(0, 0, 0);
     filter: blur(0);
-  }
-
-  .reveal-motion[data-delay="short"] {
-    transition-delay: 90ms;
-  }
-
-  .reveal-motion[data-delay="medium"] {
-    transition-delay: 160ms;
-  }
-
-  .reveal-motion[data-delay="long"] {
-    transition-delay: 240ms;
   }
 
   .aperture-ring {

@@ -360,11 +360,12 @@ export default function Home() {
               <pre className="overflow-x-auto rounded-[1.35rem] border border-paper-50/10 bg-ink-900 p-4 font-mono text-xs leading-6 text-paper-200 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:rounded-[1.65rem] sm:p-6 sm:text-sm sm:leading-7 lg:p-8">
                 <code>{`{
   "ok": true,
+  "eligible": true,
   "privateAppId": "vp_appA_72f1",
   "gateId": "premium-holder",
   "epoch": 1,
   "origin": "https://app.example",
-  "expiresAt": 1760000000000
+  "expiresAt": "2026-10-25T09:00:00.000Z"
 }`}</code>
               </pre>
             </Reveal>
@@ -416,9 +417,9 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <span>VeilPass. Stellar network.</span>
           <div className="flex flex-wrap gap-4 sm:gap-5">
-            <Link className="smooth-link" href="/docs/security">Security</Link>
-            <Link className="smooth-link" href="/docs/privacy-model">Privacy model</Link>
-            <Link className="smooth-link" href="/docs/limitations">Limitations</Link>
+            <Link className="smooth-link" href="/docs/threat-model">Security</Link>
+            <Link className="smooth-link" href="/docs/privacy">Privacy model</Link>
+            <Link className="smooth-link" href="/docs/identity">Identity limits</Link>
           </div>
         </div>
       </footer>

@@ -31,18 +31,22 @@ export function Reveal({
       return;
     }
 
+    if (!("IntersectionObserver" in window)) return;
+    // Keep content visible and in the accessibility tree before it enters the
+    // viewport. A small offset provides motion without hiding instructions.
+    gsap.set(node, { y: 18 });
+
     const delaySeconds = { none: 0, short: 0.09, medium: 0.16, long: 0.24 }[delay];
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
           gsap.to(node, {
-            autoAlpha: 1,
             y: 0,
-            filter: "blur(0px)",
-            duration: 0.76,
+            duration: 0.56,
             delay: delaySeconds,
             ease: "power3.out",
             overwrite: true,
+            onComplete: () => { node.style.willChange = "auto"; },
           });
           observer.disconnect();
         }
@@ -50,6 +54,7 @@ export function Reveal({
       { rootMargin: "0px 0px -12% 0px", threshold: 0.16 },
     );
 
+    node.style.willChange = "transform";
     observer.observe(node);
     return () => observer.disconnect();
   }, { scope: ref, dependencies: [delay] });

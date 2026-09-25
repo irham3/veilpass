@@ -24,6 +24,7 @@ export class VeilPass {
     if (!popup) throw new VeilPassError("POPUP_BLOCKED", "Allow the VeilPass login window and try again.");
     return new Promise((resolve, reject) => {
       let settled = false;
+      let verificationStarted = false;
       let challengePromise: ReturnType<typeof createChallenge> | null = null;
       const cleanup = () => {
         settled = true;
@@ -48,7 +49,8 @@ export class VeilPass {
           return;
         }
         const result = validatePopupMessage({ event, popup, loginOrigin: this.loginOrigin, state });
-        if (!result) return;
+        if (!result || settled || verificationStarted) return;
+        verificationStarted = true;
         void fetch("/api/verify", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(result) }).then(async (response) => {
           const verified = verifyResultSchema.parse(await response.json());
           cleanup(); popup.close();

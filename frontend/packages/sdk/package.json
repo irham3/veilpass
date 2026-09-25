@@ -1,6 +1,6 @@
 {
   "name": "@veilpass/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Browser popup client for VeilPass private eligibility login.",
   "license": "MIT",
   "author": "Irham Tri Ahmadi <irhamtria@gmail.com>",
@@ -13,6 +13,6 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "scripts": { "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap --tsconfig tsconfig.build.json" },
-  "dependencies": { "@veilpass/shared": "^0.1.0" },
+  "dependencies": { "@veilpass/shared": "^0.2.0" },
   "publishConfig": { "access": "public", "provenance": true }
 }

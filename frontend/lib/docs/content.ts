@@ -27,7 +27,7 @@ const verified = await verifyVeilPassProof({
 
 export const docs: Record<string, DocPage> = {
   "": { title: "Developer documentation", eyebrow: "VeilPass docs", intro: "Integrate origin-scoped, eligibility-gated login without receiving the user's Stellar address.", sections: [
-    { heading: "What the host receives", body: "A successful login returns only a private app ID, gate ID, epoch, normalized origin, and expiry. The host does not receive a wallet address, balance, credential commitment, revocation handle, nullifier, or proof." },
+    { heading: "What the host receives", body: "A successful login returns only eligibility, a private app ID, gate ID, epoch, normalized origin, and expiry. The host never receives the Stellar wallet address or balance. During verification, the host browser and server do receive the raw proof and public inputs, including the credential commitment, revocation hash, and one-time nullifier; treat those as sensitive request data and do not log or persist them." },
     { heading: "MVP status", body: "This repository is testnet software. The hosted login generates a local Noir/UltraHonk membership proof and the verifier checks it with the pinned verification key. The separately labeled Simulated proof endpoint is only a non-production compatibility fixture; /api/verify never accepts it." },
   ]},
   quickstart: { title: "Quickstart", eyebrow: "Start here", intro: "Create one challenge on the host, open the VeilPass login surface, verify once, then establish an opaque cookie session.", sections: [
@@ -66,7 +66,7 @@ export const docs: Record<string, DocPage> = {
     { heading: "Credential and verifier", body: "CREDENTIAL_EXPIRED, CREDENTIAL_REVOKED, PROOF_INVALID, and SERVICE_UNAVAILABLE are the remaining public outcomes. Retry is safe only for SERVICE_UNAVAILABLE with backoff and a fresh challenge." },
   ]},
   privacy: { title: "Privacy model", eyebrow: "Exact claim", intro: "VeilPass protects the Stellar wallet address from the host dApp during the login flow.", sections: [
-    { heading: "What is hidden", body: "The host does not receive the wallet address, public balance, credential secrets, revocation handle, nullifier, or raw proof." },
+    { heading: "What is hidden", body: "The host does not receive the Stellar wallet address, public balance, or credential secret. Its verifier receives the raw proof and public inputs, including a credential commitment, revocation hash, and one-time nullifier. Those inputs are omitted from the successful login result and should never be logged or persisted by the host." },
     { heading: "What is not hidden", body: "The enrollment issuer sees the address. VeilPass does not hide IP address, browser fingerprint, timing, device state, or later on-chain actions. It is not a network anonymity system." },
   ]},
   "threat-model": { title: "Threat model", eyebrow: "Security model", intro: "The MVP defends against accidental wallet disclosure, cross-origin message confusion, challenge replay, nullifier reuse, and stale or revoked policy use.", sections: [
@@ -75,8 +75,8 @@ export const docs: Record<string, DocPage> = {
   ]},
   api: { title: "API reference", eyebrow: "Host and login endpoints", intro: "Host applications create a one-time challenge and submit a proof result. The hosted login also exposes enrollment, witness, session, and health endpoints.", sections: [
     { heading: "POST /api/challenges", body: "Creates 32 random bytes, stores only their digest, binds the record to trusted origin and gate, and expires it after five minutes.", code: `{"gateId":"premium-holder"}` },
-    { heading: "POST /api/verify", body: "Validates and atomically consumes the challenge and login nullifier. A successful response contains only the documented VerifiedLogin fields.", code: `{"ok":true,"privateAppId":"vp_appA_72f1","gateId":"premium-holder","epoch":20391,"origin":"https://app.example","expiresAt":"2026-08-02T09:00:00.000Z"}`, language: "json" },
-    { heading: "POST /api/session", body: "Creates or clears the opaque, Secure, HttpOnly cookie-session adapter after a successful server verification. It must not receive a wallet address." },
+    { heading: "POST /api/verify", body: "Validates and atomically consumes the challenge and login nullifier. A successful response contains only the documented VerifiedLogin fields.", code: `{"ok":true,"eligible":true,"privateAppId":"vp_appA_72f1","gateId":"premium-holder","epoch":20391,"origin":"https://app.example","expiresAt":"2026-08-02T09:00:00.000Z"}`, language: "json" },
+    { heading: "GET /api/session", body: "Reads the opaque session cookie and returns only authentication state, private app ID, and gate. POST /api/verify creates the Secure, HttpOnly, SameSite=Lax session cookie after successful server verification. Neither response contains a wallet address." },
     { heading: "POST /api/credentials/witness", body: "Refreshes the signed credential's Merkle witness against the active contract root. It is part of the hosted-login service, not an endpoint a host dApp needs to call directly." },
     { heading: "POST /api/enrollment/challenge and POST /api/enrollment/issue", body: "Create the Freighter signing challenge, check the configured Testnet asset rule, issue the local credential, and publish the updated root through the owner-controlled service flow." },
     { heading: "GET /api/health", body: "Returns 200 only when origin, database URL, contract, gate, asset, and required signing configuration are structurally valid. It returns issue codes only, never configuration values or secrets." },

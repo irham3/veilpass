@@ -25,7 +25,7 @@ export async function verifyVeilPassProof({ proofResult, expectedOrigin, expecte
   if (!await verifyProof(result)) return failure("PROOF_INVALID", requestId);
   const consumed = await store.consume({ challengeId: result.challengeId, challengeHash: input.challengeHash, gateId: input.gateId, origin: input.origin, loginNullifier: input.loginNullifier, proofExpiresAt: input.proofExpiresAt });
   if (!consumed.ok) return failure(consumed.error, requestId);
-  return { ok: true, privateAppId: input.privateAppId, gateId: input.gateId, epoch: input.epoch, origin: input.origin, expiresAt: input.proofExpiresAt };
+  return { ok: true, eligible: true, privateAppId: input.privateAppId, gateId: input.gateId, epoch: input.epoch, origin: input.origin, expiresAt: input.proofExpiresAt };
 }
 
 function failure(error: VeilPassErrorCode, requestId: string): VerifyResult { return { ok: false, error, requestId }; }

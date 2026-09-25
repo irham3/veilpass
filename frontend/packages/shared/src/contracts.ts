@@ -48,6 +48,7 @@ export const proofResultSchema = z
 export const verifiedLoginSchema = z
   .object({
     ok: z.literal(true),
+    eligible: z.literal(true),
     privateAppId: z.string().min(1).max(256),
     gateId: z.string().min(1).max(128),
     epoch: z.number().int().nonnegative(),

@@ -155,7 +155,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
               <CircleNotchIcon aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
             </Button>
           ) : credential ? (
-            <Button className="mt-6 min-h-12 w-full rounded-full disabled:opacity-80" size="lg" disabled={!challenge || isProving} aria-busy={buttonLoading} onClick={prove}>
+            <Button className="mt-6 min-h-12 w-full rounded-full disabled:opacity-80" size="lg" disabled={!challenge || isProving || Boolean(channelIssue)} aria-busy={buttonLoading} onClick={prove}>
               {credentialButtonLabel}
               {buttonLoading ? <CircleNotchIcon aria-hidden="true" className="animate-spin motion-reduce:animate-none" /> : null}
             </Button>
@@ -163,7 +163,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
             <Button className="mt-6 min-h-12 w-full rounded-full" size="lg" disabled={Boolean(channelIssue)} onClick={enrollThisBrowser}>Enroll this browser</Button>
           )}
 
-          <p className="mt-4 text-xs leading-5 text-paper-200">{credential ? "The secret stays in this browser. The verifier receives only the circuit proof and public anti-replay inputs." : "Enrollment uses Freighter once. After it completes, this popup resumes the private login automatically."}</p>
+          <p className="mt-4 text-xs leading-5 text-paper-200">{credential ? "The secret stays in this browser. The host verifier receives the proof and public inputs, including the commitment, revocation hash, and one-time nullifier, but not the wallet address." : "Enrollment uses Freighter once. After it completes, this popup resumes the private login automatically."}</p>
         </div>
       </section>
     </main>

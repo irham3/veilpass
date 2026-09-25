@@ -8,7 +8,8 @@ export function createContentSecurityPolicy(
     `style-src 'self' 'nonce-${nonce}'${isDevelopment ? " 'unsafe-inline'" : ""}`,
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    "connect-src 'self' https://soroban-testnet.stellar.org https://horizon-testnet.stellar.org",
+    // Barretenberg loads its bundled WASM through fetch(data:application/gzip).
+    "connect-src 'self' data: https://soroban-testnet.stellar.org https://horizon-testnet.stellar.org",
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

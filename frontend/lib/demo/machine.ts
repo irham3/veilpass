@@ -16,6 +16,6 @@ export function runDemoLogin(state: DemoState, app: DemoApp, options: { replay?:
   const selected = appResults[app];
   return {
     state: { ...state, loginCount: state.loginCount + 1, lastChallengeSpent: true },
-    result: { ok: true, privateAppId: selected.privateAppId, gateId: "premium-holder", epoch: 20391, origin: selected.origin, expiresAt: "2026-08-02T09:00:00.000Z" },
+    result: { ok: true, eligible: true, privateAppId: selected.privateAppId, gateId: "premium-holder", epoch: 20391, origin: selected.origin, expiresAt: "2026-08-02T09:00:00.000Z" },
   };
 }
