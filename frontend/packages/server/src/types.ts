@@ -1,3 +1,4 @@
+/* c8 ignore file */
 import type { VeilPassErrorCode } from "@veilpass/shared";
 
 export type ChallengeConsumeInput = {
