@@ -9,14 +9,39 @@ import type { ProofResult } from "@/packages/shared/src/contracts";
 
 type CircuitArtifact = { bytecode: string };
 type ProofArtifacts = { circuit: CircuitArtifact; verificationKey: Uint8Array };
-let artifactsPromise: Promise<ProofArtifacts> | undefined;
+let cachedArtifacts: ProofArtifacts | undefined;
+
+async function readArtifactFile(filename: string): Promise<Buffer> {
+  const candidatePaths = [
+    join(process.cwd(), "public", "proof", filename),
+    join(process.cwd(), "frontend", "public", "proof", filename),
+  ];
+  for (const candidate of candidatePaths) {
+    try {
+      return await readFile(candidate);
+    } catch {
+      // try next candidate
+    }
+  }
+  throw new Error(`Circuit artifact ${filename} could not be found in ${candidatePaths.join(" or ")}`);
+}
 
 async function artifacts(): Promise<ProofArtifacts> {
-  artifactsPromise ??= Promise.all([
-    readFile(join(process.cwd(), "public", "proof", "veilpass_membership.json"), "utf8"),
-    readFile(join(process.cwd(), "public", "proof", "veilpass_membership.vk")),
-  ]).then(([circuitJson, verificationKey]) => ({ circuit: JSON.parse(circuitJson) as CircuitArtifact, verificationKey: new Uint8Array(verificationKey) }));
-  return artifactsPromise;
+  if (cachedArtifacts) return cachedArtifacts;
+  try {
+    const [circuitBuffer, verificationKeyBuffer] = await Promise.all([
+      readArtifactFile("veilpass_membership.json"),
+      readArtifactFile("veilpass_membership.vk"),
+    ]);
+    cachedArtifacts = {
+      circuit: JSON.parse(circuitBuffer.toString("utf8")) as CircuitArtifact,
+      verificationKey: new Uint8Array(verificationKeyBuffer),
+    };
+    return cachedArtifacts;
+  } catch (error) {
+    console.error("[zk-verifier] Failed to load circuit artifacts:", error);
+    throw error;
+  }
 }
 
 function seconds(isoTime: string): number {
@@ -58,7 +83,8 @@ export async function verifyNoirMembershipProof(proofResult: ProofResult): Promi
     } finally {
       await api.destroy();
     }
-  } catch {
+  } catch (error) {
+    console.error("[zk-verifier] Noir verification failed:", error);
     return false;
   }
 }

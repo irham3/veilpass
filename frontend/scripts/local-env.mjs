@@ -8,14 +8,14 @@ import { pathToFileURL } from "node:url";
 import { buildLocalEnvText, buildSetupSummary } from "./local-env-format.mjs";
 
 export const DEFAULT_TESTNET_DEPLOYMENT = {
-  hostOrigin: "http://localhost:3000",
+  hostOrigin: "http://localhost:3000,http://app-a.localhost:3000,http://app-b.localhost:3000",
   loginOrigin: "http://localhost:3000",
   rpcUrl: "https://soroban-testnet.stellar.org",
   contractId: "CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK",
   sourceAccount: "GDVP7QVOCQ4L4CDNXVWD53ATXGYDXTDOYVFPJ3UA5OTWJW7XGXSNFXRJ",
   gateId: "premium-holder",
   gateEpoch: 1,
-  credentialRoot: "0000000000000000000000000000000000000000000000000000000000000000",
+  credentialRoot: "03a4d3be85ba04f4d1fa6f7d2aac7c980bb06599b3818d5d09c62f3acc87d632",
   assetType: "native",
   assetCode: "XLM",
   minBalance: "1",

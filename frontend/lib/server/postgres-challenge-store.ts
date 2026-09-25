@@ -20,17 +20,41 @@ export class PostgresChallengeStore implements ChallengeStoreLike {
     return this.sql.begin(async (tx) => {
       const rows = await tx.unsafe<{ challenge_digest: string; gate_id: string; origin: string; expires_at: Date; spent_at: Date | null }[]>("select challenge_digest, gate_id, origin, expires_at, spent_at from veilpass.login_challenges where id = $1 for update", [input.challengeId]);
       const record = rows[0];
-      if (!record) return { ok: false as const, error: "PROOF_INVALID" as const };
-      if (record.spent_at) return { ok: false as const, error: "CHALLENGE_SPENT" as const };
-      if (record.expires_at.getTime() <= Date.now()) return { ok: false as const, error: "CHALLENGE_EXPIRED" as const };
+      if (!record) {
+        console.error(`[postgres-challenge-store] Challenge not found in DB for id: ${input.challengeId}`);
+        return { ok: false as const, error: "PROOF_INVALID" as const };
+      }
+      if (record.spent_at) {
+        console.error(`[postgres-challenge-store] Challenge ${input.challengeId} was already spent at ${record.spent_at.toISOString()}`);
+        return { ok: false as const, error: "CHALLENGE_SPENT" as const };
+      }
+      if (record.expires_at.getTime() <= Date.now()) {
+        console.error(`[postgres-challenge-store] Challenge ${input.challengeId} expired at ${record.expires_at.toISOString()}`);
+        return { ok: false as const, error: "CHALLENGE_EXPIRED" as const };
+      }
       const proofExpiresAt = Date.parse(input.proofExpiresAt);
-      if (!Number.isFinite(proofExpiresAt) || proofExpiresAt > record.expires_at.getTime()) return { ok: false as const, error: "PROOF_INVALID" as const };
-      if (record.origin !== input.origin) return { ok: false as const, error: "ORIGIN_MISMATCH" as const };
-      if (record.gate_id !== input.gateId) return { ok: false as const, error: "GATE_MISMATCH" as const };
-      if (record.challenge_digest !== input.challengeHash) return { ok: false as const, error: "PROOF_INVALID" as const };
+      if (!Number.isFinite(proofExpiresAt) || proofExpiresAt > record.expires_at.getTime() + 1_000) {
+        console.error(`[postgres-challenge-store] Proof expires after challenge expiry window: proofExpiresAt=${input.proofExpiresAt}, challengeExpiresAt=${record.expires_at.toISOString()}`);
+        return { ok: false as const, error: "PROOF_INVALID" as const };
+      }
+      if (record.origin !== input.origin) {
+        console.error(`[postgres-challenge-store] Challenge origin mismatch: record=${record.origin}, proof=${input.origin}`);
+        return { ok: false as const, error: "ORIGIN_MISMATCH" as const };
+      }
+      if (record.gate_id !== input.gateId) {
+        console.error(`[postgres-challenge-store] Challenge gate mismatch: record=${record.gate_id}, proof=${input.gateId}`);
+        return { ok: false as const, error: "GATE_MISMATCH" as const };
+      }
+      if (record.challenge_digest !== input.challengeHash) {
+        console.error(`[postgres-challenge-store] Challenge digest mismatch: expected=${record.challenge_digest}, received=${input.challengeHash}`);
+        return { ok: false as const, error: "PROOF_INVALID" as const };
+      }
       const nullifier = digest(input.loginNullifier);
       const inserted = await tx.unsafe("insert into veilpass.login_nullifiers (digest) values ($1) on conflict do nothing returning digest", [nullifier]);
-      if (inserted.length !== 1) return { ok: false as const, error: "CHALLENGE_SPENT" as const };
+      if (inserted.length !== 1) {
+        console.error(`[postgres-challenge-store] Replay detected: login nullifier already consumed for digest ${nullifier}`);
+        return { ok: false as const, error: "CHALLENGE_SPENT" as const };
+      }
       await tx.unsafe("update veilpass.login_challenges set spent_at = now() where id = $1", [input.challengeId]);
       return { ok: true as const };
     });

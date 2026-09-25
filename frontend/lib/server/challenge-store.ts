@@ -36,16 +36,37 @@ export class ChallengeStore {
   consume(input: { challengeId: string; challengeHash: string; gateId: string; origin: string; loginNullifier: string; proofExpiresAt: string }): Promise<ConsumeResult> {
     return this.atomic(() => {
       const record = this.challenges.get(input.challengeId);
-      if (!record) return { ok: false, error: "PROOF_INVALID" };
-      if (record.spent || this.nullifiers.has(input.loginNullifier)) return { ok: false, error: "CHALLENGE_SPENT" };
-      if (this.now() > record.expiresAtMs) return { ok: false, error: "CHALLENGE_EXPIRED" };
+      if (!record) {
+        console.error(`[challenge-store] In-memory challenge record not found for id: ${input.challengeId}`);
+        return { ok: false, error: "PROOF_INVALID" };
+      }
+      if (record.spent || this.nullifiers.has(input.loginNullifier)) {
+        console.error(`[challenge-store] Challenge ${input.challengeId} already spent or nullifier already used`);
+        return { ok: false, error: "CHALLENGE_SPENT" };
+      }
+      if (this.now() > record.expiresAtMs) {
+        console.error(`[challenge-store] Challenge ${input.challengeId} expired`);
+        return { ok: false, error: "CHALLENGE_EXPIRED" };
+      }
       const proofExpiresAt = Date.parse(input.proofExpiresAt);
-      if (!Number.isFinite(proofExpiresAt) || proofExpiresAt > record.expiresAtMs) return { ok: false, error: "PROOF_INVALID" };
-      if (input.origin !== record.origin) return { ok: false, error: "ORIGIN_MISMATCH" };
-      if (input.gateId !== record.gateId) return { ok: false, error: "GATE_MISMATCH" };
+      if (!Number.isFinite(proofExpiresAt) || proofExpiresAt > record.expiresAtMs + 1_000) {
+        console.error(`[challenge-store] Proof expires after challenge expiry: proofExpiresAt=${input.proofExpiresAt}, challengeExpiresAtMs=${record.expiresAtMs}`);
+        return { ok: false, error: "PROOF_INVALID" };
+      }
+      if (input.origin !== record.origin) {
+        console.error(`[challenge-store] Challenge origin mismatch: record=${record.origin}, proof=${input.origin}`);
+        return { ok: false, error: "ORIGIN_MISMATCH" };
+      }
+      if (input.gateId !== record.gateId) {
+        console.error(`[challenge-store] Challenge gate mismatch: record=${record.gateId}, proof=${input.gateId}`);
+        return { ok: false, error: "GATE_MISMATCH" };
+      }
       const supplied = Buffer.from(input.challengeHash);
       const expected = Buffer.from(record.challengeDigest);
-      if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return { ok: false, error: "PROOF_INVALID" };
+      if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+        console.error(`[challenge-store] Challenge digest mismatch: expected=${record.challengeDigest}, received=${input.challengeHash}`);
+        return { ok: false, error: "PROOF_INVALID" };
+      }
       record.spent = true;
       this.nullifiers.add(input.loginNullifier);
       return { ok: true };
