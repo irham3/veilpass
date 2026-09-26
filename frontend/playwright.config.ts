@@ -5,6 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: true,
   retries: 1,
+  // Keep CI browser runs within the memory/CPU budget of a single GitHub runner.
+  workers: process.env.CI ? 2 : undefined,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: { baseURL: "http://localhost:3000", trace: "retain-on-failure", screenshot: "only-on-failure", video: "retain-on-failure" },
   projects: [
