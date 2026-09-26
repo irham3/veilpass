@@ -25,9 +25,9 @@ Notable changes to VeilPass are recorded here. Version entries describe source i
 
 ### Release status
 
-- This source change is prepared for `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` version `0.2.1`.
-- The public `0.2.0` npm pages remain unchanged until a reviewed source change is merged and the protected `v0.2.1` GitHub tag workflow publishes packages with provenance.
-- The hosted website updates after the reviewed source change is merged and its deployment completes.
+- `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` version `0.2.1` were published on 27 September 2026 from the protected `v0.2.1` tag with npm provenance.
+- The [GitHub Release](https://github.com/irham3/veilpass/releases/tag/v0.2.1) contains all three package archives and verified SHA256 checksums. See the [release verification](frontend/docs/evidence/release-v0.2.1-verification-2026-09-27.md).
+- The hosted website and GitHub developer documentation were updated from the reviewed source before the package release.
 
 ## [0.2.0] - 2026-09-26
 
