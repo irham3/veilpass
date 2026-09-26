@@ -19,5 +19,5 @@ export const metadata: Metadata = {
 export default async function HostPage({ params }: { params: Promise<{ host: string }> }) {
   const { host } = await params;
   if (!(host in hostApps)) notFound();
-  return <HostDemo app={host as keyof typeof hostApps} {...hostApps[host as keyof typeof hostApps]} />;
+  return <HostDemo {...hostApps[host as keyof typeof hostApps]} />;
 }

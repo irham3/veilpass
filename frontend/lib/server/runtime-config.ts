@@ -1,16 +1,18 @@
 import "server-only";
 
+import { StrKey } from "@stellar/stellar-sdk";
+
 export type RuntimeConfigIssue =
   | "DATABASE_URL_INVALID"
   | "HOST_ORIGIN_INVALID"
   | "LOGIN_ORIGIN_INVALID"
   | "PUBLIC_LOGIN_ORIGIN_INVALID"
-  | "CONTRACT_ID_MISSING"
-  | "SOURCE_ACCOUNT_MISSING"
+  | "CONTRACT_ID_INVALID"
+  | "SOURCE_ACCOUNT_INVALID"
   | "GATE_IDS_MISSING"
   | "ASSET_RULE_INCOMPLETE"
-  | "ISSUER_SECRET_MISSING"
-  | "GATE_OWNER_SECRET_MISSING";
+  | "ISSUER_SECRET_INVALID"
+  | "GATE_OWNER_SECRET_INVALID";
 
 export type RuntimeConfigReport = {
   ok: boolean;
@@ -76,23 +78,23 @@ export function inspectRuntimeConfiguration(environment: RuntimeEnvironment = pr
     hostOrigin: isOriginAllowlist(environment.VEILPASS_HOST_ORIGIN),
     loginOrigin: isExactOrigin(environment.VEILPASS_LOGIN_ORIGIN),
     publicLoginOrigin: isExactOrigin(environment.NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN),
-    contractId: Boolean(environment.NEXT_PUBLIC_VEILPASS_CONTRACT_ID),
-    sourceAccount: Boolean(environment.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT),
+    contractId: StrKey.isValidContract(environment.NEXT_PUBLIC_VEILPASS_CONTRACT_ID ?? ""),
+    sourceAccount: StrKey.isValidEd25519PublicKey(environment.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT ?? ""),
     gateIds: Boolean(environment.VEILPASS_GATE_IDS?.split(",").map((value) => value.trim()).filter(Boolean).length),
     assetRule: hasValidAssetRule(environment),
-    issuerSecret: Boolean(environment.VEILPASS_ISSUER_SECRET),
-    gateOwnerSecret: Boolean(environment.VEILPASS_GATE_OWNER_SECRET),
+    issuerSecret: StrKey.isValidEd25519SecretSeed(environment.VEILPASS_ISSUER_SECRET ?? ""),
+    gateOwnerSecret: StrKey.isValidEd25519SecretSeed(environment.VEILPASS_GATE_OWNER_SECRET ?? ""),
   };
   const issues: RuntimeConfigIssue[] = [];
   if (!checks.database) issues.push("DATABASE_URL_INVALID");
   if (!checks.hostOrigin) issues.push("HOST_ORIGIN_INVALID");
   if (!checks.loginOrigin) issues.push("LOGIN_ORIGIN_INVALID");
   if (!checks.publicLoginOrigin) issues.push("PUBLIC_LOGIN_ORIGIN_INVALID");
-  if (!checks.contractId) issues.push("CONTRACT_ID_MISSING");
-  if (!checks.sourceAccount) issues.push("SOURCE_ACCOUNT_MISSING");
+  if (!checks.contractId) issues.push("CONTRACT_ID_INVALID");
+  if (!checks.sourceAccount) issues.push("SOURCE_ACCOUNT_INVALID");
   if (!checks.gateIds) issues.push("GATE_IDS_MISSING");
   if (!checks.assetRule) issues.push("ASSET_RULE_INCOMPLETE");
-  if (!checks.issuerSecret) issues.push("ISSUER_SECRET_MISSING");
-  if (!checks.gateOwnerSecret) issues.push("GATE_OWNER_SECRET_MISSING");
+  if (!checks.issuerSecret) issues.push("ISSUER_SECRET_INVALID");
+  if (!checks.gateOwnerSecret) issues.push("GATE_OWNER_SECRET_INVALID");
   return { ok: issues.length === 0, issues, checks };
 }

@@ -12,6 +12,7 @@ VeilPass uses a layered test model so each boundary is checked at the cheapest r
 | Accessibility | Playwright plus axe-core | Landing, demo, dashboard and docs; serious and critical findings fail the build | `npm run test:a11y` |
 | Security | Vitest, Playwright, npm audit | CSP, security headers, cross-origin rejection, oversized/hostile input, session minimization, secret leakage, dependency advisories | `npm run test:security` |
 | Contract | Cargo and Stellar smoke scripts | Soroban contract behavior and optional live Testnet deployment | `npm run contract:test`, `npm run contract:smoke` |
+| Documentation contract | Vitest | Every implemented API method/path appears in the hosted developer docs and GitHub README; privacy and package README/export metadata remain explicit | `npm run docs:check` |
 
 ## Coverage gate
 
@@ -35,6 +36,7 @@ Run the same high-signal checks used by CI:
 ```bash
 npm run lint
 npm run typecheck
+npm run docs:check
 npm run test:coverage
 npm run test:coverage:all
 npm run test:system

@@ -4,6 +4,8 @@
 # Local dependencies and build/test artifacts
 node_modules
 node_modules-stale-after-frontend-move
+.node_modules-stale-after-frontend-move
+.codex
 .next
 .next-stale-after-move
 .tmp-bb-inspect
@@ -15,9 +17,12 @@ frontend/out
 frontend/build
 frontend/dist
 frontend/coverage
+frontend/coverage-all
 frontend/playwright-report
 frontend/test-results
 frontend/*.tsbuildinfo
+frontend/packages/*/node_modules
+contracts/veilpass-gate/target
 
 # Local environment and deployment metadata
 .env*

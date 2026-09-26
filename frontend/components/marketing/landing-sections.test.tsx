@@ -43,7 +43,7 @@ describe("landing page information architecture", () => {
 
     expect(privacy).toHaveAttribute("aria-expanded", "false");
     expect(deployment).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(/^Yes\. Vercel should use frontend as the project root\./)).toBeInTheDocument();
+    expect(screen.getByText(/Set Vercel's Root Directory to frontend/)).toBeInTheDocument();
 
     fireEvent.click(deployment);
     expect(deployment).toHaveAttribute("aria-expanded", "false");

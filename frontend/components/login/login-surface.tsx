@@ -12,6 +12,13 @@ import { loadCredential, saveCredential } from "@/packages/credential/src/store"
 import { proveMembership } from "@/packages/proof/src/noir";
 import { challengeResponseSchema, proofResultSchema, type ChallengeResponse } from "@/packages/shared/src/contracts";
 
+export function witnessFailureMessage(code: string): string {
+  if (code === "CREDENTIAL_REVOKED") return "This browser credential is absent from the active gate tree or has been revoked. Re-enroll with Freighter to create a new one.";
+  if (code === "STALE_EPOCH") return "The gate epoch changed. Re-enroll this browser with Freighter before logging in.";
+  if (code === "PROOF_INVALID") return "This browser credential failed issuer validation. Re-enroll with Freighter.";
+  return "The credential witness service is unavailable. Retry after the operator checks the live gate configuration.";
+}
+
 export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; state: string; hostOrigin: string }) {
   const router = useRouter();
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
@@ -19,6 +26,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
   const [credentialLoading, setCredentialLoading] = useState(true);
   const [isProving, setIsProving] = useState(false);
   const [channelIssue, setChannelIssue] = useState<string | null>(null);
+  const [credentialNeedsEnrollment, setCredentialNeedsEnrollment] = useState(false);
   const [status, setStatus] = useState("Connecting securely to the host app");
 
   useEffect(() => {
@@ -106,8 +114,15 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
           },
         }),
       });
-      const witness = credentialWitnessSchema.safeParse(await witnessResponse.json());
-      if (!witnessResponse.ok || !witness.success) throw new Error("Credential witness is unavailable or has been revoked");
+      const witnessBody = await witnessResponse.json().catch(() => null);
+      if (!witnessResponse.ok) {
+        const code = typeof witnessBody?.error === "string" ? witnessBody.error : "SERVICE_UNAVAILABLE";
+        setCredentialNeedsEnrollment(["CREDENTIAL_REVOKED", "STALE_EPOCH", "PROOF_INVALID"].includes(code));
+        throw new Error(witnessFailureMessage(code));
+      }
+      setCredentialNeedsEnrollment(false);
+      const witness = credentialWitnessSchema.safeParse(witnessBody);
+      if (!witness.success) throw new Error("The witness service returned an invalid response. Retry later.");
       const freshCredential = { ...credential, ...witness.data };
       await saveCredential(freshCredential);
       const payload = await proveMembership({ challenge, credential: freshCredential, onStatus: setStatus });
@@ -162,6 +177,10 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
           ) : (
             <Button className="mt-6 min-h-12 w-full rounded-full" size="lg" disabled={Boolean(channelIssue)} onClick={enrollThisBrowser}>Enroll this browser</Button>
           )}
+
+          {credentialNeedsEnrollment ? (
+            <Button className="mt-3 min-h-11 w-full rounded-full" variant="outline" onClick={enrollThisBrowser}>Re-enroll this browser</Button>
+          ) : null}
 
           <p className="mt-4 text-xs leading-5 text-paper-200">{credential ? "The secret stays in this browser. The host verifier receives the proof and public inputs, including the commitment, revocation hash, and one-time nullifier, but not the wallet address." : "Enrollment uses Freighter once. After it completes, this popup resumes the private login automatically."}</p>
         </div>

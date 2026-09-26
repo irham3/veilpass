@@ -1,8 +1,8 @@
 # VeilPass — Release dan Konfigurasi Cloud Runbook
 
-> **Pembaruan 25 September 2026:** status di bawah adalah riwayat rilis 0.1.0, bukan bukti bahwa perubahan checkout saat ini telah terdeploy. Source `shared`, `sdk`, dan `server` disiapkan sebagai 0.2.0 dan lulus `pack:check`, tetapi belum diterbitkan. Root Testnet aktif `273348dff2a3aea95053c4db8579ddacf1051b6d59d07516abb566e75ab4c9d2` cocok dengan database yang dikonfigurasi lokal. Acceptance wallet live, video, dan network capture belum dicatat. Lihat [panduan demo dan gerbang rilis](demo-end-to-end-guide-2026-09-25.md) sebelum deploy/tag baru.
+> **Runbook historis — diperbarui 26 September 2026:** status operasional pada bagian lama di bawah sudah usang dan dipertahankan sebagai riwayat. Status terbaru: deployment `dpl_D5pR6QWm7Ci1LWLCeN3y2W7MmmJe` READY; production health/acceptance lulus; enrollment selesai; App A login 2/2 dan App B 1/1 lulus. npm registry masih `0.2.0` (publish manual, tanpa provenance), sementara README/paket `0.2.1` adalah kandidat lokal untuk protected release setelah reviewed merge. Laporan live, test dan coverage, serta acceptance yang masih terbuka ada di [panduan demo aktif](demo-end-to-end-guide-2026-09-25.md), [test report](test-report.md), dan [delivery status](delivery-status.md). Jangan mengikuti perintah historical issuer/VPT atau menganggap baris tabel lama sebagai hasil terbaru.
 
-**Tanggal pemeriksaan:** 14 September 2026
+**Tanggal pemeriksaan awal:** 14 September 2026
 **Tujuan:** menutup gap konfigurasi untuk Deliverable 1–3 tanpa mengungkap seed, password, token, atau data wallet.
 
 Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan menimpa, audit deliverable terdahulu. Semua perintah di bawah dijalankan dari komputer pengembang; jangan menempelkan nilai rahasia ke chat, Git, issue, atau README.
@@ -16,12 +16,12 @@ Dokumen ini adalah status aktual dan prosedur operasional. Ia melengkapi, bukan 
 | Env Vercel inti | Selesai | Kontrak, public source account, root, network/RPC, origin, dan owner secret sudah ada pada environment yang sesuai. |
 | Deployment produksi | Selesai | `https://www.veilpass.dev/api/health` memberi HTTP 200 dan seluruh pemeriksaan konfigurasi bernilai `true`. |
 | Artefak paket | Siap publish | `npm run pack:check` lulus pada 14 September 2026. |
-| Publikasi npm | Selesai | `@veilpass/shared@0.1.0`, `@veilpass/sdk@0.1.0`, dan `@veilpass/server@0.1.0` telah diterbitkan public pada 15 September 2026; instalasi bersih dan import ESM ketiganya lulus. |
+| Publikasi npm (status 26 Sep 2026) | `0.2.0` public; provenance/release source pending | `@veilpass/shared@0.2.0`, `@veilpass/sdk@0.2.0`, dan `@veilpass/server@0.2.0` diterbitkan manual pada 26 September 2026; install/import ESM dan integrity pack cocok. Kandidat lokal `0.2.1` belum diterbitkan; belum ada provenance/GitHub Release yang cocok dengan working tree. |
 | Workflow release GitHub | Trusted Publishing aktif | Workflow membangun, memeriksa, publish dengan npm provenance, membuat `.tgz`, dan membuat GitHub Release. Pemilik akun mengonfirmasi Trusted Publisher npm telah diaktifkan untuk ketiga package pada 15 September 2026. |
 | Neon schema | Selesai | Pada 15 September 2026, Drizzle menjalankan migration `0000`, `0001`, dan `0002` ke Neon. Query schema mengonfirmasi seluruh delapan tabel `veilpass` tersedia. |
-| Demo dua dApp independen | Domain/origin selesai; wallet acceptance tertunda | `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev` telah dipasang dan terverifikasi pada project Vercel. Rewrites aplikasi memetakan root App A/B ke host demo masing-masing. |
-| Uji wallet end-to-end | Menunggu wallet testnet | Freighter memerlukan persetujuan langsung pemegang wallet; ini tidak bisa dan tidak boleh diautomasi oleh agent. |
-| Video review | Belum | Direkam setelah jalur login App A/B, replay, expiry, dan revocation lolos pada deployment publik. |
+| Demo dua dApp independen | Domain/origin dan login lintas-host teruji | `login.veilpass.dev`, `app-a.veilpass.dev`, dan `app-b.veilpass.dev` dipasang dan terverifikasi pada project Vercel. Login App A (dua kali) dan App B (sekali) lulus pada profile browser holder yang sama. |
+| Uji wallet end-to-end | Enrollment dan login lulus; negative acceptance tersisa | Enrollment live dan login App A (2 kali), App B (1 kali) telah lulus. Replay, expiry, revocation, capture host tersensor, dan video belum diuji/direkam; lihat lembar acceptance terbaru. |
+| Video review | Belum | Rekam setelah jalur acceptance yang tersisa diuji pada deployment publik. |
 
 ### Pembaruan implementasi 15 September 2026
 
@@ -66,15 +66,15 @@ OAuth Vercel dan Neon pernah disambungkan pada konfigurasi Codex, tetapi tool MC
 
 ## 3. Publish npm — prosedur yang direkomendasikan
 
-Paket yang akan dipublikasikan secara berurutan adalah:
+Paket yang diterbitkan pada 26 September 2026 secara berurutan adalah:
 
-1. `@veilpass/shared@0.1.0`
-2. `@veilpass/sdk@0.1.0`
-3. `@veilpass/server@0.1.0`
+1. `@veilpass/shared@0.2.0`
+2. `@veilpass/sdk@0.2.0`
+3. `@veilpass/server@0.2.0`
 
 Urutan penting karena SDK dan server bergantung pada `@veilpass/shared`.
 
-> **Catatan permanen:** kombinasi nama paket dan versi tidak dapat dipakai ulang setelah dipublish. Jangan menerbitkan `0.1.0` bila rilis ini belum siap untuk publik; naikkan versi terlebih dahulu bila perlu.
+> **Catatan permanen:** ketiga versi `0.2.0` di atas sudah terbit dan tidak dapat dipakai ulang. Untuk rilis selanjutnya, naikkan versi package dan dependency internal, selesaikan quality gate, lalu rilis dari reviewed commit/tag.
 
 ### 3.1 Pilih dan klaim scope npm
 
@@ -107,7 +107,11 @@ Saat `npm login`, ikuti browser/device authorization bila ditawarkan npm. Jangan
 
 Periksa setiap daftar file dari `npm pack --dry-run`. Paket boleh berisi `dist`, `README.md`, dan `LICENSE`; paket tidak boleh memuat `.env*`, credential, seed `S...`, database URL, `node_modules`, atau file build aplikasi yang tidak relevan.
 
-### 3.3 Publish manual satu kali (aksi permanen)
+### 3.3 Hasil publish manual `0.2.0` (sudah dilakukan)
+
+Pada 26 September 2026, publish lokal berhasil untuk shared, sdk, dan server dengan `--provenance=false`. Ketiga versi `0.2.0` sudah terlihat pada npm registry; clean install/import berhasil dan integritas tarball npm cocok dengan hasil `npm pack` lokal. **Jangan jalankan ulang publish untuk versi `0.2.0`.** Paket diterbitkan dari working tree yang belum committed, sehingga metadata `gitHead` tidak merepresentasikan perubahan lokal; reviewed commit/GitHub Release serta provenance untuk rilis berikutnya masih perlu dibuat.
+
+Prosedur di bawah adalah riwayat perintah untuk rilis manual yang sudah dilakukan. Untuk versi baru, pastikan commit/tag cocok dengan source yang ditinjau terlebih dahulu.
 
 Setelah scope/2FA valid dan pemeriksaan lulus, jalankan tepat dalam urutan ini:
 
@@ -118,7 +122,7 @@ npm publish --workspace @veilpass/sdk --access public --provenance=false
 npm publish --workspace @veilpass/server --access public --provenance=false
 ```
 
-CLI akan meminta OTP dari authenticator untuk setiap publish. Isi hanya ke prompt lokal. Jangan memakai `--otp=<kode>` atau mengirim OTP ke chat karena berisiko tersimpan di history/log. Opsi `--provenance=false` hanya dipakai untuk rilis awal dari mesin lokal; provenance otomatis harus dilakukan dari GitHub Actions Trusted Publishing pada rilis berikutnya.
+CLI dapat meminta persetujuan browser npm atau OTP authenticator untuk publish. Selesaikan hanya di prompt/browser lokal; jangan memakai `--otp=<kode>` atau mengirim OTP ke chat karena berisiko tersimpan di history/log. Opsi `--provenance=false` dipakai untuk rilis manual ini; rilis berikutnya sebaiknya memakai GitHub Actions Trusted Publishing dan provenance.
 
 Lalu verifikasi registry dan instalasi bersih:
 
@@ -130,7 +134,7 @@ $testDir = Join-Path $env:TEMP 'veilpass-npm-smoke'
 New-Item -ItemType Directory -Force -Path $testDir | Out-Null
 Set-Location $testDir
 npm init -y
-npm install @veilpass/sdk@0.1.0
+npm install @veilpass/sdk@0.2.0
 node -e "import('@veilpass/sdk').then(() => console.log('SDK import OK'))"
 ```
 
@@ -154,8 +158,8 @@ Ini adalah opsi jangka panjang yang direkomendasikan karena GitHub Actions tidak
    | Allowed action | izinkan direct `npm publish` untuk workflow release yang sudah direview |
 
 5. Ulangi konfigurasi Trusted Publisher untuk `@veilpass/shared`, `@veilpass/sdk`, dan `@veilpass/server`.
-6. Setelah itu, agent dapat mengubah workflow agar menambahkan permission `id-token: write` dan menjalankan tiga publish command pada tag semver. Jangan simpan legacy `NPM_TOKEN` di GitHub Secrets kecuali ada alasan operasional yang kuat.
-7. Buat tag baru yang sesuai dengan versi, push tag, lihat **GitHub repository → Actions → Release packages**, lalu verifikasi provenance di halaman npm.
+6. Workflow saat ini sudah memakai `id-token: write`, Trusted Publishing, pemeriksaan tarball, dan membuat GitHub Release. Jangan simpan legacy `NPM_TOKEN` di GitHub Secrets kecuali ada alasan operasional yang kuat.
+7. Untuk rilis berikutnya, bump semua versi yang sesuai, buat reviewed commit, lalu buat/push tag semver. Lihat **GitHub repository → Actions → Release packages**, lalu verifikasi provenance di halaman npm.
 
 > **Catatan tooling:** pada npm `11.6.2` yang dipin di repository ini, perintah `npm stage publish` belum tersedia. Jangan menjadikan staged publishing sebagai langkah rilis sampai CLI resmi di-upgrade dan diverifikasi kembali.
 

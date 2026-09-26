@@ -51,7 +51,7 @@ export default async function DocsPage({ params }: { params: Promise<{ slug?: st
         <h1 className="mt-4 text-4xl font-semibold leading-[0.96] tracking-[-0.055em] text-balance sm:text-6xl">{page.title}</h1>
         <p className="mt-6 max-w-3xl text-lg leading-8 text-paper-200">{page.intro}</p>
         <div className="mt-12 space-y-11">
-          {page.sections.map((section) => <section key={section.heading} className="scroll-mt-28"><h2 className="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{section.heading}</h2><p className="mt-4 leading-7 text-paper-200">{section.body}</p>{section.code ? <CodeBlock code={section.code} language={section.language} /> : null}</section>)}
+          {page.sections.map((section) => <section key={section.heading} className="scroll-mt-28"><h2 className="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{section.heading}</h2><p className="mt-4 leading-7 text-paper-200">{section.body}</p>{section.links ? <ul className="mt-4 grid gap-2">{section.links.map((link) => <li key={link.href}><a className="inline-flex min-h-11 items-center text-signal-300 underline decoration-signal-300/40 underline-offset-4 transition-colors hover:text-signal-200 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-signal-300" href={link.href} target="_blank" rel="noopener noreferrer">{link.label}<span className="sr-only"> (opens in a new tab)</span></a></li>)}</ul> : null}{section.code ? <CodeBlock code={section.code} language={section.language} /> : null}</section>)}
         </div>
       </div>
     </article>

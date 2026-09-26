@@ -3,10 +3,10 @@ export const siteConfig = {
   url: "https://veilpass.dev",
   title: "VeilPass | Private wallet login for Stellar dApps",
   description:
-    "VeilPass lets Stellar dApps verify wallet eligibility and recognize returning users without receiving the user's Stellar wallet address.",
+    "VeilPass lets Stellar dApps verify wallet eligibility without receiving the user's Stellar wallet address. The host verifier receives proof inputs transiently; this Testnet MVP is not an anonymity system.",
   socialTitle: "VeilPass: prove access, keep wallets private",
   socialDescription:
-    "A Stellar testnet MVP for origin-scoped wallet login. Hosts receive a scoped ID and access verdict, not the wallet address.",
+      "A Stellar Testnet MVP for origin-scoped wallet login. Hosts receive a scoped ID and access verdict, not the wallet address; host servers process sensitive proof inputs during verification.",
   ogImageAlt:
     "VeilPass private aperture showing an eligibility verdict without exposing a Stellar wallet address.",
 } as const;
@@ -26,12 +26,12 @@ export const landingFaqItems = [
   {
     question: "Does VeilPass make the user anonymous?",
     answer:
-      "No. The issuer still sees the wallet during enrollment. VeilPass keeps the wallet address out of the host response and gives each origin its own private app ID.",
+      "No. The issuer sees the wallet during enrollment. The host verification API receives proof bytes and public inputs, which are sensitive and must not be logged, but the login result excludes the Stellar wallet address. VeilPass gives each allowed origin its own scoped private app ID and does not hide IP, timing, browser fingerprint, or later on-chain activity.",
   },
   {
     question: "Can I deploy this from the frontend folder?",
     answer:
-      "Yes. Vercel should use frontend as the project root. Keep the contract workspace at the repo root and configure production env vars in Vercel.",
+      "Set Vercel's Root Directory to frontend and keep the contract workspace in the repository. Run the Vercel CLI from the repository root because the linked project already applies the frontend root setting. Configure production environment values in Vercel; do not commit them.",
   },
   {
     question: "Is the proof already zero knowledge?",
@@ -41,7 +41,7 @@ export const landingFaqItems = [
   {
     question: "What does the host receive?",
     answer:
-      "The host receives an eligibility verdict, gate ID, epoch, expiry, origin, and a private app ID scoped to that origin. It does not receive the Stellar wallet address.",
+      "The successful result contains an eligibility verdict, gate ID, epoch, expiry, origin, and a private app ID scoped to that origin. The host's POST /api/verify endpoint also receives the raw proof and public inputs transiently; do not log or persist that request. Neither contains the Stellar wallet address.",
   },
 ] as const;
 

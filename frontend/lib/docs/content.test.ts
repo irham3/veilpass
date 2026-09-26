@@ -20,7 +20,7 @@ describe("documentation content registry", () => {
   it("documents the privacy limitation and trusted server boundary", () => {
     expect(docs.privacy.sections.map((section) => section.body).join(" ")).toMatch(/not a network anonymity system/i);
     expect(docs.server.sections.map((section) => section.body).join(" ")).toMatch(/never raw verifier diagnostics/i);
-    expect(docs.privacy.sections.map((section) => section.body).join(" ")).toMatch(/verifier receives the raw proof and public inputs/i);
+    expect(docs.privacy.sections.map((section) => section.body).join(" ")).toMatch(/host's POST \/api\/verify route .* receive the raw proof and public inputs/i);
     expect(docs.api.sections.map((section) => section.heading)).toContain("GET /api/session");
     expect(docs.api.sections.map((section) => section.heading)).not.toContain("POST /api/session");
   });

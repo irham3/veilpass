@@ -5,6 +5,8 @@
   "license": "MIT",
   "author": "Irham Tri Ahmadi <irhamtria@gmail.com>",
   "repository": { "type": "git", "url": "git+https://github.com/irham3/veilpass.git", "directory": "frontend/packages/contract-bindings" },
+  "homepage": "https://veilpass.dev/docs/contract",
+  "keywords": ["stellar", "soroban", "contract", "bindings", "veilpass"],
   "type": "module",
   "files": ["dist", "README.md", "LICENSE"],
   "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },

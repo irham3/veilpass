@@ -31,6 +31,15 @@ export default defineConfig({
       exclude: [
         "**/*.test.{ts,tsx,mjs}",
         "packages/**/dist/**",
+        // Type-only protocol declarations are verified by tsc, not runtime coverage.
+        "packages/server/src/types.ts",
+        // These modules contain no executable implementation statements: the
+        // config is validated by its focused test and the remaining files are
+        // tested public/Next metadata re-export barrels.
+        "drizzle.config.ts",
+        "app/twitter-image.tsx",
+        "packages/server/src/index.ts",
+        "packages/shared/src/index.ts",
       ],
       thresholds: { statements: 0, branches: 0, functions: 0, lines: 0 },
     },

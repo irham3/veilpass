@@ -44,6 +44,8 @@ jobs:
         run: npm run lint
       - name: Type check
         run: npm run typecheck
+      - name: Check website, GitHub, and package documentation contracts
+        run: npm run docs:check
       - name: Unit, integration, and coverage gate
         run: npm run test:coverage
       - name: Whole TypeScript source coverage inventory

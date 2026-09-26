@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="frontend\public\brand\favicon.svg" width="88" alt="VeilPass">
+  <img src="frontend/public/brand/favicon.svg" width="88" alt="VeilPass">
   <h1>VeilPass</h1>
   <p>Origin-scoped private eligibility login for Stellar Testnet apps.</p>
 
@@ -19,7 +19,7 @@ A host dApp can learn that a user passed a policy, such as holding the required 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.
 
-[Live Demo](https://veilpass.dev) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md) · [Frontend Docs](frontend/app/docs/[[...slug]]/page.tsx)
+[Live Demo](https://veilpass.dev) · [Developer docs](https://veilpass.dev/docs) · [Quickstart](https://veilpass.dev/docs/quickstart) · [API reference](https://veilpass.dev/docs/api) · [Changelog](CHANGELOG.md) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md)
 
 ---
 
@@ -124,7 +124,7 @@ flowchart LR
 - **Contract:** Soroban gate registry in `contracts/veilpass-gate`.
 - **Storage:** PostgreSQL is required for production challenge, enrollment, session, and Merkle-tree state; memory adapters are development-only.
 - **Proof boundary:** the hosted page generates the Noir/UltraHonk proof locally; the verifier uses the pinned verification key and returns no wallet data to the host.
-- **Deployment:** Vercel Hobby-compatible frontend deployment from `frontend/`.
+- **Deployment:** Vercel-hosted Next.js frontend from `frontend/`; production readiness depends on durable database, exact origins, current contract/tree policy, signing keys, and adequate function execution limits.
 
 ---
 
@@ -156,18 +156,35 @@ flowchart LR
 
 ## API Surface
 
-| Method | Path | Description |
+| Origin | Method | Path | Description |
+| --- | --- | --- | --- |
+| Host app (each allowed host origin) | `POST` | `/api/challenges` | Host-owned route creates a digest-only challenge bound to that origin and gate |
+| Host app (each allowed host origin) | `POST` | `/api/verify` | Host-owned route consumes the challenge and returns the minimized verifier result |
+| Host app (example adapter) | `GET` | `/api/session` | Reads that host's opaque HTTP-only session after its verifier route creates one |
+| VeilPass login service | `POST` | `/api/credentials/witness` | Refreshes a signed credential's Merkle path at the current contract root |
+| VeilPass login service | `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
+| VeilPass login service | `POST` | `/api/enrollment/eligibility` | Enrollment preflight against the configured Testnet eligibility rule |
+| VeilPass login service | `POST` | `/api/enrollment/challenge` | Checks eligibility and creates the Freighter enrollment challenge |
+| VeilPass login service | `POST` | `/api/enrollment/issue` | Verifies the signature and issues a credential/root update |
+| VeilPass login service | `POST` | `/api/demo-asset/challenge` | Creates an origin- and wallet-bound proof request for the fixed Testnet fixture |
+| VeilPass login service | `POST` | `/api/demo-asset/issue` | Verifies the Freighter signature and issues the fixed fixture once per wallet |
+| VeilPass login service | `GET` | `/api/health` | Reports redacted runtime-configuration readiness |
+
+The table lists this repository's demo/login service routes, not a backend automatically supplied by the npm SDK. The browser SDK makes same-origin requests to the host application's `POST /api/challenges` and `POST /api/verify`; every third-party host app must implement those routes, durable atomic challenge/nullifier storage, chain/policy reads, a pinned cryptographic verifier, rate/body limits, and its own session boundary. See [Quickstart](https://veilpass.dev/docs/quickstart), [server integration](https://veilpass.dev/docs/server), and the [package READMEs](frontend/packages/).
+
+The host's `/api/verify` receives proof bytes and public inputs (including commitment/root, one-time nullifier, revocation hash, origin, and challenge binding). The SDK does not return those fields to application code, but the host's server, reverse proxy, and observability stack can see them. Treat the request body as sensitive transient data: **do not log, trace, persist, or attach it to analytics/support reports**. The no-wallet-address claim is not a claim that proof data is anonymous or non-sensitive.
+
+### Published npm packages
+
+The following packages are the public integration surface currently published on npm. Each package-level README is included in its tarball and rendered on its npm page:
+
+| Package | Responsibility | Documentation |
 | --- | --- | --- |
-| `POST` | `/api/challenges` | Creates a digest-only host challenge |
-| `POST` | `/api/verify` | Consumes a challenge and returns the minimized verifier result |
-| `GET` | `/api/session` | Reads the opaque HTTP-only session created by successful `POST /api/verify` |
-| `POST` | `/api/credentials/witness` | Refreshes a signed credential's Merkle path at the current contract root |
-| `POST` | `/api/proof/simulate` | Non-production compatibility fixture; the verifier never accepts it |
-| `POST` | `/api/enrollment/challenge` | Creates the enrollment challenge for Freighter signing |
-| `POST` | `/api/enrollment/issue` | Checks eligibility and issues a credential |
-| `POST` | `/api/demo-asset/challenge` | Creates an origin- and wallet-bound proof request for the fixed Testnet fixture |
-| `POST` | `/api/demo-asset/issue` | Verifies the Freighter signature and issues the fixed fixture once per wallet |
-| `GET` | `/api/health` | Reports redacted runtime-configuration readiness for the login service |
+| [`@veilpass/sdk`](https://www.npmjs.com/package/@veilpass/sdk) | Browser popup client; calls host-owned `/api/challenges` and `/api/verify` routes | [README](frontend/packages/sdk/README.md) |
+| [`@veilpass/server`](https://www.npmjs.com/package/@veilpass/server) | Server-side verification policy primitive; does not include database, chain, verifier-key, or HTTP adapters | [README](frontend/packages/server/README.md) |
+| [`@veilpass/shared`](https://www.npmjs.com/package/@veilpass/shared) | Strict shared schemas, error codes, and origin/field helpers | [README](frontend/packages/shared/README.md) |
+
+These packages are integration primitives, not a drop-in authentication backend. Do not infer that installing them provisions VeilPass service infrastructure or makes a host application production-ready.
 
 ---
 
@@ -190,6 +207,8 @@ npm run env:local
 npm run env:validate
 npm run dev
 ```
+
+`npm run env:local` creates an ignored development template and generates an issuer key, but intentionally leaves `VEILPASS_GATE_OWNER_SECRET` empty and does not provision PostgreSQL. It is not a complete live-enrollment setup. Before Testnet issuance, configure the actual owner secret for the deployed gate, a durable `DATABASE_URL`, and a Merkle tree/root aligned to the current on-chain state; then run `npm run env:validate`. Never copy a production owner key into an untrusted local machine.
 
 Open:
 
@@ -242,9 +261,12 @@ VEILPASS_MIN_BALANCE=1
 VEILPASS_DEMO_ASSET_DAILY_LIMIT=100
 VEILPASS_SIMULATOR_KEY=
 VEILPASS_ISSUER_SECRET=
+VEILPASS_GATE_OWNER_SECRET=
 VEILPASS_FIXTURE_CREDENTIAL=
 DATABASE_URL=
 ```
+
+This is a consolidated inventory, not a claim that every variable is needed by every route. The runtime validator reports the structural checks required by the full issuer/login deployment. `NEXT_PUBLIC_*` values are intentionally public; issuer/owner secrets, fixture credentials, simulator keys, and database URLs must remain server-only. See [runtime configuration](https://veilpass.dev/docs/quickstart) and [`frontend/.env.example`](frontend/.env.example) for the local template.
 
 Important rules:
 
@@ -341,10 +363,11 @@ Output Directory: Next.js default
 Node.js Version: 20.x or newer
 ```
 
+The configured Vercel Root Directory is `frontend`. Run the CLI from the repository root, where the linked Vercel project configuration lives; launching the CLI from `frontend/` can resolve the configured root a second time and build the wrong directory.
+
 Deploy:
 
 ```powershell
-cd frontend
 npx vercel --prod --yes
 ```
 
@@ -365,6 +388,7 @@ Run from `frontend/`:
 ```powershell
 npm run lint
 npm run typecheck
+npm run docs:check
 npm test
 npm run contract:test
 npm run contract:smoke
