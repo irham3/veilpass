@@ -14,6 +14,8 @@ VeilPass uses a layered test model so each boundary is checked at the cheapest r
 | Contract | Cargo and Stellar smoke scripts | Soroban contract behavior and optional live Testnet deployment | `npm run contract:test`, `npm run contract:smoke` |
 | Documentation contract | Vitest | Every implemented API method/path appears in the hosted developer docs and GitHub README; privacy and package README/export metadata remain explicit | `npm run docs:check` |
 
+The Playwright system job requires the production app's challenge API to use durable storage. CI provisions a disposable PostgreSQL 17 service, applies the repository migrations, and passes its connection string only to that job. It does not connect to a developer's or production database.
+
 ## Coverage gate
 
 `npm run test:coverage` measures the selected security-critical TypeScript core and requires complete coverage of that selection:
@@ -27,7 +29,21 @@ The generated HTML and LCOV reports live under `coverage/`. CI uploads that dire
 
 `npm run test:coverage:all` measures all first-party application, component, library, package-source, script, and runtime-config TypeScript/TSX/MJS modules with Vitest V8. It includes files that received zero Vitest execution. CI uploads `coverage-all/` separately. Browser Playwright tests exercise UI and route behavior but their browser/server execution is **not merged** into this V8 percentage; Rust and Noir require their own coverage tools. A green full-inventory command means tests passed and a report was generated, not that 100% was reached. The dated [test report](evidence/test-report.md) records the actual figures and gaps.
 
-Verified on 25 September 2026 before the final config inventory expansion: 39 Vitest files, 164 passing tests; selected core 100% of 546 statements; broad V8 inventory 35.23% statements, 34.89% branches, 32.20% functions, 34.80% lines; 44/44 Playwright desktop/mobile scenarios. Re-run commands for the current commit before release.
+Verified on 26 September 2026: 87 Vitest files, 279 passing tests; selected core 100% of 580 statements, 424 branches, 123 functions, and 479 lines; broad V8 inventory 77.16% statements, 75.14% branches, 79.10% functions, and 79.51% lines; 48/48 Playwright desktop/mobile scenarios. The core selection is fully covered; the whole TypeScript inventory is not 100%, as itemized in the dated [test report](evidence/test-report.md). Re-run commands for the current commit before release.
+
+## Reproducing the browser job locally
+
+`npm run test:system` starts a production Next.js server. In production mode the challenge API intentionally fails closed with HTTP 503 if durable storage is missing, so point it at an isolated local PostgreSQL database—not a production or shared developer database—and apply migrations first:
+
+```bash
+docker compose -f compose.e2e.yml up -d --wait
+export DATABASE_URL='postgresql://veilpass:veilpass@localhost:55432/veilpass'
+npm run db:migrate
+npm run test:system
+docker compose -f compose.e2e.yml down --remove-orphans
+```
+
+On PowerShell, start the Compose service, set `$env:DATABASE_URL` to the same local-only connection string, run the two npm commands, then stop the disposable database with `docker compose -f compose.e2e.yml down --remove-orphans`. The Compose service has no persistent volume, so removing the container removes its test data. The GitHub Actions browser job provisions its own PostgreSQL service and database. CI uses two Playwright workers to keep Chromium memory use within the hosted runner budget; local defaults can use the available machine resources.
 
 ## Local release check
 

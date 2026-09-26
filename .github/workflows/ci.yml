@@ -76,6 +76,22 @@ jobs:
   browser:
     name: Browser and accessibility
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: veilpass
+          POSTGRES_USER: veilpass
+          POSTGRES_PASSWORD: veilpass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U veilpass -d veilpass"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://veilpass:veilpass@localhost:5432/veilpass
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -87,6 +103,8 @@ jobs:
         run: npm install --global npm@11.6.2
       - name: Install frontend dependencies
         run: npm ci
+      - name: Prepare isolated browser-test database
+        run: npm run db:migrate
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: System, security, responsive, and accessibility tests
