@@ -32,18 +32,19 @@ export async function getGatePolicy(gateId = "premium-holder"): Promise<GatePoli
           try {
             return await readRevocationState({ contractId, gateId, revocationHash, rpcUrl, sourceAccount });
           } catch (error) {
-            console.error(`[gate-policy] readRevocationState failed for ${gateId}:`, error);
-            return false;
+            console.error(JSON.stringify({ event: "gate_revocation_read_failed", gateId, reason: error instanceof Error ? error.name : "unknown" }));
+            throw error;
           }
         },
       };
     } catch (error) {
-      console.warn(`[gate-policy] readGateState failed for ${gateId}, checking fallback policy:`, error);
-      if (process.env.VEILPASS_CREDENTIAL_ROOT) {
+      console.warn(JSON.stringify({ event: "gate_state_read_failed", gateId, reason: error instanceof Error ? error.name : "unknown" }));
+      if (process.env.NODE_ENV !== "production" && process.env.VEILPASS_CREDENTIAL_ROOT) {
         return fallbackPolicy();
       }
       throw error;
     }
   }
+  if (process.env.NODE_ENV === "production") throw new Error("Live gate configuration is required in production");
   return fallbackPolicy();
 }

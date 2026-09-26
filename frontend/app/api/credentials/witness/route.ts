@@ -30,7 +30,13 @@ export async function POST(request: NextRequest) {
   let policy;
   try { policy = await getGatePolicy(credential.gateId); } catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
   if (!policy.active || policy.epoch !== credential.epoch) return publicError("STALE_EPOCH", id, 400);
-  const witness = await credentialTreeStore.witnessForCredential({ gateId: credential.gateId, credentialCommitment: credential.commitment, expectedRoot: policy.credentialRoot }).catch(() => null);
+  let witness;
+  try {
+    witness = await credentialTreeStore.witnessForCredential({ gateId: credential.gateId, credentialCommitment: credential.commitment, expectedRoot: policy.credentialRoot });
+  } catch (error) {
+    console.error(JSON.stringify({ event: "credential_witness_failed", requestId: id, reason: error instanceof Error ? error.name : "unknown" }));
+    return publicError("SERVICE_UNAVAILABLE", id, 503);
+  }
   if (!witness) return publicError("CREDENTIAL_REVOKED", id, 400);
   return NextResponse.json(witness, { headers: { "Cache-Control": "no-store" } });
 }

@@ -54,9 +54,9 @@ test("landing FAQ opens privacy and deployment answers", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Questions reviewers ask first" })).toBeVisible();
   await page.getByRole("button", { name: "Does VeilPass make the user anonymous?" }).click();
-  await expect(page.getByText("No. The issuer still sees the wallet during enrollment.")).toBeVisible();
+  await expect(page.getByText(/No\. The issuer sees the wallet during enrollment\./)).toBeVisible();
   await page.getByRole("button", { name: "Can I deploy this from the frontend folder?" }).click();
-  await expect(page.getByText("Yes. Vercel should use frontend as the project root.")).toBeVisible();
+  await expect(page.getByText(/Set Vercel's Root Directory to frontend/)).toBeVisible();
 });
 
 test("VeilPass owns every browser and install surface", async ({ page, request }) => {
@@ -322,7 +322,9 @@ test("docs navigation stays oriented without replaying route-entry animation", a
   }
   await page.screenshot({ path: `docs/evidence/docs-${testInfo.project.name}.png`, fullPage: true });
   if (testInfo.project.name === "mobile") await page.locator("details summary").click();
-  const docsNav = page.getByRole("navigation", { name: "Documentation" });
+  const docsNav = testInfo.project.name === "mobile"
+    ? page.locator("details[open]").getByRole("navigation", { name: "Documentation" })
+    : page.locator("aside").getByRole("navigation", { name: "Documentation" }).last();
   await expect(docsNav).toBeVisible();
   await docsNav.getByRole("link", { name: "Enrollment" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Enrollment" })).toBeVisible();

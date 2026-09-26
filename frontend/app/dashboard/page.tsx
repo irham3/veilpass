@@ -62,6 +62,7 @@ export default async function DashboardPage() {
                   <dl className="mt-6 space-y-5 text-sm">
                     <Data label="Contract ID" value={contractId || "Not configured"} />
                     <Data label="Network" value="Stellar Testnet" />
+                    <Data label="Gate owner" value={state?.owner ?? "Unavailable until deployment"} />
                     <Data label="Policy hash" value={state?.policyHash ?? "Unavailable until deployment"} />
                     <Data label="Credential root" value={state?.root ?? "Unavailable until deployment"} />
                     <Data label="Epoch" value={String(state?.epoch ?? 1)} />

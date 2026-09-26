@@ -8,8 +8,9 @@ export function createContentSecurityPolicy(
     `style-src 'self' 'nonce-${nonce}'${isDevelopment ? " 'unsafe-inline'" : ""}`,
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    // Barretenberg loads its bundled WASM through fetch(data:application/gzip).
-    "connect-src 'self' data: https://soroban-testnet.stellar.org https://horizon-testnet.stellar.org",
+    // Barretenberg loads its bundled WASM through fetch(data:application/gzip)
+    // and initializes its public SRS from the exact primary/fallback CRS hosts.
+    "connect-src 'self' data: https://soroban-testnet.stellar.org https://horizon-testnet.stellar.org https://crs.aztec-cdn.foundation https://crs.aztec-labs.com",
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

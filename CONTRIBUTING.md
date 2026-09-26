@@ -15,6 +15,7 @@ Run from `frontend/` before opening a pull request:
 ```bash
 npm run lint
 npm run typecheck
+npm run docs:check
 npm test
 npm run contract:test
 npm run pack:check

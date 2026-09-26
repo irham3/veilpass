@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import nextEnv from "@next/env";
+import { StrKey } from "@stellar/stellar-sdk";
 
 const { loadEnvConfig } = nextEnv;
 
@@ -52,10 +53,10 @@ const checks = [
   ["VEILPASS_LOGIN_ORIGIN", isExactOrigin(process.env.VEILPASS_LOGIN_ORIGIN ?? "")],
   ["NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN", isExactOrigin(process.env.NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN ?? "")],
   ["DATABASE_URL", isPostgresUrl(process.env.DATABASE_URL ?? "")],
-  ["VEILPASS_ISSUER_SECRET", Boolean(process.env.VEILPASS_ISSUER_SECRET)],
-  ["VEILPASS_GATE_OWNER_SECRET", Boolean(process.env.VEILPASS_GATE_OWNER_SECRET)],
-  ["NEXT_PUBLIC_VEILPASS_CONTRACT_ID", Boolean(process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID)],
-  ["NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT", Boolean(process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT)],
+  ["VEILPASS_ISSUER_SECRET", StrKey.isValidEd25519SecretSeed(process.env.VEILPASS_ISSUER_SECRET ?? "")],
+  ["VEILPASS_GATE_OWNER_SECRET", StrKey.isValidEd25519SecretSeed(process.env.VEILPASS_GATE_OWNER_SECRET ?? "")],
+  ["NEXT_PUBLIC_VEILPASS_CONTRACT_ID", StrKey.isValidContract(process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID ?? "")],
+  ["NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT", StrKey.isValidEd25519PublicKey(process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT ?? "")],
   ["VEILPASS_ASSET_RULE", isAssetRule(process.env)],
 ];
 

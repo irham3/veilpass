@@ -1,43 +1,57 @@
 # VeilPass
 
-VeilPass is a Stellar testnet MVP for private wallet eligibility login. It lets a host dApp verify that a user qualifies for a gate and recognize returning users without receiving the user's Stellar wallet address.
+VeilPass is a Stellar Testnet MVP for origin-scoped, eligibility-gated login. It lets a host application learn that a user satisfies a gate and recognize that user within that one allowed origin without receiving the user's Stellar wallet address.
 
-## Best short answer
+## Product status
 
-VeilPass gives each allowed origin a scoped private app ID and an eligibility verdict. The host does not receive the wallet address, raw proof, credential secret, nullifier, or revocation handle. The issuer still sees the wallet during enrollment, so VeilPass does not claim anonymity.
-
-## Primary pages
-
-- Home: https://veilpass.dev/
-- Two-origin demo: https://veilpass.dev/demo
-- Developer docs: https://veilpass.dev/docs
-- Client SDK: https://veilpass.dev/docs/client
-- Server verifier: https://veilpass.dev/docs/server
-- Privacy model: https://veilpass.dev/docs/privacy
-- Threat model: https://veilpass.dev/docs/threat-model
-- Gate contract: https://veilpass.dev/docs/contract
-- Pricing: https://veilpass.dev/pricing.md
-
-## Product boundaries
-
-- Network: Stellar Testnet for the MVP.
+- Network: Stellar Testnet only.
 - Wallet: Freighter.
 - Contract: Soroban gate registry.
-- Host response: privateAppId, gateId, epoch, origin, expiresAt, and eligibility verdict fields.
-- Privacy claim: hides the Stellar wallet address from the host dApp during login.
-- Limitation: the issuer observes the wallet at enrollment; IP address, browser fingerprint, timing, device state, and later on-chain activity are not hidden.
-- Proof status: hosted login generates a browser-local Noir/UltraHonk membership proof and the server verifies it with a pinned verification key. The separately labeled simulated-proof route is a non-production compatibility fixture and is never accepted by the verifier.
+- Credential and proof: issuer-signed credential, browser-local Noir/UltraHonk membership proof, server verification against the verification key pinned to the deployed circuit.
+- VeilPass is not an anonymity service, mainnet product, or drop-in authentication backend for arbitrary host applications.
 
-## Common queries VeilPass answers
+## Exact privacy boundary
 
-- What is private wallet login for Stellar dApps?
-- How can a dApp verify wallet eligibility without receiving a wallet address?
-- How does origin-scoped identity work for Web3 login?
-- Does VeilPass make wallet users anonymous?
-- What does a VeilPass host receive after login?
-- How do Freighter and Stellar Testnet fit into VeilPass?
+- The enrollment issuer sees the public Stellar wallet address and checks its eligibility during enrollment.
+- The host application does not receive that wallet address in the login result or proof request.
+- The host browser's SDK receives the proof message from the login popup and sends it to the host's own `POST /api/verify` route. The host server, reverse proxy, request logger, and observability tooling can therefore process the raw proof and public inputs transiently.
+- Public inputs include the gate, epoch, origin, challenge binding, credential commitment and root, private app ID, one-time login nullifier, revocation hash, and timestamps. These fields are sensitive and may be linkable within their intended scope. Never log, persist, trace, or attach the `/api/verify` body to analytics or support reports.
+- A successful verifier result is minimized to `ok`, `eligible`, `privateAppId`, `gateId`, `epoch`, `origin`, and `expiresAt`; it excludes wallet address and proof data.
+- `privateAppId` is scoped to a credential, origin, and gate epoch. It is not global anonymous identity and may change after credential or policy rotation.
+- VeilPass does not hide IP address, timing, browser/device fingerprint, endpoint state, issuer-side enrollment knowledge, or later on-chain activity.
 
-## Contact and repo
+## Developer integration boundary
 
-- Product site: https://veilpass.dev/
+The published `@veilpass/sdk` is a browser popup client, not a hosted backend. The current `0.2.x` API uses fixed same-origin requests to the host application's `POST /api/challenges` and `POST /api/verify`. An integrator must build these routes and provide exact-origin/gate policy, durable atomic challenge and nullifier consumption, current policy/root/revocation reads, a real pinned proof-verification callback, request size/rate limits, sensitive-data logging exclusions, and the host application's session. `@veilpass/server` supplies only a verifier primitive; it does not supply database, chain, HTTP, key-loading, or session adapters.
+
+## Documentation
+
+- Home and privacy overview: https://veilpass.dev/
+- Full developer documentation: https://veilpass.dev/docs
+- Quickstart and host prerequisites: https://veilpass.dev/docs/quickstart
+- Client SDK contract: https://veilpass.dev/docs/client
+- Server verifier and atomic-store contract: https://veilpass.dev/docs/server
+- Exact API routes and trust boundaries: https://veilpass.dev/docs/api
+- Identity semantics: https://veilpass.dev/docs/identity
+- Enrollment: https://veilpass.dev/docs/enrollment
+- Error codes: https://veilpass.dev/docs/errors
+- Privacy model: https://veilpass.dev/docs/privacy
+- Threat model: https://veilpass.dev/docs/threat-model
+- Contract operations: https://veilpass.dev/docs/contract
+- Examples and production checklist: https://veilpass.dev/docs/examples
+- Pricing and MVP availability: https://veilpass.dev/pricing.md
+- GitHub source, tests, packages, and evidence: https://github.com/irham3/veilpass
+- npm `@veilpass/sdk`: https://www.npmjs.com/package/@veilpass/sdk
+- npm `@veilpass/server`: https://www.npmjs.com/package/@veilpass/server
+- npm `@veilpass/shared`: https://www.npmjs.com/package/@veilpass/shared
+
+## Demo distinctions
+
+- `/demo` is a visibly labeled UI simulation for explaining concepts; its fixed simulated IDs and failures are not proof/login acceptance evidence.
+- The live holder path is Testnet enrollment with Freighter followed by browser-local proof generation and host-origin server verification.
+- `POST /api/proof/simulate` is a non-production compatibility fixture; production rejects it and `POST /api/verify` never accepts it.
+
+## Repository and support
+
 - GitHub: https://github.com/irham3/veilpass
+- Report exploitable security concerns privately to the repository owner. Do not publish wallet secrets, proof payloads, cookies, signing keys, or raw enrollment data.

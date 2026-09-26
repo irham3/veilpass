@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { verifyVeilPassProof } from "@/packages/server/src/verifier";
 import { ChallengeStore } from "./challenge-store";
 import { fieldHexFromBytes, fieldHexToNoir, hashBytesToFieldHex, hashTextToFieldHex, u64ToFieldHex } from "@/packages/shared/src/field";
-import { verifyNoirMembershipProof } from "./zk-verifier";
+import { resolveVerifierCrsPath, verifyNoirMembershipProof } from "./zk-verifier";
 
 function fieldBytes(value: string): Uint8Array {
   return Uint8Array.from(value.match(/.{2}/g)!.map((part) => Number.parseInt(part, 16)));
@@ -16,6 +16,12 @@ function fieldBytes(value: string): Uint8Array {
 function seconds(iso: string): number { return Math.floor(Date.parse(iso) / 1_000); }
 
 describe("pinned Noir verifier", () => {
+  it("uses a writable Vercel temp path while honoring an explicit CRS cache override", () => {
+    expect(resolveVerifierCrsPath({ VERCEL: "1" })).toBe("/tmp/veilpass-bb-crs");
+    expect(resolveVerifierCrsPath({ VERCEL: "1", CRS_PATH: "/tmp/custom-crs" })).toBe("/tmp/custom-crs");
+    expect(resolveVerifierCrsPath({})).toBeUndefined();
+  });
+
   it("accepts a locally generated proof only when its semantic public inputs match", async () => {
     const circuit = JSON.parse(await readFile(join(process.cwd(), "public", "proof", "veilpass_membership.json"), "utf8")) as { bytecode: string };
     const api = await Barretenberg.new();

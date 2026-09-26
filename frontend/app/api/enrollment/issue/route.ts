@@ -16,8 +16,8 @@ import { verifyStellarMessageSignature } from "@/lib/stellar/message-signature";
 
 const schema = z.object({ challengeId: z.string().uuid(), address: z.string().min(1).max(128), message: z.string().min(1).max(1024), gateId: z.string().min(1).max(128), signature: z.string().min(1).max(1024), commitment: z.string().regex(/^[a-f0-9]{64}$/), credentialSalt: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 
-function unavailable(id: string, stage: string, reason?: string) {
-  console.error(JSON.stringify({ event: "enrollment_issue_failed", requestId: id, stage, ...(reason ? { reason } : {}) }));
+function unavailable(id: string, stage: string) {
+  console.error(JSON.stringify({ event: "enrollment_issue_failed", requestId: id, stage }));
   return publicError("SERVICE_UNAVAILABLE", id, 503);
 }
 
@@ -52,8 +52,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const stage = error instanceof CredentialTreeIssueError ? error.stage : "unknown";
-    const reason = error instanceof CredentialTreeIssueError ? error.reason : undefined;
-    return unavailable(id, `credential_tree.${stage}`, reason);
+    return unavailable(id, `credential_tree.${stage}`);
   }
   let payload;
   try {

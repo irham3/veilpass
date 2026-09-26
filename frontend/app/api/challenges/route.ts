@@ -19,20 +19,17 @@ export async function POST(request: NextRequest) {
     let origin: string;
     try {
       origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") });
-    } catch (error) {
-      console.error(`[/api/challenges ${id}] Origin check rejected:`, error instanceof Error ? error.message : error);
+    } catch {
       return publicError("ORIGIN_MISMATCH", id, 403);
     }
     const parsed = requestSchema.safeParse(await readJsonLimited(request, 4_096).catch(() => null));
     if (!parsed.success || !isAllowedGate(parsed.data.gateId)) {
-      console.error(`[/api/challenges ${id}] Gate mismatch or invalid payload`);
       return publicError("GATE_MISMATCH", id, 400);
     }
     const challenge = await challengeStore.issue({ gateId: parsed.data.gateId, origin });
     return NextResponse.json(challenge, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    console.error(`[/api/challenges ${id}] Failed to issue challenge:`, error);
+    console.error(JSON.stringify({ event: "challenge_issue_failed", requestId: id, reason: error instanceof Error ? error.name : "unknown" }));
     return publicError("SERVICE_UNAVAILABLE", id, 503);
   }
 }
-

@@ -1,6 +1,6 @@
 # Audit implementasi VeilPass: Deliverable 1–3
 
-> **Catatan lanjutan 25 September 2026:** ini adalah temuan awal sebelum perbaikan pada checkout sekarang. Klaim kegagalan checker publik, ketidaktepatan docs, dan hitungan test di bawah telah berubah. Baca [status terbaru](delivery-status.md), [hasil test](test-report.md), dan [panduan demo](demo-end-to-end-guide-2026-09-25.md) untuk keputusan rilis saat ini. Chrome publik telah menemukan hambatan CSP pada inisialisasi WASM; source lokal sudah diperbaiki, tetapi belum dirilis.
+> **Catatan lanjutan 26 September 2026:** ini adalah temuan awal sebelum perbaikan pada checkout sekarang. Hambatan CSP inisialisasi WASM, kontrak ID Testnet, status transaksi gate, tampilan owner, log verifier, alur enrollment, dan login lintas-origin telah ditindaklanjuti. Enrollment dan tiga login live berhasil; public npm masih `0.2.0`, sedangkan README/paket `0.2.1` disiapkan lokal untuk release workflow terlindungi. Full-inventory TypeScript coverage bukan 100%. Lihat [delivery status](delivery-status.md), [test report](test-report.md), dan [panduan demo](demo-end-to-end-guide-2026-09-25.md) untuk bukti terbaru dan acceptance yang masih belum diuji (replay, expiry, revocation, host capture tersensor, video, provenance-aligned release, serta coverage branches/lines yang tersisa).
 
 **Tanggal audit:** 25 September 2026  
 **Acuan:** Statement of Work (SOW) yang dilampirkan pengguna, khusus bagian 4.1, 5.1, dan 6.1.  

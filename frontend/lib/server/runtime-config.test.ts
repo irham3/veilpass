@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Keypair, StrKey } from "@stellar/stellar-sdk";
 
 import { inspectRuntimeConfiguration } from "./runtime-config";
 
@@ -7,14 +8,14 @@ const complete = {
   VEILPASS_HOST_ORIGIN: "https://app-a.example.test",
   VEILPASS_LOGIN_ORIGIN: "https://login.example.test",
   NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN: "https://login.example.test",
-  NEXT_PUBLIC_VEILPASS_CONTRACT_ID: "CCONTRACT",
-  NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT: "GSOURCE",
+  NEXT_PUBLIC_VEILPASS_CONTRACT_ID: StrKey.encodeContract(Buffer.alloc(32, 7)),
+  NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT: Keypair.fromRawEd25519Seed(Buffer.alloc(32, 8)).publicKey(),
   VEILPASS_GATE_IDS: "premium-holder",
   VEILPASS_ASSET_TYPE: "native",
   VEILPASS_ASSET_CODE: "XLM",
   VEILPASS_MIN_BALANCE: "1",
-  VEILPASS_ISSUER_SECRET: "SISSUER",
-  VEILPASS_GATE_OWNER_SECRET: "SOWNER",
+  VEILPASS_ISSUER_SECRET: Keypair.fromRawEd25519Seed(Buffer.alloc(32, 9)).secret(),
+  VEILPASS_GATE_OWNER_SECRET: Keypair.fromRawEd25519Seed(Buffer.alloc(32, 10)).secret(),
 };
 
 describe("runtime configuration inspection", () => {
@@ -78,12 +79,12 @@ describe("runtime configuration inspection", () => {
       "HOST_ORIGIN_INVALID",
       "LOGIN_ORIGIN_INVALID",
       "PUBLIC_LOGIN_ORIGIN_INVALID",
-      "CONTRACT_ID_MISSING",
-      "SOURCE_ACCOUNT_MISSING",
+      "CONTRACT_ID_INVALID",
+      "SOURCE_ACCOUNT_INVALID",
       "GATE_IDS_MISSING",
       "ASSET_RULE_INCOMPLETE",
-      "ISSUER_SECRET_MISSING",
-      "GATE_OWNER_SECRET_MISSING",
+      "ISSUER_SECRET_INVALID",
+      "GATE_OWNER_SECRET_INVALID",
     ]);
     expect(Object.values(report.checks).every(Boolean)).toBe(false);
   });
@@ -93,5 +94,13 @@ describe("runtime configuration inspection", () => {
     expect(inspectRuntimeConfiguration({ ...complete, VEILPASS_HOST_ORIGIN: "https://app.example.test/path" }).checks.hostOrigin).toBe(false);
     expect(inspectRuntimeConfiguration({ ...complete, DATABASE_URL: "not-a-url" }).checks.database).toBe(false);
     expect(inspectRuntimeConfiguration({ ...complete, VEILPASS_LOGIN_ORIGIN: "ftp://login.example.test" }).checks.loginOrigin).toBe(false);
+  });
+
+  it("rejects a plausible contract address with the wrong checksum before accepting traffic", () => {
+    const invalidContract = "CA52HQ2L5X453T4B5XWEXUFX2Z7V2C2X4R3N62VHQJ6K2YPX2J4O2R3N";
+    const report = inspectRuntimeConfiguration({ ...complete, NEXT_PUBLIC_VEILPASS_CONTRACT_ID: invalidContract });
+    expect(report.ok).toBe(false);
+    expect(report.issues).toContain("CONTRACT_ID_INVALID");
+    expect(JSON.stringify(report)).not.toContain(invalidContract);
   });
 });

@@ -18,6 +18,7 @@ const originalEnvironment = Object.fromEntries(
 );
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   for (const key of environmentKeys) {
     const value = originalEnvironment[key];
     if (value === undefined) delete process.env[key];
@@ -72,14 +73,14 @@ describe("gate allowlist", () => {
     expect(readRevocationState).toHaveBeenCalledWith({ contractId: "CCONTRACT", gateId: "staff-holder", revocationHash: "deadbeef", rpcUrl: "https://rpc.example", sourceAccount: "GSOURCE" });
   });
 
-  it("handles isRevoked error safely by returning false", async () => {
+  it("fails closed when revocation state cannot be read", async () => {
     process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
     process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
     readGateState.mockResolvedValue({ epoch: 1, owner: "GOWNER", credential_root: Uint8Array.from([1]) });
     readRevocationState.mockRejectedValue(new Error("RPC timeout"));
 
     const policy = await getGatePolicy("premium-holder");
-    await expect(policy.isRevoked?.("deadbeef")).resolves.toBe(false);
+    await expect(policy.isRevoked?.("deadbeef")).rejects.toThrow("RPC timeout");
   });
 
   it("falls back to configured credential root when live readGateState fails", async () => {
@@ -104,6 +105,43 @@ describe("gate allowlist", () => {
     readGateState.mockRejectedValue(new Error("Fatal RPC error"));
 
     await expect(getGatePolicy("premium-holder")).rejects.toThrow("Fatal RPC error");
+  });
+
+  it("never uses a stale fallback root in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
+    process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
+    process.env.VEILPASS_CREDENTIAL_ROOT = "stale-root";
+    readGateState.mockRejectedValue(new Error("Invalid contract StrKey checksum"));
+
+    await expect(getGatePolicy("premium-holder")).rejects.toThrow("Invalid contract StrKey checksum");
+  });
+
+  it("redacts non-Error failures from the live contract adapter", async () => {
+    process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID = "CCONTRACT";
+    process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT = "GSOURCE";
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    readGateState.mockResolvedValue({ epoch: 1, owner: "GOWNER", credential_root: Uint8Array.from([1]) });
+    readRevocationState.mockRejectedValueOnce("private adapter detail");
+    const policy = await getGatePolicy("premium-holder");
+    await expect(policy.isRevoked?.("hash")).rejects.toBe("private adapter detail");
+    expect(error.mock.calls.join(" ")).toContain('"reason":"unknown"');
+
+    process.env.VEILPASS_CREDENTIAL_ROOT = "fallback-root";
+    readGateState.mockRejectedValueOnce("private RPC detail");
+    await expect(getGatePolicy("premium-holder")).resolves.toEqual({ active: true, epoch: 1, credentialRoot: "fallback-root" });
+    expect(warn.mock.calls.join(" ")).toContain('"reason":"unknown"');
+    expect(JSON.stringify([...error.mock.calls, ...warn.mock.calls])).not.toContain("private");
+  });
+
+  it("requires a live contract binding in production even when a fallback root exists", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    delete process.env.NEXT_PUBLIC_VEILPASS_CONTRACT_ID;
+    delete process.env.NEXT_PUBLIC_VEILPASS_SOURCE_ACCOUNT;
+    process.env.VEILPASS_CREDENTIAL_ROOT = "stale-root";
+
+    await expect(getGatePolicy("premium-holder")).rejects.toThrow("Live gate configuration is required in production");
   });
 
   it("uses safe defaults when local policy fields are omitted", async () => {

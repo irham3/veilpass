@@ -354,7 +354,7 @@ export default function Home() {
                   A small payload with hard edges.
                 </h2>
                 <p className="mt-5 max-w-xl text-sm leading-7 text-paper-200 sm:mt-6 sm:text-base">
-                  The verifier returns fields that support access control. It does not return the wallet address.
+                  The success result supports access control without the wallet address. The host verifier still processes proof and public inputs transiently; keep those out of logs and analytics.
                 </p>
               </div>
               <pre className="overflow-x-auto rounded-[1.35rem] border border-paper-50/10 bg-ink-900 p-4 font-mono text-xs leading-6 text-paper-200 shadow-[0_24px_80px_rgba(0,0,0,0.32)] sm:rounded-[1.65rem] sm:p-6 sm:text-sm sm:leading-7 lg:p-8">

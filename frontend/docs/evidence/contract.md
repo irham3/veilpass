@@ -11,12 +11,12 @@
 - Gate ID: `premium-holder`
 - Gate epoch: `1`
 - Policy hash: `824a57f759b435e5e7f300f65dad132ff8039fa83805f19a2169893319eea0d7`
-- Credential root (read-only smoke, 25 September 2026): `273348dff2a3aea95053c4db8579ddacf1051b6d59d07516abb566e75ab4c9d2`. The root changes after issuance; rerun the smoke check before relying on it.
+- Credential root (latest read-only smoke, 26 September 2026): `2c896a921b9ad7526d46846c8413c3d6850913b6ef476dd6665f996e26b53912`. The root changes after issuance; rerun the smoke check before relying on it.
 - Wasm installation: reused the verified local Wasm hash; no new upload transaction was required for this deployment.
 - Deploy transaction: `ebefe9c2aa18361e58dc1defac11fe346840d62efee2b3c4ac0c35c3544af3cb`
 - Gate initialization transaction: `c7b420f20f0167c47340259f7afb060040ac06b9f40303163ae2da8c79620558`
 
-The deploy and initialization transactions above establish the contract and its initial empty root. The update-root transaction responsible for the current nonzero root has not yet been linked in this evidence file; it must be captured and checked before claiming complete live acceptance. A read-only query of the locally configured PostgreSQL tree returned the same root and five credential rows on 25 September 2026.
+The deploy and initialization transactions above establish the contract and its initial empty root. The update-root transaction responsible for the current nonzero root has not yet been linked in this evidence file; it must be captured and checked before claiming complete live acceptance. A read-only query of the locally configured PostgreSQL tree returned the same root and eight credential rows on 26 September 2026. This database connection is local configuration; it does not prove the Production Vercel database contains the same tree.
 
 Verify the live gate:
 

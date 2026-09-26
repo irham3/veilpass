@@ -8,7 +8,7 @@ import { Reveal } from "@/components/motion/reveal";
 const boundaries = [
   { icon: WalletIcon, title: "Issuer", text: "Sees the Stellar address during enrollment and signs the credential." },
   { icon: ShieldCheckIcon, title: "VeilPass login", text: "Checks eligibility and derives a private ID scoped to one origin." },
-  { icon: BrowserIcon, title: "Host dApp", text: "Receives a verdict and scoped ID, never the wallet address." },
+  { icon: BrowserIcon, title: "Host dApp", text: "Gets a scoped ID and verdict without the wallet address. Its verification API still receives proof and public inputs; treat them as sensitive and never log them." },
 ] as const;
 
 export function PrivacyBoundary() {
@@ -51,7 +51,7 @@ export function PrivacyBoundary() {
         </div>
 
         <Reveal delay="short" className="mt-6 max-w-full rounded-2xl border border-signal-400/25 bg-signal-400/[0.06] p-4 text-sm leading-7 text-paper-200 sm:mt-8 sm:max-w-3xl sm:rounded-3xl sm:p-5">
-          VeilPass does not provide network anonymity. IP address, browser fingerprint, timing, and later on-chain actions may still identify or correlate a user.
+          The issuer sees the wallet address during enrollment. The host server receives proof and public inputs during verification, but not the wallet address. VeilPass does not provide network anonymity or hide IP address, browser fingerprint, timing, device state, or later on-chain activity.
         </Reveal>
       </div>
     </section>

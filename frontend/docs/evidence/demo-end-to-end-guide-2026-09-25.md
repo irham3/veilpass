@@ -1,10 +1,10 @@
 # VeilPass: panduan demo lengkap dan gerbang rilis developer
 
-**Tanggal:** 25 September 2026  
+**Tanggal:** 26 September 2026
 **Lingkungan:** Stellar Testnet; `https://veilpass.dev`, `https://login.veilpass.dev`, `https://app-a.veilpass.dev`, `https://app-b.veilpass.dev`.  
-**Status panduan:** alur dan hasil yang harus diperiksa; bukan bukti bahwa persetujuan Freighter, transaksi owner, rekaman video, dan penerbitan paket baru sudah dilakukan. Catat hasil nyata pada tabel di akhir. Jangan menyatakan demo live lulus bila ada langkah yang belum dijalankan.
+**Status panduan:** enrollment live dengan Freighter sudah selesai; login App A dua kali dan App B sekali sudah sukses pada Chrome yang sama. App A mempertahankan private ID di dua sesi dan App B menghasilkan private ID berbeda. Jangan merekam atau menyalin private ID/proof mentah. Tiga package npm `0.2.0` telah diterbitkan manual tanpa provenance dan lulus smoke install/import; README lokal untuk patch `0.2.1` menunggu merge dan protected release workflow.
 
-**Gerbang rilis saat panduan ini ditulis:** pengguna telah menyetujui akses Freighter di Chrome publik, tetapi enrollment gagal setelah cek eligibility karena CSP deployment memblokir fetch WASM `data:` Barretenberg. Source lokal sudah diperbaiki dan regresi browser desktop/mobile lulus. Jangan mulai demo acceptance pada deployment lama. Setelah merilis commit ini, ulangi enrollment dari awal dengan challenge baru, lalu lanjutkan langkah di bawah hanya bila credential benar-benar tersimpan.
+**Gerbang rilis saat panduan ini diperbarui:** support reference lama `af2f4b9d-34f5-47a8-b371-84c8b894ed10` berasal dari contract StrKey tidak valid dan ketidakcocokan root. Contract Production/Preview sudah dikoreksi ke `CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK`. Setelah login live mengungkap origin localhost dari SSR dan kegagalan inisialisasi CRS di Vercel, deployment [`dpl_D5pR6QWm7Ci1LWLCeN3y2W7MmmJe`](https://vercel.com/my-team-11d97e25/veilpass/D5pR6QWm7Ci1LWLCeN3y2W7MmmJe) memperbaiki keduanya dan READY. `/api/health`, automated production acceptance, dan verifikasi live `/api/verify` lulus. Pemilik wallet menyetujui akses wallet dan signature enrollment; credential tersimpan. Login App A dua kali dan App B satu kali berhasil. Replay/expiry/revocation, capture host tersensor, dan video masih belum diuji/direkam. Lihat gerbang dan batas status pada lembar acceptance di akhir dokumen sebelum menyebut demo siap untuk developer eksternal.
 
 ## 1. Pilih dua jalur presentasi dengan jelas
 
@@ -54,6 +54,8 @@ Urutan presentasi yang disarankan: konteks privasi → status gate → enrollmen
 
 Jika popup ditutup, Freighter salah network, account tidak eligible, root berbeda, atau health HTTP 503, tampilkan kode error dan hentikan klaim acceptance. Ulangi dari challenge baru setelah penyebab diperbaiki.
 
+Jika popup menampilkan **Available in IndexedDB** tetapi witness credential tidak ditemukan pada tree aktif, pilih **Re-enroll this browser** yang muncul setelah kegagalan witness. Selesaikan enrollment dengan account Freighter yang dimaksud, lalu mulai login baru dari tombol App A/B. Jika yang muncul adalah kegagalan layanan 503, periksa contract ID, root on-chain, serta tree PostgreSQL terlebih dahulu; mengulang enrollment tidak memperbaiki konfigurasi layanan yang salah.
+
 ## 4. Kasus penolakan nyata
 
 Jalankan hanya dengan account/credential demo. DevTools perlu melihat body `/api/verify` untuk pengujian replay/expiry; body itu sensitif. Jangan tempelkan ke chat, issue, repo, atau video mentah. Hapus salinan lokal setelah pengujian, lalu simpan hanya kode hasil dan request ID yang disensor.
@@ -91,15 +93,15 @@ Lakukan review file hasil redaksi sebelum commit atau berbagi. Jangan masukkan s
 
 | Pemeriksaan | Nilai/tautan yang boleh dipublikasikan | Status |
 | --- | --- | --- |
-| Commit dan deployment yang sama |  | Belum dicatat |
-| Versi npm SDK/shared/server yang sesuai |  | Belum dicatat |
-| Health, env validation, migrasi, root/tree cocok |  | Belum dicatat |
+| Commit dan deployment yang sama | `dpl_D5pR6QWm7Ci1LWLCeN3y2W7MmmJe` READY; belum ada reviewed source commit untuk dicocokkan | Belum lengkap |
+| Versi npm SDK/shared/server yang sesuai | Registry saat dicek menampilkan `0.2.0`; publish manual tanpa provenance. README lokal dan tarball `0.2.1` disiapkan, tetapi belum dipublikasikan atau disejajarkan dengan reviewed commit/GitHub Release. | Belum lengkap |
+| Health, env validation, migrasi, root/tree cocok | Production health 200; witness refresh dan `/api/verify` memakai root/credential Production dengan sukses; dashboard menampilkan gate owner | Lulus |
 | Update-root transaction |  | Belum dicatat |
-| App A `A1 = A2`, App B `B1 ≠ A1` | ID boleh di-hash untuk publik | Belum dicatat |
+| App A `A1 = A2`, App B `B1 ≠ A1` | Sudah diuji di Chrome: App A sukses 2/2 dengan ID stabil dan App B 1/1 dengan ID berbeda; nilai mentah tidak dicatat | Lulus |
 | Host HAR tanpa wallet address, dengan data proof tersensor |  | Belum dicatat |
 | Replay `CHALLENGE_SPENT` |  | Belum dicatat |
 | Expiry `CREDENTIAL_EXPIRED` atau `CHALLENGE_EXPIRED` |  | Belum dicatat |
 | Revoke transaction + login baru `CREDENTIAL_REVOKED` |  | Belum dicatat |
-| Video dan laporan test/coverage lengkap |  | Belum dicatat |
+| Video dan laporan test/coverage lengkap | 279/279 Vitest; 87 file; 106 executable TypeScript/TSX/MJS menerima statement coverage; full inventory 77.16% statements, 75.14% branches, 79.10% functions, 79.51% lines; video belum direkam | Sebagian |
 
 **Aturan keputusan:** seluruh baris harus memiliki bukti nyata sebelum demo disebut selesai atau siap dipakai developer eksternal. Bila satu baris kosong, statusnya tetap belum terverifikasi, sekalipun unit test hijau.

@@ -11,48 +11,48 @@ import { verifyNoirMembershipProof } from "@/lib/server/zk-verifier";
 import { proofResultSchema } from "@/packages/shared/src/contracts";
 import { verifyVeilPassProof } from "@/packages/server/src/verifier";
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const id = requestId();
   try {
     if (process.env.NODE_ENV === "production" && !durableChallengeStoreConfigured) {
-      console.error(`[/api/verify ${id}] Durable challenge store not configured in production`);
+      console.error(JSON.stringify({ event: "verification_unavailable", requestId: id, reason: "durable_store_missing" }));
       return publicError("SERVICE_UNAVAILABLE", id, 503);
     }
     let origin: string;
     try {
       origin = resolveTrustedOrigin({ configuredOrigin: process.env.VEILPASS_HOST_ORIGIN, requestUrl: request.url, originHeader: request.headers.get("origin") });
-    } catch (error) {
-      console.error(`[/api/verify ${id}] Origin check rejected:`, error instanceof Error ? error.message : error);
+    } catch {
       return publicError("ORIGIN_MISMATCH", id, 403);
     }
-    const body = await readJsonLimited(request).catch((err) => {
-      console.error(`[/api/verify ${id}] Error reading request JSON:`, err);
+    const body = await readJsonLimited(request).catch(() => {
       return null;
     });
     const parsed = proofResultSchema.safeParse(body);
     if (!parsed.success) {
-      console.error(`[/api/verify ${id}] proofResultSchema rejected payload:`, parsed.error.format());
+      console.error(JSON.stringify({ event: "verification_rejected", requestId: id, reason: "invalid_payload" }));
       return publicError("PROOF_INVALID", id, 400);
     }
     const gateId = parsed.data.publicInputs.gateId;
     if (!isAllowedGate(gateId)) {
-      console.error(`[/api/verify ${id}] Gate ${gateId} is not in allowed gate IDs`);
+      console.error(JSON.stringify({ event: "verification_rejected", requestId: id, reason: "gate_mismatch" }));
       return publicError("GATE_MISMATCH", id, 400);
     }
     let policy;
     try {
       policy = await getGatePolicy(gateId);
     } catch (error) {
-      console.error(`[/api/verify ${id}] Failed to load gate policy for ${gateId}:`, error);
+      console.error(JSON.stringify({ event: "verification_unavailable", requestId: id, reason: error instanceof Error ? error.name : "unknown" }));
       return publicError("SERVICE_UNAVAILABLE", id, 503);
     }
     const result = await verifierGate.run(() => verifyVeilPassProof({ proofResult: parsed.data, expectedOrigin: origin, expectedGateId: gateId, store: challengeStore, policy, verifyProof: verifyNoirMembershipProof, requestId: id }));
     if (!result) {
-      console.error(`[/api/verify ${id}] Verifier gate concurrency limit or timeout reached`);
+      console.error(JSON.stringify({ event: "verification_unavailable", requestId: id, reason: "verifier_capacity" }));
       return publicError("SERVICE_UNAVAILABLE", id, 503);
     }
     if (!result.ok) {
-      console.error(`[/api/verify ${id}] Proof verification failed with error:`, result.error);
+      console.error(JSON.stringify({ event: "verification_rejected", requestId: id, reason: result.error }));
     }
     const status = result.ok ? 200 : result.error === "SERVICE_UNAVAILABLE" ? 503 : result.error === "ORIGIN_MISMATCH" ? 403 : 400;
     const response = NextResponse.json(result, { status, headers: { "Cache-Control": "no-store" } });
@@ -63,8 +63,7 @@ export async function POST(request: NextRequest) {
     }
     return response;
   } catch (error) {
-    console.error(`[/api/verify ${id}] Unexpected server error during verification:`, error);
+    console.error(JSON.stringify({ event: "verification_unavailable", requestId: id, reason: error instanceof Error ? error.name : "unknown" }));
     return publicError("SERVICE_UNAVAILABLE", id, 503);
   }
 }
-
