@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { isConnected, requestAccess, getNetworkDetails, signMessage, saveCredential, createCredentialSecrets, replace } = vi.hoisted(() => ({
   isConnected: vi.fn(),
@@ -50,9 +50,24 @@ describe("Freighter enrollment recovery", () => {
 });
 
 const nativeRule = { type: "native" as const, code: "XLM", minimum: 1 };
+const issuedCredential = {
+  gateId: "premium-holder",
+  epoch: 1,
+  commitment: "1".repeat(64),
+  credentialSalt: "2".repeat(64),
+  credentialRoot: "3".repeat(64),
+  leafIndex: 0,
+  leafNonce: "4".repeat(64),
+  merklePath: Array.from({ length: 16 }, () => "5".repeat(64)),
+  pathIsRight: Array.from({ length: 16 }, () => false),
+  revocationHash: "6".repeat(64),
+  expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+  issuerPublicKey: "GISSUER",
+  issuerSignature: Buffer.from("signature").toString("base64"),
+};
 const address = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 function approveDisclosure() {
-  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getAllByRole("checkbox").at(-1)!);
 }
 
 beforeEach(() => {
@@ -66,6 +81,7 @@ beforeEach(() => {
   createCredentialSecrets.mockReset().mockResolvedValue({ subjectSecret: "secret", credentialSalt: "2".repeat(64), commitment: "1".repeat(64) });
   replace.mockReset();
 });
+afterEach(() => cleanup());
 
 describe("enrollment interaction", () => {
   it("requires the privacy disclosure before enabling enrollment", () => {
@@ -128,6 +144,64 @@ describe("enrollment interaction", () => {
 
     expect(await screen.findByText(/Support reference: req-public-1/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Connect Freighter and enroll" })).toBeEnabled();
+    expect(saveCredential).not.toHaveBeenCalled();
+  });
+
+  it("completes native XLM enrollment and stores a validated credential only in this browser", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "challenge-2", message: "signed enrollment", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/enrollment/eligibility",
+      "/api/enrollment/challenge",
+      "/api/enrollment/issue",
+    ]);
+    expect(saveCredential).toHaveBeenCalledWith(expect.objectContaining({
+      ...issuedCredential,
+      subjectSecret: "secret",
+      storedAt: expect.any(String),
+    }));
+    expect(screen.getByRole("link", { name: "Continue to App A" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Continue to App B" })).toBeInTheDocument();
+    expect(screen.getAllByText("Credential enrolled").length).toBeGreaterThan(0);
+  });
+
+  it("shows the balance recovery guidance before requesting a challenge", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ eligible: false }) });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+
+    expect(await screen.findByText(/needs at least 1 XLM on Stellar Testnet/)).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(signMessage).not.toHaveBeenCalled();
+  });
+
+  it("reports malformed issuer responses and rejected wallet access without saving credentials", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "challenge-3", message: "signed enrollment", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ unexpected: true }) }));
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/unexpected response shape/)).toBeInTheDocument();
+    expect(saveCredential).not.toHaveBeenCalled();
+
+    requestAccess.mockResolvedValue({ error: "user rejected" });
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getAllByRole("button", { name: "Connect Freighter and enroll" }).at(-1)!);
+    expect(await screen.findByText("Wallet access was rejected.")).toBeInTheDocument();
     expect(saveCredential).not.toHaveBeenCalled();
   });
 });

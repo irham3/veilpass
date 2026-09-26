@@ -18,7 +18,7 @@
     "test:security": "vitest run tests/security && playwright test --grep @security && npm run test:security:deps",
     "test:security:deps": "npm audit --audit-level=moderate",
     "test:coverage": "vitest run --coverage",
-    "test:coverage:all": "vitest run --coverage --config vitest.full.config.mts",
+    "test:coverage:all": "vitest run --coverage --config vitest.full.config.mts && node scripts/check-full-coverage.mjs",
     "docs:check": "vitest run lib/docs/docs-sync.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

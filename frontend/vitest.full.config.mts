@@ -12,6 +12,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Full-inventory instrumentation can push short filesystem/CLI tests just
+    // past Vitest's 5s default on Windows and shared CI workers.
+    testTimeout: 15_000,
     exclude: [...configDefaults.exclude, "tests/e2e/**"],
     setupFiles: ["./tests/setup.ts"],
     coverage: {
