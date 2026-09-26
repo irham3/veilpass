@@ -5,7 +5,12 @@ vi.mock("node:child_process", () => ({ execFileSync }));
 vi.mock("node:fs", () => ({ existsSync }));
 
 describe("pinned Noir toolchain launcher", () => {
-  afterEach(() => { vi.resetModules(); vi.clearAllMocks(); });
+  const originalPlatform = process.platform;
+  afterEach(() => {
+    Object.defineProperty(process, "platform", { configurable: true, value: originalPlatform });
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
 
   it("fails clearly when the circuit workspace is missing", async () => {
     existsSync.mockReturnValue(false);
@@ -15,7 +20,12 @@ describe("pinned Noir toolchain launcher", () => {
 
   it("uses the repository WSL wrapper on Windows", async () => {
     existsSync.mockReturnValue(true);
+    Object.defineProperty(process, "platform", { configurable: true, value: "win32" });
     await import("./noir-check.mjs?windows");
-    expect(execFileSync).toHaveBeenCalledWith("wsl.exe", expect.arrayContaining(["-d", "Ubuntu"]), expect.objectContaining({ cwd: process.cwd() }));
+    expect(execFileSync).toHaveBeenCalledWith(
+      "wsl.exe",
+      ["-d", "Ubuntu", "--", "bash", "./scripts/noir-check-wsl.sh"],
+      expect.objectContaining({ cwd: process.cwd() }),
+    );
   });
 });

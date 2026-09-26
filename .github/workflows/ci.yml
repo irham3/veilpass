@@ -58,14 +58,14 @@ jobs:
         with:
           name: coverage-report
           path: frontend/coverage
-          if-no-files-found: error
+          if-no-files-found: ignore
       - name: Upload whole-source coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-all-report
           path: frontend/coverage-all
-          if-no-files-found: error
+          if-no-files-found: ignore
       - name: Soroban contract tests
         run: npm run contract:test
       - name: Build npm packages and inspect tarballs

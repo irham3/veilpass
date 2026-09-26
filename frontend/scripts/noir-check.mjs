@@ -13,7 +13,9 @@ function run(command, args, options = {}) {
 if (!existsSync(circuitDirectory)) throw new Error(`Circuit directory missing: ${circuitDirectory}`);
 
 if (process.platform === "win32") {
-  run("wsl.exe", ["-d", "Ubuntu", "--", "bash", "/mnt/d/Work/00/Veilpass/frontend/scripts/noir-check-wsl.sh"], { cwd: process.cwd() });
+  // WSL inherits the working directory from the Windows process. Keep the
+  // wrapper path relative so this works in any clone location and drive.
+  run("wsl.exe", ["-d", "Ubuntu", "--", "bash", "./scripts/noir-check-wsl.sh"], { cwd: process.cwd() });
 } else {
   const installed = execFileSync("nargo", ["--version"], { encoding: "utf8" }).match(/nargo version = ([^\s]+)/)?.[1];
   if (installed !== version) throw new Error(`Expected Nargo ${version}; found ${installed ?? "none"}`);
