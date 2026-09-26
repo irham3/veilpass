@@ -102,6 +102,6 @@ Lakukan review file hasil redaksi sebelum commit atau berbagi. Jangan masukkan s
 | Replay `CHALLENGE_SPENT` |  | Belum dicatat |
 | Expiry `CREDENTIAL_EXPIRED` atau `CHALLENGE_EXPIRED` |  | Belum dicatat |
 | Revoke transaction + login baru `CREDENTIAL_REVOKED` |  | Belum dicatat |
-| Video dan laporan test/coverage lengkap | 279/279 Vitest; 87 file; 106 executable TypeScript/TSX/MJS menerima statement coverage; full inventory 77.16% statements, 75.14% branches, 79.10% functions, 79.51% lines; video belum direkam | Sebagian |
+| Video dan laporan test/coverage lengkap | 322/322 Vitest; 91 file; coverage gate mengonfirmasi 107/107 modul executable mendapat statement hit; full inventory 88.35% statements, 84.17% branches, 87.35% functions, 91.17% lines; video belum direkam | Sebagian |
 
 **Aturan keputusan:** seluruh baris harus memiliki bukti nyata sebelum demo disebut selesai atau siap dipakai developer eksternal. Bila satu baris kosong, statusnya tetap belum terverifikasi, sekalipun unit test hijau.

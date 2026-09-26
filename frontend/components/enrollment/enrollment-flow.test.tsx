@@ -3,19 +3,44 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { isConnected, requestAccess, getNetworkDetails, signMessage, saveCredential, createCredentialSecrets, replace } = vi.hoisted(() => ({
-  isConnected: vi.fn(),
-  requestAccess: vi.fn(),
-  getNetworkDetails: vi.fn(),
-  signMessage: vi.fn(),
-  saveCredential: vi.fn(),
-  createCredentialSecrets: vi.fn(),
-  replace: vi.fn(),
-}));
+const { isConnected, requestAccess, getNetworkDetails, signMessage, signTransaction, changeTrust, saveCredential, createCredentialSecrets, replace, server, builder, mockTransactionBuilder } = vi.hoisted(() => {
+  const transaction = { toXDR: () => "unsigned-xdr" };
+  const builder = {
+    addOperation: vi.fn().mockReturnThis(),
+    setTimeout: vi.fn().mockReturnThis(),
+    build: vi.fn(() => transaction),
+  };
+  const server = {
+    loadAccount: vi.fn(async () => ({ account: "fixture" })),
+    submitTransaction: vi.fn(async () => ({ hash: "trustline-tx" })),
+  };
+  const mockTransactionBuilder = Object.assign(
+    vi.fn(function TransactionBuilder() { return builder; }),
+    { fromXDR: vi.fn(() => transaction) },
+  );
+  return {
+    isConnected: vi.fn(),
+    requestAccess: vi.fn(),
+    getNetworkDetails: vi.fn(),
+    signMessage: vi.fn(),
+    signTransaction: vi.fn(),
+    changeTrust: vi.fn((value) => ({ type: "changeTrust", ...value })),
+    saveCredential: vi.fn(),
+    createCredentialSecrets: vi.fn(),
+    replace: vi.fn(),
+    server,
+    builder,
+    mockTransactionBuilder,
+  };
+});
 
-vi.mock("@stellar/freighter-api", () => ({ isConnected, requestAccess, getNetworkDetails, signMessage, signTransaction: vi.fn() }));
+vi.mock("@stellar/freighter-api", () => ({ isConnected, requestAccess, getNetworkDetails, signMessage, signTransaction }));
 vi.mock("@stellar/stellar-sdk", () => ({
-  Asset: class {}, Horizon: { Server: class {} }, Networks: { TESTNET: "Test SDF Network ; September 2015" }, Operation: {}, TransactionBuilder: class {},
+  Asset: class Asset { constructor(readonly code: string, readonly issuer: string) {} },
+  Horizon: { Server: vi.fn(function Server() { return server; }) },
+  Networks: { TESTNET: "Test SDF Network ; September 2015" },
+  Operation: { changeTrust },
+  TransactionBuilder: mockTransactionBuilder,
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/packages/credential/src/store", () => ({ saveCredential }));
@@ -50,6 +75,7 @@ describe("Freighter enrollment recovery", () => {
 });
 
 const nativeRule = { type: "native" as const, code: "XLM", minimum: 1 };
+const creditRule = { type: "credit" as const, code: "VPT", issuer: "GISSUER", minimum: 1 };
 const issuedCredential = {
   gateId: "premium-holder",
   epoch: 1,
@@ -77,6 +103,15 @@ beforeEach(() => {
   requestAccess.mockReset().mockResolvedValue({ address });
   getNetworkDetails.mockReset().mockResolvedValue({ networkPassphrase: "Test SDF Network ; September 2015" });
   signMessage.mockReset().mockResolvedValue({ signedMessage: "signed", signerAddress: address });
+  signTransaction.mockReset().mockResolvedValue({ signedTxXdr: "signed-xdr" });
+  server.loadAccount.mockReset().mockResolvedValue({ account: "fixture" });
+  server.submitTransaction.mockReset().mockResolvedValue({ hash: "trustline-tx" });
+  changeTrust.mockClear();
+  builder.addOperation.mockClear().mockReturnThis();
+  builder.setTimeout.mockClear().mockReturnThis();
+  builder.build.mockClear();
+  mockTransactionBuilder.mockClear();
+  mockTransactionBuilder.fromXDR.mockClear();
   saveCredential.mockReset().mockResolvedValue(undefined);
   createCredentialSecrets.mockReset().mockResolvedValue({ subjectSecret: "secret", credentialSalt: "2".repeat(64), commitment: "1".repeat(64) });
   replace.mockReset();
@@ -203,6 +238,77 @@ describe("enrollment interaction", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Connect Freighter and enroll" }).at(-1)!);
     expect(await screen.findByText("Wallet access was rejected.")).toBeInTheDocument();
     expect(saveCredential).not.toHaveBeenCalled();
+  });
+
+  it("enrolls an already eligible credit-asset wallet without preparing or issuing demo funds", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "credit-challenge", message: "credit enrollment", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/enrollment/eligibility",
+      "/api/enrollment/challenge",
+      "/api/enrollment/issue",
+    ]);
+    expect(screen.getByText(/This demo checks for at least 1 VPT/)).toBeInTheDocument();
+    expect(screen.getByText("VPT:GISSUER")).toBeInTheDocument();
+  });
+
+  it("explains when a custom-asset demo claim has hit the daily service limit", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "claim-challenge", message: "wallet claim" }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "RATE_LIMITED" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+
+    expect(await screen.findByText("The Testnet demo wallet limit has been reached. Try again tomorrow or contact the demo operator.")).toBeInTheDocument();
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/enrollment/eligibility",
+      "/api/demo-asset/challenge",
+      "/api/demo-asset/issue",
+    ]);
+    expect(saveCredential).not.toHaveBeenCalled();
+  });
+
+  it("creates the configured custom-asset trustline before issuing a demo claim", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: false }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "claim-challenge", message: "wallet claim" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "credit-challenge", message: "credit enrollment", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(server.loadAccount).toHaveBeenCalledWith(address);
+    expect(changeTrust).toHaveBeenCalledWith({ asset: expect.objectContaining({ code: "VPT", issuer: "GISSUER" }) });
+    expect(mockTransactionBuilder).toHaveBeenCalledWith({ account: "fixture" }, expect.objectContaining({ networkPassphrase: "Test SDF Network ; September 2015" }));
+    expect(signTransaction).toHaveBeenCalledWith("unsigned-xdr", expect.objectContaining({ address }));
+    expect(server.submitTransaction).toHaveBeenCalledWith(expect.anything());
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/enrollment/eligibility",
+      "/api/enrollment/eligibility",
+      "/api/demo-asset/challenge",
+      "/api/demo-asset/issue",
+      "/api/enrollment/eligibility",
+      "/api/enrollment/challenge",
+      "/api/enrollment/issue",
+    ]);
+    expect(saveCredential).toHaveBeenCalledOnce();
   });
 });
 
