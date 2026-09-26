@@ -18,6 +18,8 @@ All three registry manifests report `gitHead` equal to the tagged commit and `di
 
 A clean install from `registry.npmjs.org` of the three exact `0.2.1` versions succeeded. Node imported each published package through both CommonJS and ESM entry points: shared exposed 19 exports, SDK 2, and server 1 in each module format. npm verified registry tarball integrity during installation. This is an import smoke test; it does not exercise every application flow.
 
+`npm audit signatures` on that clean installation passed: four installed packages had verified registry signatures and four had verified attestations. This count includes the three VeilPass packages and their `zod` dependency.
+
 ## GitHub Release archives
 
 The release contains `veilpass-shared-0.2.1.tgz`, `veilpass-sdk-0.2.1.tgz`, `veilpass-server-0.2.1.tgz`, and `SHA256SUMS`. Each downloaded archive matched the published checksum file:
