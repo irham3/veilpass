@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -49,5 +49,30 @@ describe("full-source coverage inventory gate", () => {
     const result = spawnSync(process.execPath, [script], { cwd: directory, encoding: "utf8" });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("Executable modules without statement coverage: app/unused.ts");
+  });
+
+  it("handles invalid CLI coverage JSON without hiding the failure", async () => {
+    const reportPath = join(process.cwd(), "coverage-all", "coverage-final.json");
+    const originalReport = await readFile(reportPath).catch((failure) => {
+      if (failure?.code === "ENOENT") return null;
+      throw failure;
+    });
+    const originalArg = process.argv[1];
+    const originalExitCode = process.exitCode;
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      await mkdir(join(process.cwd(), "coverage-all"), { recursive: true });
+      await writeFile(reportPath, "{");
+      process.argv[1] = join(process.cwd(), "scripts", "check-full-coverage.mjs");
+      vi.resetModules();
+      await import("./check-full-coverage.mjs");
+      await vi.waitFor(() => expect(error).toHaveBeenCalledWith(expect.stringContaining("JSON")));
+      expect(process.exitCode).toBe(1);
+    } finally {
+      if (originalReport === null) await rm(reportPath, { force: true });
+      else await writeFile(reportPath, originalReport);
+      process.argv[1] = originalArg;
+      process.exitCode = originalExitCode;
+    }
   });
 });
