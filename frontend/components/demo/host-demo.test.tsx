@@ -106,6 +106,22 @@ describe("host session display", () => {
     login.mockRejectedValueOnce(Object.assign(new Error("wallet denied"), { code: "WALLET_REJECTED", name: "VeilPassError" }));
     fireEvent.click(screen.getByRole("button", { name: "Login with VeilPass" }));
     expect(await screen.findByRole("status")).toHaveTextContent("SERVICE_UNAVAILABLE");
+    expect(screen.queryByText(/vp_private_1/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("session-verified-icon")).not.toBeInTheDocument();
+  });
+
+  it("shows a revoked new login without displaying the previous successful payload", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ authenticated: false }), { status: 401 })));
+    login.mockReset().mockResolvedValueOnce({ ok: true, privateAppId: "vp_private_old", gateId: "premium-holder" });
+    render(<HostDemo {...props} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Login with VeilPass" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("Host session verified");
+    login.mockRejectedValueOnce(new (await import("@veilpass/sdk")).VeilPassError("CREDENTIAL_REVOKED", "revoked"));
+    fireEvent.click(screen.getByRole("button", { name: "Login with VeilPass" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("CREDENTIAL_REVOKED");
+    expect(screen.queryByText(/vp_private_old/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("session-verified-icon")).not.toBeInTheDocument();
+    expect(screen.getByText(/existing host session may remain active/i)).toBeInTheDocument();
   });
 
   it("shows the SDK's typed failure code and generic runtime fallback", async () => {
