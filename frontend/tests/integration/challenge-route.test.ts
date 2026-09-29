@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { issue } = vi.hoisted(() => ({ issue: vi.fn() }));
+const { issue, durable } = vi.hoisted(() => ({ issue: vi.fn(), durable: { value: true } }));
 
 vi.mock("@/lib/server/challenge-store", () => ({
-  durableChallengeStoreConfigured: true,
+  get durableChallengeStoreConfigured() { return durable.value; },
   challengeStore: { issue },
 }));
 
@@ -25,6 +25,7 @@ function request(body: unknown, origin = "http://localhost:3000", headers: Recor
 describe("POST /api/challenges integration boundary", () => {
   beforeEach(() => {
     issue.mockReset();
+    durable.value = true;
     issue.mockResolvedValue({
       challengeId: "2fe46d77-e928-44be-8725-8bbbd1c18df7",
       challenge: "fixture",
@@ -76,5 +77,34 @@ describe("POST /api/challenges integration boundary", () => {
 
     expect(response.status).toBe(400);
     expect(issue).not.toHaveBeenCalled();
+  });
+
+  it("fails closed in production without a durable store", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.stubEnv("NODE_ENV", "production");
+    durable.value = false;
+    const response = await POST(request({ gateId: "premium-holder" }));
+    expect(response.status).toBe(503);
+    expect(error).toHaveBeenCalledOnce();
+    expect(issue).not.toHaveBeenCalled();
+    durable.value = true;
+    vi.unstubAllEnvs();
+    error.mockRestore();
+  });
+
+  it("rejects unparseable JSON and maps store failures to a safe service error", async () => {
+    const invalid = new NextRequest("http://localhost:3000/api/challenges", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000", "content-type": "application/json" },
+      body: "{",
+    });
+    expect((await POST(invalid)).status).toBe(400);
+
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    issue.mockRejectedValueOnce(new Error("database unavailable"));
+    const response = await POST(request({ gateId: "premium-holder" }));
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({ error: "SERVICE_UNAVAILABLE" });
+    expect(error).toHaveBeenCalledOnce();
   });
 });

@@ -139,6 +139,29 @@ describe("enrollment interaction", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("recovers from unavailable Freighter, rejected account access, and network lookup errors", async () => {
+    isConnected.mockResolvedValueOnce({ isConnected: false, error: "extension unavailable" });
+    vi.stubGlobal("fetch", vi.fn());
+    const first = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByRole("link", { name: /Install or download Freighter/ })).toBeInTheDocument();
+    first.unmount();
+
+    requestAccess.mockResolvedValueOnce({ error: "account rejected" });
+    const second = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText("Wallet access was rejected.")).toBeInTheDocument();
+    second.unmount();
+
+    getNetworkDetails.mockResolvedValueOnce({ error: "network unavailable" });
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/Switch Freighter to Stellar Testnet/)).toBeInTheDocument();
+  });
+
   it("rejects a wallet on the wrong network before eligibility or signing", async () => {
     getNetworkDetails.mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" });
     const fetchMock = vi.fn();
@@ -238,6 +261,30 @@ describe("enrollment interaction", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Connect Freighter and enroll" }).at(-1)!);
     expect(await screen.findByText("Wallet access was rejected.")).toBeInTheDocument();
     expect(saveCredential).not.toHaveBeenCalled();
+  });
+
+  it("explains when the enrollment challenge no longer considers the selected account eligible", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "NOT_ELIGIBLE" }) }));
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/active Freighter account needs at least 1 XLM/)).toBeInTheDocument();
+    expect(signMessage).not.toHaveBeenCalled();
+  });
+
+  it("copies custom asset details and keeps the control usable when clipboard access fails", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    fireEvent.click(screen.getByRole("button", { name: "Copy asset" }));
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith("VPT:GISSUER");
+
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
+    fireEvent.click(screen.getByRole("button", { name: "Copied" }));
+    expect(await screen.findByRole("button", { name: "Copy asset" })).toBeInTheDocument();
   });
 
   it("enrolls an already eligible credit-asset wallet without preparing or issuing demo funds", async () => {

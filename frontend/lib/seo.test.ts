@@ -13,4 +13,12 @@ describe("public metadata", () => {
     expect(seoKeywords).toContain("private wallet login");
     expect(landingFaqItems.some((item) => /anonymous/i.test(item.question))).toBe(true);
   });
+
+  it("does not use Testnet as a promotional slogan", () => {
+    expect(siteConfig.title).not.toMatch(/testnet/i);
+    expect(siteConfig.description).not.toMatch(/testnet/i);
+    expect(siteConfig.socialTitle).not.toMatch(/testnet/i);
+    expect(siteConfig.socialDescription).not.toMatch(/testnet/i);
+    expect(seoKeywords.join(" ")).not.toMatch(/testnet/i);
+  });
 });

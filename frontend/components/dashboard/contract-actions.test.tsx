@@ -2,6 +2,7 @@
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Networks } from "@stellar/stellar-sdk";
+import { Buffer } from "buffer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { getNetwork, requestAccess, updateRoot, createGate, rotateEpoch, revoke, signAndSend } = vi.hoisted(() => ({
@@ -58,6 +59,32 @@ describe("contract operation controls", () => {
     await waitFor(() => expect(updateRoot).toHaveBeenCalledWith(expect.objectContaining({ gate_id: "premium-holder", expected_epoch: 1 })));
     expect(await screen.findByText("Confirmed on Stellar Testnet")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "abc123" })).toHaveAttribute("href", "https://stellar.expert/explorer/testnet/tx/abc123");
+  });
+
+  it("creates a gate, rotates its epoch, and rejects a transaction response without a hash", async () => {
+    render(<ContractActions {...props} />);
+    fireEvent.change(screen.getByLabelText("Gate ID"), { target: { value: " premium-holder " } });
+    fireEvent.click(screen.getByRole("button", { name: "Create gate with Freighter" }));
+    await waitFor(() => expect(createGate).toHaveBeenCalledWith(expect.objectContaining({ gate_id: "premium-holder", owner: "GTESTPUBLICADDRESS" })));
+    expect(await screen.findByRole("link", { name: "abc123" })).toBeInTheDocument();
+
+    signAndSend.mockResolvedValueOnce({ result: { isErr: () => false }, sendTransactionResponse: {} });
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Rotate epoch" }), { button: 0, ctrlKey: false });
+    fireEvent.click(screen.getByRole("button", { name: "Rotate epoch with Freighter" }));
+    expect(await screen.findByText("The transaction result had no hash; check its status before retrying")).toBeInTheDocument();
+    expect(rotateEpoch).toHaveBeenCalledWith(expect.objectContaining({ gate_id: "premium-holder", new_root: Buffer.alloc(32) }));
+  });
+
+  it("reports missing wallet access and non-Error transaction failures", async () => {
+    requestAccess.mockResolvedValue({ address: "" });
+    render(<ContractActions {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "Create gate with Freighter" }));
+    expect(await screen.findByText("Wallet access rejected")).toBeInTheDocument();
+
+    requestAccess.mockResolvedValue({ address: "GTESTPUBLICADDRESS" });
+    signAndSend.mockRejectedValueOnce("offline");
+    fireEvent.click(screen.getByRole("button", { name: "Create gate with Freighter" }));
+    expect(await screen.findByText("Transaction failed")).toBeInTheDocument();
   });
 
   it("does not claim confirmation when the contract rejects the transaction", async () => {

@@ -28,4 +28,28 @@ describe("pinned Noir toolchain launcher", () => {
       expect.objectContaining({ cwd: process.cwd() }),
     );
   });
+
+  it("checks the pinned native tool versions and executes test, prove, and verify", async () => {
+    existsSync.mockReturnValue(true);
+    Object.defineProperty(process, "platform", { configurable: true, value: "linux" });
+    execFileSync.mockImplementation((command) => command === "nargo" ? "nargo version = 1.0.0-beta.22" : "5.0.0-nightly.20260522\n");
+    await import("./noir-check.mjs?native");
+    expect(execFileSync).toHaveBeenNthCalledWith(1, "nargo", ["--version"], { encoding: "utf8" });
+    expect(execFileSync).toHaveBeenNthCalledWith(2, "bb", ["--version"], { encoding: "utf8" });
+    expect(execFileSync).toHaveBeenCalledWith("nargo", ["test"], expect.objectContaining({ stdio: "inherit" }));
+    expect(execFileSync).toHaveBeenCalledWith("nargo", ["execute"], expect.objectContaining({ stdio: "inherit" }));
+    expect(execFileSync.mock.calls.some(([command, args]) => command === "bb" && args[0] === "prove")).toBe(true);
+    expect(execFileSync.mock.calls.some(([command, args]) => command === "bb" && args[0] === "verify")).toBe(true);
+  });
+
+  it("rejects unpinned Nargo or Barretenberg installations", async () => {
+    existsSync.mockReturnValue(true);
+    Object.defineProperty(process, "platform", { configurable: true, value: "linux" });
+    execFileSync.mockReturnValueOnce("other");
+    await expect(import("./noir-check.mjs?nargo-mismatch")).rejects.toThrow("Expected Nargo 1.0.0-beta.22");
+
+    vi.resetModules();
+    execFileSync.mockReset().mockImplementation((command) => command === "nargo" ? "nargo version = 1.0.0-beta.22" : "other");
+    await expect(import("./noir-check.mjs?bb-mismatch")).rejects.toThrow("Expected Barretenberg 5.0.0-nightly.20260522");
+  });
 });

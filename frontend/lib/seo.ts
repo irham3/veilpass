@@ -3,10 +3,10 @@ export const siteConfig = {
   url: "https://veilpass.dev",
   title: "VeilPass | Private wallet login for Stellar dApps",
   description:
-    "VeilPass lets Stellar dApps verify wallet eligibility without receiving the user's Stellar wallet address. The host verifier receives proof inputs transiently; this Testnet MVP is not an anonymity system.",
+    "VeilPass lets Stellar dApps verify wallet eligibility without receiving the user's Stellar wallet address. The host verifier receives sensitive proof inputs transiently; this experimental service is not an anonymity system.",
   socialTitle: "VeilPass: prove access, keep wallets private",
   socialDescription:
-      "A Stellar Testnet MVP for origin-scoped wallet login. Hosts receive a scoped ID and access verdict, not the wallet address; host servers process sensitive proof inputs during verification.",
+      "Origin-scoped wallet eligibility login for Stellar dApps. Hosts receive a scoped ID and access verdict, not the wallet address; host servers process sensitive proof inputs during verification.",
   ogImageAlt:
     "VeilPass private aperture showing an eligibility verdict without exposing a Stellar wallet address.",
 } as const;
@@ -15,7 +15,6 @@ export const seoKeywords = [
   "VeilPass",
   "Stellar wallet login",
   "private wallet login",
-  "Stellar testnet dApp",
   "wallet eligibility verification",
   "origin scoped identity",
   "Freighter wallet",

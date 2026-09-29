@@ -156,7 +156,7 @@ export default function OpenGraphImage() {
                   letterSpacing: "-0.035em",
                 }}
               >
-                Stellar testnet login.
+                Private eligibility login.
               </div>
               <div
                 style={{
@@ -207,7 +207,7 @@ export default function OpenGraphImage() {
                 }}
               >
                 <span>Private aperture live</span>
-                <span>Testnet</span>
+                <span>Stellar</span>
               </div>
 
               {payloadRows.map(([label, value]) => (

@@ -103,7 +103,7 @@ export function ProofWindow() {
                   </p>
                 </div>
                 <span className="rounded-full border border-line-dark px-2 py-1 font-mono text-[0.6875rem] text-paper-200 sm:px-2.5 sm:text-xs">
-                  Stellar testnet
+                  Stellar dApp
                 </span>
               </div>
 

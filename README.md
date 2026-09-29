@@ -1,10 +1,10 @@
 <div align="center">
   <img src="frontend/public/brand/favicon.svg" width="88" alt="VeilPass">
   <h1>VeilPass</h1>
-  <p>Origin-scoped private eligibility login for Stellar Testnet apps.</p>
+  <p>Origin-scoped private eligibility login for Stellar apps.</p>
 
   <a href="https://veilpass.dev"><img src="https://img.shields.io/badge/demo-live-22c55e.svg" alt="Live demo"></a>
-  <img src="https://img.shields.io/badge/chain-Stellar%20Testnet-7c3aed.svg" alt="Stellar Testnet">
+  <img src="https://img.shields.io/badge/chain-Stellar-7c3aed.svg" alt="Stellar">
   <img src="https://img.shields.io/badge/contracts-Soroban-111827.svg" alt="Soroban">
   <img src="https://img.shields.io/badge/frontend-Next.js%2016-black.svg" alt="Next.js 16">
   <img src="https://img.shields.io/badge/wallet-Freighter-f59e0b.svg" alt="Freighter">
@@ -12,9 +12,9 @@
 
 ---
 
-VeilPass is a Stellar Testnet MVP for **origin-scoped, eligibility-gated login**.
+VeilPass provides **origin-scoped, eligibility-gated login** for Stellar apps.
 
-A host dApp can learn that a user passed a policy, such as holding the required testnet asset, without receiving the user's Stellar wallet address. The host receives a stable app-scoped private ID and a minimized policy verdict. The enrollment issuer still sees the wallet during enrollment.
+A host dApp can learn that a user passed a policy, such as meeting a configured asset balance requirement, without receiving the user's Stellar wallet address. The host receives a stable app-scoped private ID and a minimized policy verdict. The enrollment issuer still sees the wallet during enrollment.
 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.

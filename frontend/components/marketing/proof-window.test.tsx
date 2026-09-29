@@ -44,5 +44,6 @@ describe("ProofWindow", () => {
     expect(
       within(region).getByRole("button", { name: "Standard wallet login" }),
     ).toBeInTheDocument();
+    expect(within(region).getByText("Stellar dApp")).toBeInTheDocument();
   });
 });

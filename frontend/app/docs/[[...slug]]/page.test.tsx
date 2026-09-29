@@ -24,4 +24,10 @@ describe("documentation article route", () => {
     expect(html).toContain("<pre");
     expect(html).toContain("Copy</button>");
   });
+
+  it("returns empty metadata for an unknown topic and rejects invalid routes", async () => {
+    expect(await generateMetadata({ params: Promise.resolve({ slug: ["missing-topic"] }) })).toEqual({});
+    await expect(DocsPage({ params: Promise.resolve({ slug: ["client", "extra"] }) })).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
+    await expect(DocsPage({ params: Promise.resolve({ slug: ["missing-topic"] }) })).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
+  });
 });

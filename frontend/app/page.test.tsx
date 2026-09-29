@@ -11,6 +11,10 @@ describe("landing page", () => {
     expect(html).toContain('href="/docs/privacy"');
     const jsonLd = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
     expect(jsonLd).toBeTruthy();
-    expect(JSON.parse(jsonLd!)).toHaveLength(3);
+    const [organization, application] = JSON.parse(jsonLd!) as Array<Record<string, unknown>>;
+    expect(organization["@type"]).toBe("Organization");
+    expect(application.featureList).not.toContain("Stellar Testnet gate registry");
+    expect(html).toContain("Connect Freighter on Stellar Testnet");
+    expect(html).not.toContain("Soroban gate deployed on Stellar Testnet");
   });
 });

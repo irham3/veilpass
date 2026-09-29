@@ -3,10 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ connection: vi.fn(async () => undefined) }));
 vi.mock("next/server", () => ({ connection: mocks.connection }));
-vi.mock("next/font/google", () => ({
-  Instrument_Sans: () => ({ variable: "font-instrument" }),
-  IBM_Plex_Mono: () => ({ variable: "font-mono" }),
-}));
 vi.mock("@/components/motion/route-transition", () => ({ RouteTransition: ({ children }: { children: React.ReactNode }) => <div data-testid="route-transition">{children}</div> }));
 vi.mock("@/components/site-header", () => ({ SiteHeader: () => <header>VeilPass header</header> }));
 vi.mock("@/components/ui/sonner", () => ({ Toaster: ({ position }: { position: string }) => <div data-testid="toaster">{position}</div> }));

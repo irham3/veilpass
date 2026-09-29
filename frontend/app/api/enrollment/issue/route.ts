@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
   let policy;
   try { policy = await getGatePolicy(parsed.data.gateId); }
   catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
+  if (!policy.active) return publicError("CREDENTIAL_REVOKED", id, 400);
   try { canonicalFieldHex(policy.credentialRoot); }
   catch { return publicError("SERVICE_UNAVAILABLE", id, 503); }
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString();

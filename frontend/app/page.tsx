@@ -45,7 +45,7 @@ const homeJsonLd = [
     },
     featureList: [
       "Origin-scoped private app IDs",
-      "Stellar Testnet gate registry",
+      "Soroban eligibility gate registry",
       "Freighter enrollment flow",
       "One-time challenge verification",
       "Host responses without Stellar wallet addresses",
@@ -84,7 +84,7 @@ const inspectionCards = [
 ] as const;
 
 const evidence = [
-  ["Contract", "Soroban gate deployed on Stellar Testnet"],
+  ["Contract", "Soroban eligibility gate"],
   ["Tests", "Unit, e2e, a11y, build, and contract smoke are wired"],
   ["Docs", "Privacy model and limitations stay visible"],
 ] as const;
@@ -93,7 +93,7 @@ const enrollmentJourney = [
   {
     icon: WalletIcon,
     step: "Before you click",
-    title: "Unlock Freighter on Testnet",
+    title: "Connect Freighter on Stellar Testnet",
     text: "Keep one account selected, check the required XLM balance on the enrollment page, then tick the disclosure box. The button stays disabled until you do.",
   },
   {

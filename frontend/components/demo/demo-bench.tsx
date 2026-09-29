@@ -159,7 +159,7 @@ export function DemoBench() {
                   <h4 className="font-medium">Verification log</h4>
                   <span className="font-mono text-[0.6875rem] text-paper-200">Last 6</span>
                 </div>
-                <ol className="mt-5 space-y-3" aria-live="polite">
+                <ol className="mt-5 space-y-3" aria-label="Verification log entries" aria-live="polite">
                   {events.length ? events.map((event, index) => (
                     <li key={`${event.label}-${index}`} className="rounded-2xl border border-paper-50/10 bg-ink-950 p-3">
                       <div className="flex items-start justify-between gap-3">
