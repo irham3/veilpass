@@ -2,6 +2,17 @@
 
 Notable changes to VeilPass are recorded here. Version entries describe source intended for the release tag; a package becomes publicly available only after the protected tag workflow publishes it.
 
+## [0.2.2] - 2026-09-29
+
+### Documentation
+
+- Refresh all three public package READMEs so the npm pages describe the released product scope, current SDK/server responsibilities, and two-origin developer example without stale release-status claims.
+- Keep the package APIs and runtime behavior compatible with `0.2.1`; this is a documentation-only patch release.
+
+### Release status
+
+- Publication through the protected `v0.2.2` tag and npm Trusted Publisher workflow is pending verification.
+
 ## [0.2.1] - 2026-09-26
 
 ### Changed

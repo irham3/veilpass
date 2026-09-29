@@ -77,7 +77,11 @@ describe("published and hosted docs stay aligned with the implementation", () =>
       };
       const packageReadme = readFileSync(join(packageDirectory, "README.md"), "utf8");
       expect(packageReadme, `${metadata.name} README needs a package-specific title`).toContain(`# \`${metadata.name}\``);
-      expect(packageReadme, `${metadata.name} README must state its status/version`).toContain(metadata.version);
+      if (directory === "contract-bindings") {
+        expect(packageReadme, `${metadata.name} README must state its workspace version`).toContain(metadata.version);
+      } else {
+        expect(packageReadme, `${metadata.name} README must link to the published version history`).toContain("npm version history");
+      }
       expect(metadata.files, `${metadata.name} tarball must include its README`).toContain("README.md");
       expect(packageReadme, `${metadata.name} docs must disclose its operational/security scope`).toMatch(/security|production|testnet/i);
       expect(metadata.homepage, `${metadata.name} npm metadata needs a public documentation link`).toMatch(/^https:\/\/veilpass\.dev\/docs\//);
@@ -100,6 +104,7 @@ describe("published and hosted docs stay aligned with the implementation", () =>
     expect(read("examples/two-origin-dapp/README.md")).toContain("/api/verify");
     expect(read("packages/sdk/README.md")).toContain("frontend/examples/two-origin-dapp");
     expect(llmsText).toContain("https://www.npmjs.com/package/@veilpass/server");
-    expect(changelog).toContain("## [0.2.1]");
+    const currentPackageVersion = JSON.parse(readFileSync(join(frontendRoot, "packages/sdk/package.json"), "utf8")) as { version: string };
+    expect(changelog).toContain(`## [${currentPackageVersion.version}]`);
   });
 });

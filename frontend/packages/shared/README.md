@@ -2,7 +2,7 @@
 
 Runtime-validated TypeScript contracts and origin/field helpers shared by the VeilPass browser SDK and server verifier. This package does not connect to a wallet, open a popup, create a proof, issue credentials, verify cryptography, persist challenges, or create a host application session.
 
-> **Release status (29 September 2026):** `@veilpass/shared` `0.2.1` is published on npm with provenance. It supplies runtime-validated protocol contracts and helpers for the current Stellar Testnet deployment; it is not a mainnet security certification or an anonymity product. Check the [npm version history](https://www.npmjs.com/package/@veilpass/shared?activeTab=versions) for later releases.
+> **Product scope:** This package supplies runtime-validated protocol contracts and helpers for the current Stellar Testnet deployment; it is not a mainnet security certification or an anonymity product. Check [npm version history](https://www.npmjs.com/package/@veilpass/shared?activeTab=versions) for the current published patch.
 
 ## Install
 

@@ -1,6 +1,6 @@
 {
   "name": "@veilpass/server",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Server-side verification primitives for VeilPass eligibility login.",
   "license": "MIT",
   "author": "Irham Tri Ahmadi <irhamtria@gmail.com>",

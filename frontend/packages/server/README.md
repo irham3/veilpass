@@ -2,7 +2,7 @@
 
 Server-side proof-verification policy primitive for host applications integrating VeilPass. The library checks a submitted proof result against explicit host-owned origin/gate policy, a challenge-store callback, and a proof-verifier callback. It does **not** connect to PostgreSQL, issue challenges, read Soroban, load a verification key, configure rate limits, or create application sessions for you.
 
-> **Release status (29 September 2026):** `@veilpass/server` `0.2.1` is published on npm with provenance. This version targets VeilPass's Stellar Testnet deployment and is not a mainnet security certification. The package remains a verification primitive rather than a turnkey auth server: host applications must provide secure database, chain-policy, verifier-key, HTTP, abuse-control, and session adapters. Check the [npm version history](https://www.npmjs.com/package/@veilpass/server?activeTab=versions) for later releases.
+> **Product scope:** This package targets VeilPass's Stellar Testnet deployment and is not a mainnet security certification. It remains a verification primitive rather than a turnkey auth server: host applications must provide secure database, chain-policy, verifier-key, HTTP, abuse-control, and session adapters. Check [npm version history](https://www.npmjs.com/package/@veilpass/server?activeTab=versions) for the current published patch.
 
 ## Install
 

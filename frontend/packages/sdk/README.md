@@ -2,7 +2,7 @@
 
 Browser SDK for starting an origin-scoped VeilPass login through a popup. It opens the configured hosted login page, checks the popup's exact origin/source/state, posts a one-time challenge to the integrating host's backend, and submits the returned proof to that backend for server-side verification.
 
-> **Release status (29 September 2026):** `@veilpass/sdk` `0.2.1` is published on npm with provenance. This version targets VeilPass's Stellar Testnet deployment and is not a mainnet security certification or a network-anonymity service. Check the [npm version history](https://www.npmjs.com/package/@veilpass/sdk?activeTab=versions) for later releases and review the [quickstart](https://veilpass.dev/docs/quickstart) before integrating.
+> **Product scope:** This SDK targets VeilPass's Stellar Testnet deployment; it is not a mainnet security certification or a network-anonymity service. The documented API is compatible with the published `0.2.x` line. Check [npm version history](https://www.npmjs.com/package/@veilpass/sdk?activeTab=versions) for the current patch and review the [quickstart](https://veilpass.dev/docs/quickstart) before integrating.
 
 ## What this SDK does—and what the host must do
 
