@@ -1,6 +1,8 @@
 # Live acceptance checklist
 
-This checklist is the remaining operator-controlled portion of the delivery. It is deliberately separate from source implementation because it requires the Testnet gate owner's signing key, a real PostgreSQL service, and a user-approved Freighter wallet action.
+Live acceptance update — 2026-09-29: a disposable Testnet holder credential was enrolled, logged into App A, rejected on replay (`CHALLENGE_SPENT`), rejected after its server-side expiry (`CREDENTIAL_EXPIRED`), revoked on-chain, and rejected on a fresh login (`CREDENTIAL_REVOKED`). The gate owner signer was loaded from the local operator configuration and matched the public owner read from Testnet; no signing secret or holder wallet address is included in this record. See [the redacted host capture](host-network-capture-redacted-2026-09-29.md) and [the revoke transaction](https://stellar.expert/explorer/testnet/tx/c3e8eb3855eeca0b99cd9912f020a668ef516a67313edf1459fe4620200cf261).
+
+Remaining live evidence: the credential-root publication transaction link and review video. Aggregate whole-source coverage also remains below 100%; see [test report](test-report.md).
 
 1. Provision PostgreSQL and apply `drizzle/0000_veilpass_mvp.sql`, `drizzle/0001_enrollment_challenge_gate.sql`, and `drizzle/0002_credential_merkle_tree.sql` in order.
 2. Configure `DATABASE_URL`, `VEILPASS_ISSUER_SECRET`, and the separately scoped `VEILPASS_GATE_OWNER_SECRET` only in the VeilPass login service. Do not put either secret in a `NEXT_PUBLIC_` variable.
@@ -9,7 +11,7 @@ This checklist is the remaining operator-controlled portion of the delivery. It 
 5. In Freighter on Stellar Testnet, fund the holder account with at least the configured native XLM minimum (for example through Friendbot). No VPT trustline or custom asset is required. The holder must approve the enrollment message itself.
 6. Enroll once. Confirm the new contract root event, issued credential, and durable tree records. Enroll a second test account and confirm the first browser refreshes its Merkle witness before login.
 7. Log in to App A twice and App B once. Confirm App A returns the same private app ID, App B returns a different one, and neither host response contains a Stellar address.
-8. Replay the prior proof and confirm `CHALLENGE_SPENT`; wait until the challenge expires and confirm rejection; revoke the issued `revocationHash` on the contract and confirm `CREDENTIAL_REVOKED`.
-9. Record this exact flow over the public HTTPS origins for the final short review video. Redact wallet secrets and service environment values.
+8. **Verified 2026-09-29:** replay returned HTTP 400 `CHALLENGE_SPENT`; an unused proof sent after server-side `proofExpiresAt` returned HTTP 400 `CREDENTIAL_EXPIRED`; after owner-signed Testnet revocation, `is_revoked` returned `true` and a fresh App A login showed `CREDENTIAL_REVOKED`.
+9. Record this exact flow over the public HTTPS origins for the final short review video. Redact wallet secrets and service environment values. The video is still outstanding.
 
-The repository validates the code path locally. These steps are not automatable without exposing the gate-owner/service secrets or bypassing the Freighter user's explicit wallet approval.
+The application never received a seed phrase. The 2026-09-29 Testnet revocation used the already configured local operator signer after checking that its public key matched the on-chain gate owner and that the target credential was uniquely identified in the durable tree.
