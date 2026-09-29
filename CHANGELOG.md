@@ -11,7 +11,8 @@ Notable changes to VeilPass are recorded here. Version entries describe source i
 
 ### Release status
 
-- Publication through the protected `v0.2.2` tag and npm Trusted Publisher workflow is pending verification.
+- Published on 29 September 2026 from protected tag [`v0.2.2`](https://github.com/irham3/veilpass/releases/tag/v0.2.2) through npm Trusted Publisher with provenance for all three packages.
+- The GitHub Release contains the npm archives and `SHA256SUMS`; registry readmes, exact-version install, CJS/ESM imports, and archive hashes are verified in [release evidence](frontend/docs/evidence/release-v0.2.2-verification-2026-09-29.md).
 
 ## [0.2.1] - 2026-09-26
 

@@ -178,7 +178,7 @@ The host's `/api/verify` receives proof bytes and public inputs (including commi
 
 The following packages are the public integration surface currently published on npm. Each package-level README is included in its tarball and rendered on its npm page:
 
-The current published version is `0.2.1` for all three packages. The [release verification](frontend/docs/evidence/release-v0.2.1-verification-2026-09-27.md) records the tagged source, npm provenance, clean import check, and GitHub archive checksums.
+The current published version is `0.2.2` for all three packages. The [release verification](frontend/docs/evidence/release-v0.2.2-verification-2026-09-29.md) records the tagged source, npm provenance, clean import check, and GitHub archive checksums.
 
 | Package | Responsibility | Documentation |
 | --- | --- | --- |
