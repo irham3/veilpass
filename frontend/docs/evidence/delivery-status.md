@@ -12,19 +12,19 @@ The current Testnet gate root at the 29 September smoke read is `2599dffae45935b
 
 Historical note: `0.2.0` was published manually without provenance on 26 September 2026. The protected `0.2.1` release supersedes it with tagged source, Trusted Publisher provenance, package READMEs, and checksum-verified GitHub Release archives.
 
-## Current operational status — 2026-09-17
+## Historical operational snapshot — 2026-09-17
 
-This section supersedes older deployment-status rows below.
+This dated snapshot is retained as project history. Its open wallet-approval item was completed on 2026-09-29; use the current status above and the live acceptance checklist for release readiness.
 
-| Deliverable | Current status | Public evidence |
+| Deliverable | Status at the time | Public evidence |
 | --- | --- | --- |
 | 1. Private Gate Core | Complete on Stellar Testnet | Active gate contract, 3/3 Rust tests, Testnet smoke, verified Noir proof runtime, and the current 132-test regression suite. |
-| 2. SDK and Hosted Login | Complete except user-owned Freighter approval | Public `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` packages; Neon durable schema; hosted login health check passes. The default Testnet gate uses native XLM, not a VeilPass-issued asset. |
-| 3. Two-dApp Demo and Docs | Complete except live Freighter approval and excluded review video | Public exact origins for Login/App A/App B; automated public acceptance checks domain-bound challenges and hostile-origin rejection. |
+| 2. SDK and Hosted Login | Implemented; live wallet approval was still pending in this snapshot and was completed on 2026-09-29 | Public `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` packages; Neon durable schema; hosted login health check passes. The default Testnet gate uses native XLM. |
+| 3. Two-dApp Demo and Docs | Implemented; live Freighter approval was still pending in this snapshot and was completed on 2026-09-29; review video remains open | Public exact origins for Login/App A/App B; automated public acceptance checks domain-bound challenges and hostile-origin rejection. |
 
-Run `npm run production:acceptance` from `frontend/` to reproduce the safe public checks. The only required human action for live enrollment is the Freighter wallet access and message-signature approval; no seed phrase is requested or accepted by the application.
+Run `npm run production:acceptance` from `frontend/` to reproduce the safe public checks. At the time of this snapshot, live enrollment still required Freighter wallet access and message-signature approval; no seed phrase is requested or accepted by the application.
 
-### Fresh operator checks — 2026-09-17
+### Historical operator checks — 2026-09-17
 
 - `npm run production:acceptance` passed against `login.veilpass.dev`, `app-a.veilpass.dev`, and `app-b.veilpass.dev`; both challenges were origin-bound and an untrusted origin returned HTTP 403.
 - `npm run contract:smoke` passed against the active Testnet contract. Gate `premium-holder` is owned by the configured owner at epoch `1` and currently has the canonical empty root (`00` repeated 32 bytes); the fixture revocation hash is not revoked.
@@ -39,7 +39,11 @@ Audit date: 2026-09-02
 
 This is an evidence-based implementation status for the submitted Instawards scope. It distinguishes code that is tested today from work that still needs an operational deployment.
 
-## Sections 1–3: project, intent, and objective
+## Historical proposal snapshot — 2026-09-02
+
+This original proposal audit is retained for traceability. Its dated pending items were superseded by the current verification and live acceptance recorded above.
+
+### Sections 1–3: project, intent, and objective
 
 | Scope item | Evidence | Status |
 | --- | --- | --- |
@@ -49,7 +53,7 @@ This is an evidence-based implementation status for the submitted Instawards sco
 
 ## Section 4: in-scope deliverables
 
-| Deliverable | Tested evidence | Current status |
+| Deliverable | Tested evidence | Status in this dated snapshot |
 | --- | --- | --- |
 | 1. Private Gate Core — Soroban gate state, events, root, epoch, and revocation | `contracts/veilpass-gate`, 3 Rust tests, and current `npm run contract:smoke` output | Implemented and verified on Testnet |
 | 1. Private Gate Core — membership circuit | `packages/proof/circuits/membership`; `npm run proof:check` runs circuit test → witness → UltraHonk prove → verify | Implemented and verified |
@@ -86,4 +90,4 @@ npm run build
 npm audit --omit=dev
 ```
 
-Remaining operational work: deploy the native-XLM configuration to the hosted login, run a real Freighter enrollment with the wallet owner, publish the resulting non-empty credential root and revocation transaction on Testnet, execute the live replay/expiry/revocation matrix, and record the reviewer walkthrough (video intentionally excluded from the current request). PostgreSQL migrations, local runtime configuration, contract ownership, package release, and all automated checks are verified.
+At the time of this historical snapshot, operational work remained to deploy native-XLM configuration and perform live wallet acceptance. Deployment, enrollment, App A login, replay, expiry, and revocation have since been verified as described above. The credential-root publication transaction link and reviewer walkthrough video are still unrecorded.

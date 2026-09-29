@@ -2,7 +2,9 @@
 
 ## Current verification — 2026-09-29 (supersedes older status summaries below)
 
-The latest tested source is on GitHub `master` at commit `a3b9e8b`; [CI run 36275867024](https://github.com/irham3/veilpass/actions/runs/36275867024) passed both quality/build and browser/accessibility jobs. Production deployment `dpl_D5pR6QWm7Ci1LWLCeN3y2W7MmmJe` was READY during live enrollment/login verification; the merged docs return HTTP 200 from production docs routes. The deployment includes the corrected browser-visible host origin, exact Barretenberg CRS CSP hosts, a writable `/tmp` CRS cache for Vercel verification, a 60-second `/api/verify` budget, and bounded proof-clock skew. On 27 September, [release workflow `v0.2.1` attempt 2](https://github.com/irham3/veilpass/actions/runs/36215791259/attempts/2) succeeded after the npm owner authorized Trusted Publisher publishing. Public `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` now have version `0.2.1`, npm provenance, and `gitHead` matching the release tag `3edf8974df9656a44a4361868b33dd3794d19ad1`. The [GitHub Release](https://github.com/irham3/veilpass/releases/tag/v0.2.1) includes all three package archives and `SHA256SUMS`; clean install/import and archive checksums passed. See the [release verification](release-v0.2.1-verification-2026-09-27.md).
+The latest code and dependency verification is GitHub `master` commit `501f522`; [CI run 36512137059](https://github.com/irham3/veilpass/actions/runs/36512137059) passed both quality/build and browser/accessibility jobs, including dependency audit, coverage inventory, contract tests, package checks, and production build. The historical status summaries below do not describe current release readiness.
+
+The production deployment described in this historical verification passed its production checks. Production deployment `dpl_D5pR6QWm7Ci1LWLCeN3y2W7MmmJe` was READY during live enrollment/login verification; the merged docs return HTTP 200 from production docs routes. The deployment includes the corrected browser-visible host origin, exact Barretenberg CRS CSP hosts, a writable `/tmp` CRS cache for Vercel verification, a 60-second `/api/verify` budget, and bounded proof-clock skew. On 27 September, [release workflow `v0.2.1` attempt 2](https://github.com/irham3/veilpass/actions/runs/36215791259/attempts/2) succeeded after the npm owner authorized Trusted Publisher publishing. Public `@veilpass/shared`, `@veilpass/sdk`, and `@veilpass/server` now have version `0.2.1`, npm provenance, and `gitHead` matching the release tag `3edf8974df9656a44a4361868b33dd3794d19ad1`. The [GitHub Release](https://github.com/irham3/veilpass/releases/tag/v0.2.1) includes all three package archives and `SHA256SUMS`; clean install/import and archive checksums passed. See the [release verification](release-v0.2.1-verification-2026-09-27.md).
 
 **Live Chrome and production acceptance:** the user completed Testnet enrollment and the hosted page showed “Credential stored in this browser”. The first login exposed two production defects: the host UI rendered a localhost SSR fallback, and the verifier could not initialize the CRS cache in a read-only serverless home directory. Both fixes are deployed. Using the browser-local credential, App A login succeeded twice with the same private app ID; App B succeeded once with a different ID. The hosts reported authenticated sessions and production `/api/verify` returned HTTP 200. Private IDs and proof values were not copied into this report. The earlier enrollment reference `af2f4b9d-34f5-47a8-b371-84c8b894ed10` traced to an invalid contract StrKey and root mismatch; Production and Preview use active Testnet contract `CDENQIJD2CJJPBW74JQWF35SPRFK53XPF6FFFBJTD2UYESHI6I7CHYEK`.
 
@@ -35,9 +37,9 @@ Direct tests now cover enrollment consent and completion, wallet/network/account
 
 **Acceptance still required:** the credential-root publication transaction link and review video. Live replay, expiry, revocation, and a redacted host request/response summary passed on 29 September; see [the host capture](host-network-capture-redacted-2026-09-29.md) and [demo guide](demo-end-to-end-guide-2026-09-25.md). Aggregate coverage is not 100%: 88.35% statements, 84.17% branches, 87.35% functions, and 91.17% lines, though all 107 executable modules have statement hits and the curated core remains 100%. Older sections below are historical and contain stale counts/root values.
 
-## Current automated verification - 2026-09-19
+## Historical automated verification — 2026-09-19
 
-This section supersedes older test-count and dependency-audit statements below.
+These results are a dated snapshot and are superseded by the current verification at the beginning of this report.
 
 - **Vitest:** 33 files and 136 tests pass across unit, component, integration, and security suites.
 - **Coverage gate:** 100% statements, 100% branches, 100% functions, and 100% lines. The CI thresholds are 100/100/100/100; generated HTML and LCOV reports are retained under `frontend/coverage/`.
@@ -47,7 +49,9 @@ This section supersedes older test-count and dependency-audit statements below.
 - **Contract:** All three Soroban Rust tests pass.
 - **UI/UX review:** The landing was checked against the supplied [Apple Design Skill](https://github.com/dickwu/apple-design-skill) at desktop and mobile layouts. Navigation is a stable web-glass surface with a reduced-transparency fallback, primary viewport sections use dynamic viewport height, repetitive section labels were reduced, and the browser tests enforce focus visibility, accessibility, reduced motion, and horizontal-overflow constraints. Full findings and measured contrast values are in `docs/evidence/apple-design-review.md`.
 
-### Fresh non-video operator checks — 2026-09-17
+### Historical non-video operator checks — 2026-09-17
+
+These checks describe the state at that time. In particular, the empty root and lack of Freighter support in the Codex in-app browser were superseded by enrollment and live Testnet verification on 2026-09-29.
 
 - `npm run production:acceptance` passed: hosted-login health, public App A/App B routes, distinct origin-bound challenges, hostile-origin rejection, and the configured native-XLM eligibility mode all passed.
 - `npm run contract:smoke` passed: active gate `premium-holder`, epoch `1`, owner matches the configured signer, canonical empty root, and fixture `is_revoked=false`.
@@ -59,9 +63,9 @@ This section supersedes older test-count and dependency-audit statements below.
 
 > **Active policy note (2026-09-19):** native XLM is the default eligibility rule. Any older VPT/trustline/issuer commands in the historical sections below are retained as audit history only and must not be used for the current reviewer flow. For the active flow, fund the Freighter Testnet account with XLM and connect it directly.
 
-## Current acceptance status — 2026-09-15
+## Historical acceptance snapshot — 2026-09-15
 
-This section supersedes earlier dated statements in this report that describe the database, npm publication, or public App A/App B deployment.
+This dated snapshot is retained for traceability. Current acceptance is recorded at the start of this report and in the 2026-09-29 live acceptance checklist.
 
 - **Private Gate Core:** current Soroban tests pass 3/3; the Testnet smoke reads the active `premium-holder` gate at epoch `1`, and the Noir runtime creates a 14,656-byte proof with 11 public inputs that verifies against the committed key.
 - **SDK and Hosted Login:** `@veilpass/shared@0.1.0`, `@veilpass/sdk@0.1.0`, and `@veilpass/server@0.1.0` are public npm packages. A clean external installation imported all three successfully with zero reported vulnerabilities.
@@ -69,9 +73,9 @@ This section supersedes earlier dated statements in this report that describe th
 - **Two public dApps:** `https://login.veilpass.dev`, `https://app-a.veilpass.dev`, and `https://app-b.veilpass.dev` are verified Vercel domains. The automated `npm run production:acceptance` check confirms hosted-login health, both host routes, distinct origin-bound challenges, and rejection of an untrusted origin.
 - **Regression verification:** TypeScript, ESLint, and 62 Vitest tests pass on the current release workspace.
 
-### Remaining manual wallet evidence
+### Wallet evidence at the time of this snapshot
 
-The only non-video acceptance step that cannot be executed by an agent is a user-owned Freighter action: fund the Testnet wallet with the configured native XLM minimum, approve wallet access, and approve the enrollment message signature. This is intentionally non-automatable because VeilPass must not receive the wallet seed or bypass a user signature. Once the wallet owner performs those approvals, the existing App A/App B flow can demonstrate the final live private-ID, replay, expiry, and revocation evidence.
+At the time of this snapshot, wallet enrollment and the live replay, expiry, and revocation checks were still pending. They were completed on 2026-09-29 with a disposable Testnet credential and user-approved Freighter access/signature; see the current acceptance summary and redacted host capture above.
 
 Date: 2026-09-02
 Verified implementation revision: `4a9147c` (`fix(proof): pass fixture public inputs to verifier`), plus the working tree changes documented with this report.
@@ -125,14 +129,14 @@ The full development audit reports four moderate findings in Drizzle Kit's devel
 
 - Freighter wallet trustline and holder funding were not performed because they require the user's Testnet wallet public key and wallet approval. Run `npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` after adding the generated `VPT` asset in Freighter.
 - Earlier local verification did not have a database connection. The current operator check above loads the configured `DATABASE_URL` and applies the migrations successfully; a live restart/concurrency acceptance trace is still not recorded.
-- No live Freighter enrollment or host-to-host sign-in was performed. Those paths require a user-controlled testnet wallet, a VPT trustline, asset funding, a configured issuer key, a production database, and the gate-owner signer for root publication.
-- The active Testnet gate now reports the canonical empty root and the configured owner matches the on-chain owner. A non-empty root still requires a real wallet enrollment and owner-controlled root publication.
+- At the time of this historical setup note, no live Freighter enrollment or host-to-host sign-in had been performed. Live App A login, replay, expiry, and revocation acceptance were completed on 2026-09-29; a credential-root publication transaction link and review video remain unrecorded.
+- The active Testnet gate has the non-empty epoch-1 root recorded in the current delivery status. Do not replace it with an empty root at the same epoch; restore the matching durable tree or rotate the gate to a new epoch before resetting state.
 
 ## Important scope boundary
 
-The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. The only outstanding product acceptance is a wallet-owner-approved enrollment followed by live root publication, replay/expiry/revocation evidence, and the final review recording.
+The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. At the 2026-09-29 update, replay, expiry, and revocation evidence is complete. The remaining evidence items are the credential-root publication transaction link and the final review recording.
 
-## Production configuration acceptance — 2026-09-14
+## Historical production configuration acceptance — 2026-09-14
 
 This section supersedes the dated operational-status statements above where they describe the Testnet owner, initial root, or Vercel runtime configuration.
 
