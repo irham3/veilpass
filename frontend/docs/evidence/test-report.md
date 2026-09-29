@@ -35,7 +35,7 @@ Direct tests now cover enrollment consent and completion, wallet/network/account
 
 **Preflight and recovery regression:** direct route tests prove that enrollment accepts only an allowed gate and exact login origin; invalid addresses/gates fail; eligibility network errors now return `SERVICE_UNAVAILABLE` (503) instead of misreporting the wallet as ineligible (403). The popup offers a tested re-enrollment action when a local credential has no active witness.
 
-**Acceptance still required:** the credential-root publication transaction link and review video. Live replay, expiry, revocation, and a redacted host request/response summary passed on 29 September; see [the host capture](host-network-capture-redacted-2026-09-29.md) and [demo guide](demo-end-to-end-guide-2026-09-25.md). Aggregate coverage is not 100%: 88.35% statements, 84.17% branches, 87.35% functions, and 91.17% lines, though all 107 executable modules have statement hits and the curated core remains 100%. Older sections below are historical and contain stale counts/root values.
+**Acceptance still required:** the review video. The [Testnet root publication transaction](https://stellar.expert/explorer/testnet/tx/ab2cb1f74c9595f03a4cda4b63299720f467d602db22cd2819bebaec82ea526c) emitted `root_updated` for `premium-holder`; its decoded event confirmed epoch `1` and root `2599dffae45935bcfafde7039c4ebc1bf2bffb22b24b4089deedcccf2c9e2770`. Live replay, expiry, revocation, and a redacted host request/response summary passed on 29 September; see [the host capture](host-network-capture-redacted-2026-09-29.md) and [demo guide](demo-end-to-end-guide-2026-09-25.md). Aggregate coverage is not 100%: 88.35% statements, 84.17% branches, 87.35% functions, and 91.17% lines, though all 107 executable modules have statement hits and the curated core remains 100%. Older sections below are historical and contain stale counts/root values.
 
 ## Historical automated verification — 2026-09-19
 
@@ -129,12 +129,12 @@ The full development audit reports four moderate findings in Drizzle Kit's devel
 
 - Freighter wallet trustline and holder funding were not performed because they require the user's Testnet wallet public key and wallet approval. Run `npm run asset:issue -- <FREIGHTER_TESTNET_PUBLIC_KEY>` after adding the generated `VPT` asset in Freighter.
 - Earlier local verification did not have a database connection. The current operator check above loads the configured `DATABASE_URL` and applies the migrations successfully; a live restart/concurrency acceptance trace is still not recorded.
-- At the time of this historical setup note, no live Freighter enrollment or host-to-host sign-in had been performed. Live App A login, replay, expiry, and revocation acceptance were completed on 2026-09-29; a credential-root publication transaction link and review video remain unrecorded.
+- At the time of this historical setup note, no live Freighter enrollment or host-to-host sign-in had been performed. Live App A login, replay, expiry, and revocation acceptance were completed on 2026-09-29; the root publication transaction was linked in the current report, and the review video remains unrecorded.
 - The active Testnet gate has the non-empty epoch-1 root recorded in the current delivery status. Do not replace it with an empty root at the same epoch; restore the matching durable tree or rotate the gate to a new epoch before resetting state.
 
 ## Important scope boundary
 
-The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. At the 2026-09-29 update, replay, expiry, and revocation evidence is complete. The remaining evidence items are the credential-root publication transaction link and the final review recording.
+The active hosted-login integration creates a local Noir/UltraHonk proof, refreshes the durable Merkle witness, and `/api/verify` checks the committed VK. `/api/proof/simulate` remains a non-production compatibility fixture but is not accepted by `/api/verify`. At the 2026-09-29 update, root publication, replay, expiry, and revocation evidence is complete. The remaining evidence item is the final review recording.
 
 ## Historical production configuration acceptance — 2026-09-14
 

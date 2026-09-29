@@ -11,12 +11,12 @@
 - Gate ID: `premium-holder`
 - Gate epoch: `1`
 - Policy hash: `824a57f759b435e5e7f300f65dad132ff8039fa83805f19a2169893319eea0d7`
-- Credential root (latest read-only smoke, 26 September 2026): `2c896a921b9ad7526d46846c8413c3d6850913b6ef476dd6665f996e26b53912`. The root changes after issuance; rerun the smoke check before relying on it.
+- Credential root (latest read-only smoke, 29 September 2026): `2599dffae45935bcfafde7039c4ebc1bf2bffb22b24b4089deedcccf2c9e2770`, epoch `1`. The root changes after issuance; rerun the smoke check before relying on it.
 - Wasm installation: reused the verified local Wasm hash; no new upload transaction was required for this deployment.
 - Deploy transaction: `ebefe9c2aa18361e58dc1defac11fe346840d62efee2b3c4ac0c35c3544af3cb`
 - Gate initialization transaction: `c7b420f20f0167c47340259f7afb060040ac06b9f40303163ae2da8c79620558`
 
-The deploy and initialization transactions above establish the contract and its initial empty root. The update-root transaction responsible for the current nonzero root has not yet been linked in this evidence file; it must be captured and checked before claiming complete live acceptance. A read-only query of the locally configured PostgreSQL tree returned the same root and eight credential rows on 26 September 2026. This database connection is local configuration; it does not prove the Production Vercel database contains the same tree.
+The deploy and initialization transactions above establish the contract and its initial empty root. The [29 September update-root transaction](https://stellar.expert/explorer/testnet/tx/ab2cb1f74c9595f03a4cda4b63299720f467d602db22cd2819bebaec82ea526c) emitted `root_updated` for `premium-holder`; decoding the event confirms epoch `1` and the root recorded above. Production witness refresh and proof verification also succeeded against this enrolled credential, confirming the deployed login can use the published root. The later [revocation transaction](https://stellar.expert/explorer/testnet/tx/c3e8eb3855eeca0b99cd9912f020a668ef516a67313edf1459fe4620200cf261) was confirmed by a fresh `is_revoked=true` read.
 
 Verify the live gate:
 

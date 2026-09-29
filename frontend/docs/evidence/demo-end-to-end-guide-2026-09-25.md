@@ -96,7 +96,7 @@ Lakukan review file hasil redaksi sebelum commit atau berbagi. Jangan masukkan s
 | Commit dan deployment yang sama | Source sudah di-merge ke `master` (CI quality dan browser hijau); docs live HTTP 200. Deployment ID terbaru yang melayani commit 3edf897 belum dicatat. | Sebagian |
 | Versi npm SDK/shared/server yang sesuai | Registry menampilkan `0.2.1` untuk ketiganya; `gitHead` sama dengan tag `v0.2.1`, provenance tersedia, clean install/import CJS dan ESM lulus, arsip GitHub Release cocok dengan `SHA256SUMS` | Lulus untuk paket; deployment/source parity live masih perlu bukti pada baris di atas |
 | Health, env validation, migrasi, root/tree cocok | Production health 200; witness refresh dan `/api/verify` memakai root/credential Production dengan sukses; dashboard menampilkan gate owner | Lulus |
-| Update-root transaction |  | Belum dicatat |
+| Update-root transaction | [Testnet transaction](https://stellar.expert/explorer/testnet/tx/ab2cb1f74c9595f03a4cda4b63299720f467d602db22cd2819bebaec82ea526c); event `root_updated` confirmed `premium-holder`, epoch `1`, root `2599dffae45935bcfafde7039c4ebc1bf2bffb22b24b4089deedcccf2c9e2770` | Lulus |
 | App A `A1 = A2`, App B `B1 ≠ A1` | Sudah diuji di Chrome: App A sukses 2/2 dengan ID stabil dan App B 1/1 dengan ID berbeda; nilai mentah tidak dicatat | Lulus |
 | Host capture tersensor tanpa wallet address | [Ringkasan request/response App A](host-network-capture-redacted-2026-09-29.md); HAR mentah tidak disimpan karena memuat proof/identifier satu kali | Lulus sebagai ringkasan tersensor |
 | Replay `CHALLENGE_SPENT` | Proof App A yang telah dikonsumsi dikirim ulang; HTTP 400 `CHALLENGE_SPENT` | Lulus |

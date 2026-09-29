@@ -2,7 +2,7 @@
 
 Live acceptance update — 2026-09-29: a disposable Testnet holder credential was enrolled, logged into App A, rejected on replay (`CHALLENGE_SPENT`), rejected after its server-side expiry (`CREDENTIAL_EXPIRED`), revoked on-chain, and rejected on a fresh login (`CREDENTIAL_REVOKED`). The gate owner signer was loaded from the local operator configuration and matched the public owner read from Testnet; no signing secret or holder wallet address is included in this record. See [the redacted host capture](host-network-capture-redacted-2026-09-29.md) and [the revoke transaction](https://stellar.expert/explorer/testnet/tx/c3e8eb3855eeca0b99cd9912f020a668ef516a67313edf1459fe4620200cf261).
 
-Remaining live evidence: the credential-root publication transaction link and review video. Aggregate whole-source coverage also remains below 100%; see [test report](test-report.md).
+Remaining live evidence: the review video. The root publication transaction was confirmed on-chain and matches the documented epoch-1 root: [Testnet transaction](https://stellar.expert/explorer/testnet/tx/ab2cb1f74c9595f03a4cda4b63299720f467d602db22cd2819bebaec82ea526c). Aggregate whole-source coverage also remains below 100%; see [test report](test-report.md).
 
 1. Provision PostgreSQL and apply `drizzle/0000_veilpass_mvp.sql`, `drizzle/0001_enrollment_challenge_gate.sql`, and `drizzle/0002_credential_merkle_tree.sql` in order.
 2. Configure `DATABASE_URL`, `VEILPASS_ISSUER_SECRET`, and the separately scoped `VEILPASS_GATE_OWNER_SECRET` only in the VeilPass login service. Do not put either secret in a `NEXT_PUBLIC_` variable.
