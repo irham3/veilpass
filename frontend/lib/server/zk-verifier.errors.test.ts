@@ -64,6 +64,10 @@ describe("Noir verifier failure containment", () => {
     await expect(verify(proofResult)).resolves.toBe(false);
     expect(error).toHaveBeenCalledWith(expect.stringContaining('"stage":"load_verification_key"'));
 
+    mocks.readFile.mockRejectedValue("artifact unavailable");
+    await expect(verify(proofResult)).resolves.toBe(false);
+    expect(error).toHaveBeenLastCalledWith(expect.stringContaining('"reason":"unknown"'));
+
     mocks.readFile.mockImplementation(async (path: string) => String(path).endsWith(".json") ? Buffer.from('{"bytecode":"circuit"}') : Buffer.from([1]));
     mocks.newBackend.mockRejectedValueOnce("backend unavailable");
     await expect(verify(proofResult)).resolves.toBe(false);

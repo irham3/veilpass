@@ -52,4 +52,11 @@ describe("pinned Noir toolchain launcher", () => {
     execFileSync.mockReset().mockImplementation((command) => command === "nargo" ? "nargo version = 1.0.0-beta.22" : "other");
     await expect(import("./noir-check.mjs?bb-mismatch")).rejects.toThrow("Expected Barretenberg 5.0.0-nightly.20260522");
   });
+
+  it("reports a missing Barretenberg version without crashing", async () => {
+    existsSync.mockReturnValue(true);
+    Object.defineProperty(process, "platform", { configurable: true, value: "linux" });
+    execFileSync.mockImplementation((command) => command === "nargo" ? "nargo version = 1.0.0-beta.22" : "");
+    await expect(import("./noir-check.mjs?missing-bb-version")).rejects.toThrow("Expected Barretenberg 5.0.0-nightly.20260522; found none");
+  });
 });

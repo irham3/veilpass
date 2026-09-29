@@ -22,8 +22,8 @@ export function Reveal({
   const ref = useRef<HTMLElement | null>(null);
 
   useGSAP(() => {
-    const node = ref.current;
-    if (!node) return;
+    // useGSAP runs this callback after commit, when the rendered element is attached.
+    const node = ref.current!;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reducedMotion.matches) {

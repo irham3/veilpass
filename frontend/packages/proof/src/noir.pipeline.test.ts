@@ -84,7 +84,10 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ bytecode: "fixture-bytecode" }), { status: 200 })));
 });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 describe("browser Noir proving pipeline", () => {
   it("loads and caches the circuit, binds every public input, and preserves an injected backend", async () => {
@@ -125,6 +128,20 @@ describe("browser Noir proving pipeline", () => {
       _api: mockedApi,
     })).rejects.toThrow("credential or login challenge has expired");
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a credential timestamp before the Unix epoch", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("1960-01-01T00:00:00.000Z"));
+    const { proveMembership } = await loadPipeline();
+    const timestamp = "1960-01-01T00:02:00.000Z";
+
+    await expect(proveMembership({
+      challenge: { ...challenge, expiresAt: "1960-01-01T00:01:00.000Z" },
+      credential: { ...credential, expiresAt: timestamp },
+      _api: mockedApi,
+    })).rejects.toThrow("Invalid credential timestamp");
+    expect(mocks.noir.execute).not.toHaveBeenCalled();
   });
 
   it("rejects malformed timestamps when encoding the circuit inputs", async () => {

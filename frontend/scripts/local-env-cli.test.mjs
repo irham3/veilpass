@@ -17,6 +17,9 @@ describe("local Testnet environment generator", () => {
       expect(contents).toContain("VEILPASS_LOGIN_ORIGIN=http://login.localhost:3000");
       expect(contents).toMatch(/VEILPASS_ISSUER_SECRET=S[A-Z2-7]{55}/);
       await expect(runLocalEnvSetup([], directory)).rejects.toThrow("already exists");
+      const replacement = await runLocalEnvSetup(["--force"], directory);
+      expect(replacement).toContain(envPath);
+      expect(await readFile(envPath, "utf8")).toContain("VEILPASS_HOST_ORIGIN=http://localhost:3000");
       await expect(runLocalEnvSetup(["--force", "--host-origin"], directory)).rejects.toThrow("Missing value");
     } finally {
       await rm(directory, { recursive: true, force: true });

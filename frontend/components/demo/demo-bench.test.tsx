@@ -49,4 +49,5 @@ describe("DemoBench", () => {
     expect(screen.getByText("Actions appear here with minimized outcomes. No wallet address is written to this log.")).toBeInTheDocument();
     expect(screen.queryByText("VeilPass login at App B")).not.toBeInTheDocument();
   });
+
 });

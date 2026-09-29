@@ -29,6 +29,19 @@ beforeEach(() => {
 });
 
 describe("contract operation controls", () => {
+  it("requires a non-empty gate ID and disables writes when contract configuration is missing", async () => {
+    const { unmount } = render(<ContractActions {...props} />);
+    fireEvent.change(screen.getByLabelText("Gate ID"), { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: "Create gate with Freighter" }));
+    expect(await screen.findByText("Enter a valid gate ID (1–128 characters)")).toBeInTheDocument();
+    expect(getNetwork).not.toHaveBeenCalled();
+
+    unmount();
+    render(<ContractActions {...props} configured={false} />);
+    expect(screen.getByRole("button", { name: "Create gate with Freighter" })).toBeDisabled();
+    expect(screen.getByText("Add the public contract environment values to enable writes")).toBeInTheDocument();
+  });
+
   it("rejects invalid input before requesting wallet access", async () => {
     render(<ContractActions {...props} />);
     fireEvent.change(screen.getByLabelText("32-byte value (hex)"), { target: { value: "short" } });

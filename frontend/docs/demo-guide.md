@@ -1,358 +1,190 @@
-# VeilPass — Demo & Presentation Guide
+# VeilPass Demo and Technical Review Guide
 
-Panduan lengkap untuk mendemokan VeilPass kepada developer atau investor, mulai dari setup lokal hingga seluruh alur kerja end-to-end.
+This guide describes the repository state and the public Testnet deployment as of **29 September 2026**. Use it to prepare a developer demo, reproduce the automated checks, and distinguish simulated UI from cryptographic and chain-backed acceptance.
 
----
+## Contents
 
-## Daftar Isi
+1. [Choose the right demo path](#1-choose-the-right-demo-path)
+2. [Prerequisites and preflight](#2-prerequisites-and-preflight)
+3. [Local setup](#3-local-setup)
+4. [Public user journey](#4-public-user-journey)
+5. [SDK integration example](#5-sdk-integration-example)
+6. [Security and rejection evidence](#6-security-and-rejection-evidence)
+7. [Documentation and operator review](#7-documentation-and-operator-review)
+8. [Verification commands](#8-verification-commands)
+9. [Known product boundaries](#9-known-product-boundaries)
 
-1. [Prasyarat](#1-prasyarat)
-2. [Setup Lokal](#2-setup-lokal)
-3. [Alur Demo Interaktif (Landing Page)](#3-alur-demo-interaktif-landing-page)
-4. [Alur Demo Live (Freighter Wallet)](#4-alur-demo-live-freighter-wallet)
-5. [Mendemonstrasikan Skenario Keamanan](#5-mendemonstrasikan-skenario-keamanan)
-6. [Mendemonstrasikan SDK Integration](#6-mendemonstrasikan-sdk-integration)
-7. [Narasi Teknis untuk Audiens Developer](#7-narasi-teknis-untuk-audiens-developer)
-8. [Test & Coverage Evidence](#8-test--coverage-evidence)
+## 1. Choose the right demo path
 
----
+| Path | What it proves | What it does not prove |
+| --- | --- | --- |
+| Landing page interactive bench at `https://veilpass.dev/#two-app-demo` or `/demo` | The UI communicates scoped IDs, replay rejection, and simulated revocation behavior | A Noir proof, wallet enrollment, a server session, or a Soroban transaction. The UI labels this flow **Interactive simulation**. |
+| Public App A and App B | Real host pages at separate origins; popup SDK wiring, host challenges, server verification, and each origin's session boundary | A fresh enrollment if the holder credential is already stored or has been revoked. |
+| Automated Playwright and package checks | Reproducible browser behavior, rejection paths, accessibility checks, built package artifacts and package import smoke tests | User approval in Freighter or a new owner-authorized Testnet transaction. |
 
-## 1. Prasyarat
+Never use a simulated panel as evidence of a live chain or zero-knowledge operation. For a reviewer acceptance, open the live hosts and inspect the dated evidence listed in [the live acceptance checklist](evidence/live-acceptance-checklist.md).
 
-| Komponen | Versi | Catatan |
-|---|---|---|
-| Node.js | >= 20 | `node --version` |
-| pnpm | >= 9 | `pnpm --version` |
-| Freighter Extension | >= 4.x | Chrome/Brave/Firefox |
-| Stellar Testnet XLM | >= 1 XLM | Diperlukan untuk enrollment |
+## 2. Prerequisites and preflight
 
-**Setup Freighter untuk Testnet:**
-1. Install Freighter (https://www.freighter.app/) di browser
-2. Buat atau import wallet
-3. Buka Settings -> Network -> pilih **TESTNET**
-4. Topup XLM via Stellar Friendbot: https://friendbot.stellar.org?addr=YOUR_ADDRESS
+### For the public demo
 
----
+- A current desktop Chrome/Chromium or a modern mobile browser.
+- Freighter for a new enrollment; keep it on **Stellar Testnet**.
+- A disposable Testnet holder account with the minimum native XLM balance shown on the enrollment page. Freighter signs an off-chain enrollment message; enrollment does not transfer funds.
+- A separate operator account and explicit owner approval only if you are demonstrating contract writes or revocation. Do not reuse a holder credential after revoking it.
+- A clean browser profile with popups permitted for `login.veilpass.dev`.
 
-## 2. Setup Lokal
+Do not enter a seed phrase into VeilPass, a terminal, a form, or a recording. Review the current `contract:smoke` result and the durable credential-tree status with the operator before enrollment. A successful health endpoint alone does not prove that the on-chain root matches the server's Merkle tree.
 
-```bash
-# Clone & install
-git clone <repo>
+### For repository checks
+
+- Node.js 20 or newer and npm 11 as pinned by `frontend/package.json`.
+- Rust/Cargo for Soroban tests.
+- WSL on Windows, or the pinned Nargo and Barretenberg toolchain on Linux, for `proof:check`.
+- Playwright browser dependencies for browser tests.
+- PostgreSQL only when running the production-like host adapters or live enrollment locally.
+
+## 3. Local setup
+
+From the repository root, use PowerShell:
+
+```powershell
 cd frontend
-pnpm install
-
-# Salin env file
-cp .env.example .env.local
+npm ci
+npm run env:local
+npm run env:validate
+npm run dev
 ```
 
-**Edit `.env.local` minimal untuk demo:**
+Open `http://localhost:3000`. `env:local` creates an ignored development template; it does not provision PostgreSQL, synchronize an on-chain root, or make the production issuer ready. `env:validate` is a structural check and prints issue codes rather than secret values.
 
-```env
-# Wajib untuk enrollment flow
-NEXT_PUBLIC_VEILPASS_ORIGIN=http://localhost:3000
+For a full local enrollment, configure a disposable local Testnet deployment with a durable PostgreSQL database, the matching owner and issuer services, an exact local origin allowlist, and a credential tree whose root matches the active gate. Do not copy production secrets onto a development machine. See [runtime configuration](https://veilpass.dev/docs/quickstart), [the operator runbook](evidence/operator-acceptance-runbook-2026-09-10.md), and [`../.env.example`](../.env.example).
 
-# Opsional - tanpa ini hanya demo interaktif yang berjalan
-DATABASE_URL=postgresql://...
-VEILPASS_ISSUER_SECRET=S...
-VEILPASS_HOST_ORIGIN=http://localhost:3000
+The local `.env.example` and `env:local` helper are not substitutes for the variables supplied by a deployed environment. `VEILPASS_HOST_ORIGIN` is the exact comma-separated host allowlist; `VEILPASS_LOGIN_ORIGIN` and `NEXT_PUBLIC_VEILPASS_LOGIN_ORIGIN` identify the hosted login origin. PostgreSQL is required for durable challenge, enrollment, nullifier, session, and Merkle-tree records.
+
+## 4. Public user journey
+
+The production review path uses the three public origins:
+
+- Landing and docs: [https://veilpass.dev](https://veilpass.dev)
+- Hosted login and enrollment: [https://login.veilpass.dev](https://login.veilpass.dev)
+- Host dApps: [https://app-a.veilpass.dev](https://app-a.veilpass.dev) and [https://app-b.veilpass.dev](https://app-b.veilpass.dev)
+
+### A. Review the privacy boundary
+
+1. On the landing page, explain that the issuer sees the wallet address during enrollment, but the host does not receive it from the login verifier.
+2. Open the privacy model and threat model from the landing footer or the docs sidebar.
+3. State the limit accurately: the host's `/api/verify` receives a proof and public inputs, including commitment, root, challenge binding, login nullifier, and revocation hash. These are sensitive transient values; do not log or persist them. VeilPass is not an anonymity or network-privacy product.
+
+### B. Inspect the gate and enroll
+
+1. Open `https://login.veilpass.dev/dashboard` and compare the displayed contract ID, gate, epoch, owner, and root with the current Testnet read.
+2. Open `https://login.veilpass.dev/dashboard/enroll` in the same browser profile that will be used for both host apps.
+3. Read and accept the enrollment disclosure. Select **Connect Freighter and enroll**.
+4. If Freighter asks to share the active public address, approve that request yourself. Confirm the wallet is on Testnet and the eligible native XLM balance is present.
+5. Review the exact enrollment message and approve the off-chain signature yourself. VeilPass stores the subject secret and credential in this browser's IndexedDB; the service issuer knows the wallet address during enrollment.
+6. Wait for the completion state confirming the credential is stored. If root publication or durable storage fails, stop; do not continue with a stale root or an in-memory production adapter.
+
+### C. Compare App A and App B
+
+1. In the same profile, open App A and select **Login with VeilPass** from a user gesture so the browser permits the popup.
+2. In the login popup, continue with the local credential. The browser refreshes the current witness and generates the membership proof locally. The host's trusted server verifies it and creates its own HttpOnly session cookie only after success.
+3. Record the minimized result fields: `eligible`, `privateAppId`, `gateId`, `epoch`, `origin`, and `expiresAt`. Do not record or export the raw proof or proof public inputs.
+4. Sign in to App A again with a newly issued challenge. The `privateAppId` must remain the same while the credential and gate epoch stay unchanged.
+5. Open App B in the same browser profile and sign in. Its `privateAppId` must differ from App A's because the normalized host origin is bound into the proof.
+6. Verify `/api/session` independently on each host if the developer demo provides it. App A and App B have separate host-only cookies; a VeilPass result is not itself an application session.
+
+### D. Verify the host boundary
+
+Use browser DevTools Network only for inspection. The host address must not appear in host challenge, verify, session, browser storage, or UI data. The `/api/verify` body includes sensitive cryptographic proof fields even though it excludes the wallet address. Redact both wallet and proof fields before saving a screenshot/HAR; also remove cookies, challenge values, nullifiers, revocation hashes, IPs, and unrelated personal data. Enrollment requests are a different privacy boundary and may contain the wallet address at the issuer.
+
+## 5. SDK integration example
+
+The published SDK is a browser popup client. It calls the integrating host's own `POST /api/challenges` and `POST /api/verify` routes. The host owns durable challenge/nullifier consumption, chain policy reads, pinned proof verification, rate limiting, and its cookie session. Installing the browser SDK does not create these server adapters.
+
+```sh
+npm install @veilpass/sdk @veilpass/shared
 ```
 
-```bash
-# Jalankan dev server
-pnpm dev
-# -> Buka http://localhost:3000
-```
+Call the SDK only from a browser event handler:
 
-**Verifikasi server berjalan:**
-```bash
-curl http://localhost:3000/api/health
-# -> {"ok":true,"issues":[],"checks":{...}}
-```
+```ts
+import { VeilPass, VeilPassError } from "@veilpass/sdk";
 
----
+const veilpass = new VeilPass({ loginOrigin: "https://login.veilpass.dev" });
 
-## 3. Alur Demo Interaktif (Landing Page)
-
-> **Cocok untuk:** Investor pitch, conference demo, audiens non-teknis.  
-> Tidak memerlukan database atau Freighter wallet.
-
-### Langkah-langkah
-
-**3.1 Buka halaman utama** — `http://localhost:3000`
-
-**3.2 Scroll ke bagian "Interactive Demo"**
-
-Tunjukkan panel dua-panel:
-- Kiri: Hasil verifikasi VeilPass (minimized)
-- Kanan: Verification log (real-time)
-
-**3.3 Demonstrasikan pemisahan private ID antar app:**
-
-```
-Klik tab "App A" -> Klik "Login with VeilPass"
-```
-
-Catat `privateAppId` di payload: `vp_appA_72f1`
-
-```
-Klik tab "App B" -> Klik "Login with VeilPass"
-```
-
-Catat `privateAppId` berbeda: `vp_appB_19c8`
-
-> **Narasi:** "Dua aplikasi berbeda mendapatkan ID yang berbeda meskipun wallet yang sama digunakan. App A tidak pernah tahu user juga login ke App B."
-
-**3.4 Bandingkan dengan Standard Login:**
-
-```
-Klik "Standard wallet login"
-```
-
-Payload yang muncul mengekspos alamat publik wallet: `GBRPUBLIC7B5E6K2P`. Kontraskan dengan VeilPass yang hanya mengirim `privateAppId`.
-
-**3.5 Demonstrasikan Replay Prevention:**
-
-```
-Klik "Login with VeilPass" (pertama kali)
-Klik "Replay last challenge"
-```
-
-Log menampilkan `CHALLENGE_SPENT` — challenge sudah tidak bisa dipakai ulang.
-
-**3.6 Demonstrasikan Revocation:**
-
-```
-Klik "Revoke credential"
-Klik "Login with VeilPass"
-```
-
-Log menampilkan `CREDENTIAL_REVOKED` — wallet yang sudah di-revoke tidak bisa login.
-
-**3.7 Reset dan ulangi** dengan klik "Reset bench".
-
----
-
-## 4. Alur Demo Live (Freighter Wallet)
-
-> **Cocok untuk:** Technical review, developer onboarding, deliverable acceptance.  
-> Memerlukan database + Freighter extension + Testnet XLM.
-
-### 4.1 Enrollment (Satu Kali per Wallet)
-
-**Tujuan:** Mendaftarkan wallet ke Merkle tree credential.
-
-1. Buka `http://localhost:3000/enroll`
-2. Pastikan Freighter terbuka dan terhubung ke **TESTNET**
-3. Klik **"Connect Freighter"** — izinkan koneksi
-4. Klik **"Enroll"**
-5. Freighter meminta signature — klik **"Approve"**
-6. Tunggu konfirmasi: `"Credential issued successfully"`
-
-**Apa yang terjadi di background:**
-- SDK membuat enrollment challenge via `/api/enrollment/challenge`
-- Freighter sign pesan dengan format SEP-53: `VeilPass enrollment\norigin:...\ngate:...\nnonce:...`
-- Server verifikasi signature dan menerbitkan leaf di Merkle tree
-- Leaf index dan root disimpan di database
-
-### 4.2 Login Flow (Setelah Enrollment)
-
-**Tujuan:** Membuktikan membership tanpa mengekspos wallet address.
-
-1. Buka `http://localhost:3000` (App A)
-2. Klik **"Login with VeilPass"** di hero section atau demo panel
-3. Popup VeilPass muncul di `http://localhost:3000/login`
-4. Freighter meminta signature — klik **"Approve"**
-5. Popup tertutup, host menerima:
-
-```json
-{
-  "ok": true,
-  "eligible": true,
-  "privateAppId": "vp_appA_xxxx",
-  "gateId": "premium-holder",
-  "epoch": 20391,
-  "origin": "http://localhost:3000",
-  "expiresAt": "2026-08-02T09:00:00.000Z"
-}
-```
-
-**Apa yang terjadi di background:**
-- Host SDK (`VeilPass.login()`) open popup dan issue challenge
-- Popup sign challenge dengan Freighter (SEP-53)
-- Noir circuit generate ZK proof of Merkle membership
-- Proof dikirim ke `/api/verify`
-- Server verify proof, cek nullifier belum dipakai, buat session cookie
-
-### 4.3 Verifikasi Session
-
-```bash
-curl http://localhost:3000/api/session \
-  -H "Cookie: vp_session=<token>"
-# -> {"authenticated":true,"privateAppId":"vp_appA_xxxx","gateId":"premium-holder"}
-```
-
----
-
-## 5. Mendemonstrasikan Skenario Keamanan
-
-### 5.1 Replay Attack Prevention
-
-```bash
-# Capture proof result dari login pertama, lalu kirim ulang
-curl -X POST http://localhost:3000/api/verify \
-  -H "Content-Type: application/json" \
-  -d '<proof_result_json>'
-# -> {"ok":false,"error":"CHALLENGE_SPENT","requestId":"..."}
-```
-
-### 5.2 Cross-Origin Rejection
-
-```bash
-curl -X POST http://localhost:3000/api/challenges \
-  -H "Content-Type: application/json" \
-  -H "Origin: https://evil.example" \
-  -d '{"gateId":"premium-holder"}'
-# -> {"ok":false,"error":"ORIGIN_MISMATCH","requestId":"..."}
-```
-
-### 5.3 Credential Revocation
-
-1. Di admin panel, revoke credential wallet target
-2. Wallet yang sama coba login ulang
-3. Server menolak: `CREDENTIAL_REVOKED`
-
-### 5.4 Expired Proof Rejection
-
-Proof memiliki `expiresAt` field. Setelah waktu berlalu:
-- Server cek `expiresAt < now()` sebelum menerima proof
-- Response: `{"ok":false,"error":"PROOF_EXPIRED"}`
-
----
-
-## 6. Mendemonstrasikan SDK Integration
-
-Tunjukkan betapa mudahnya integrasi di sisi host developer:
-
-```typescript
-import { VeilPass } from "@veilpass/sdk";
-
-// Setup (satu kali)
-const veilpass = new VeilPass({ loginOrigin: "https://veilpass.io" });
-
-// Saat user klik tombol login
-async function handleLogin() {
+async function signInFromButton() {
   try {
     const result = await veilpass.login({ gateId: "premium-holder" });
-    // result.privateAppId  - ID unik per-app, tidak bisa di-cross-reference
-    // result.eligible      - true jika wallet memenuhi gate policy
-    // result.expiresAt     - kapan session berakhir
-    console.log("Logged in:", result.privateAppId);
-  } catch (err) {
-    // err.code: "POPUP_BLOCKED" | "POPUP_CLOSED" | "TIMEOUT" | "CREDENTIAL_REVOKED" | ...
-    console.error(err.code, err.message);
+    // /api/verify has already accepted the proof; the host route must have
+    // created its own session cookie only after that server-side success.
+    if (result.ok && result.eligible) window.location.assign("/account");
+  } catch (error) {
+    const code = error instanceof VeilPassError ? error.code : "SERVICE_UNAVAILABLE";
+    showSafeLoginMessage(code);
   }
 }
 ```
 
-**Yang host TIDAK perlu lakukan:**
-- Menyimpan wallet address
-- Mengelola session token ZK
-- Verifikasi Noir proof secara manual
-- Integrate Stellar SDK langsung
+Do not call `VeilPass.login()` during server rendering, from a server action, or without a user gesture. Do not store the proof, public inputs, cookie, or wallet address in client analytics. Review [the SDK guide](https://veilpass.dev/docs/client), [server adapter contract](https://veilpass.dev/docs/server), [API reference](https://veilpass.dev/docs/api), and the versioned README included in each npm package before deploying.
 
----
+## 6. Security and rejection evidence
 
-## 7. Narasi Teknis untuk Audiens Developer
+### Public and automated checks
 
-### Arsitektur dalam 60 detik
+From `frontend/`, `npm run production:acceptance` checks hosted-login health, the public App A/B routes and their exact-origin challenge separation, hostile-origin rejection, and public eligibility configuration. It does not sign into Freighter or prove holder identity. The browser suite exercises both successful mocked UI journeys and negative verifier cases; distinguish those from live wallet acceptance in every report.
 
-```
-User Wallet (Freighter)
-    | sign(SEP-53 message)
-    v
-VeilPass Login Popup
-    | Noir ZK proof generation (Barretenberg WASM)
-    |   -> prove: "I know a leaf in this Merkle tree"
-    |   -> without revealing: which leaf (which wallet)
-    v
-VeilPass Server /api/verify
-    | verifyNoirMembershipProof()
-    | challengeStore.consume() [atomic, prevents replay]
-    | sessionStore.create() [httpOnly cookie]
-    v
-Host App
-    | privateAppId per-app (deterministic, not linkable)
-    + eligible: true (gate policy satisfied)
-```
+### Live rejection cases
 
-### Poin teknis kunci
+Use only a disposable Testnet credential, and record the request ID plus error code rather than sensitive request bodies. Current evidence is in [`live-acceptance-checklist.md`](evidence/live-acceptance-checklist.md), [`host-network-capture-redacted-2026-09-29.md`](evidence/host-network-capture-redacted-2026-09-29.md), and [`test-report.md`](evidence/test-report.md).
 
-| Aspek | Implementasi |
-|---|---|
-| ZK Circuit | Noir (Aztec Labs) — Poseidon hash, Merkle proof |
-| Proof System | UltraHonk (Barretenberg) |
-| Wallet | Stellar Freighter + SEP-53 message signing |
-| Anti-replay | Nullifier hash di-consume secara atomik di DB |
-| Origin binding | Challenge terikat ke `origin` saat issue |
-| Privacy | `privateAppId = hash(gateId + walletAddress)` — berbeda per app |
+- **Replay:** a consumed host challenge must return `CHALLENGE_SPENT`; a fresh attempt requires a new server challenge.
+- **Expiry:** an unused proof sent after its `proofExpiresAt` must return `CREDENTIAL_EXPIRED`. If the shorter server challenge expires first, `CHALLENGE_EXPIRED` is also a correct fail-closed result. Record the times and returned code to distinguish them.
+- **Revocation:** the gate owner submits the revocation through Freighter, verifies the Testnet transaction and `is_revoked` state, then starts a fresh login. It must return `CREDENTIAL_REVOKED`. Existing host sessions may remain valid until their own expiry; revocation blocks new proof acceptance, not retroactive cookie invalidation.
+- **Origin/gate mismatch:** an origin outside the exact allowlist must be rejected. Public acceptance sends an untrusted challenge request and expects HTTP 403; no login popup is required for that check.
 
----
+The current live acceptance already records successful App A repeat login, App B domain separation, replay, expiry, revocation, root update transaction, and a redacted host request/response summary. It does not contain a review recording of that live browser sequence.
 
-## 8. Test & Coverage Evidence
+## 7. Documentation and operator review
 
-### Hasil Coverage (September 2025)
+Use the docs sidebar to navigate: **Start** (overview, quickstart, enrollment), **Integrate** (client, server, identity, contract), and **Reference** (errors, privacy, threat model, API, examples). The web docs are generated from `lib/docs/content.ts`; the GitHub root README describes the repository; each npm page uses the README shipped inside that package. They serve different audiences but must agree on routes, API contracts, security limits, and release status.
 
-```
-All files  | 100% Stmts | 100% Branch | 100% Funcs | 100% Lines
-```
+For a technical review, show these in order:
 
-**39 test file, 161+ test case mencakup:**
+1. Public landing and privacy model.
+2. Live contract/gate state and contract evidence.
+3. Enrollment flow and the exact disclosure.
+4. App A twice, then App B once, comparing only the private ID.
+5. The redacted host capture and host-only session boundary.
+6. Replay, expiry, and revoked-credential rejection evidence.
+7. Developer quickstart, API reference, server responsibilities, and npm package READMEs.
+8. Automated test report, release provenance, and explicit out-of-scope items.
 
-| Area | Test File |
-|---|---|
-| ZK Verifier | `lib/server/zk-verifier.test.ts` |
-| Credential Issuance | `lib/server/credential-issuance.test.ts` |
-| SDK Channel | `packages/sdk/src/channel.test.ts` |
-| Server Verifier | `packages/server/src/verifier.test.ts` |
-| Noir Circuit Contract | `packages/proof/src/noir.test.ts` |
-| HTTP Security Boundaries | `tests/security/http-boundaries.test.ts` |
-| Route /api/challenges | `tests/integration/challenge-route.test.ts` |
-| Route /api/verify | `tests/integration/verify-route.test.ts` |
-| Route /api/session | `tests/integration/session-route.test.ts` |
-| Route /api/health | `tests/integration/health-route.test.ts` |
-| Route /api/enrollment/issue | `tests/integration/enrollment-issue-route.test.ts` |
-| Demo State Machine | `lib/demo/machine.test.ts` |
-| SEP-53 Signature | `lib/stellar/message-signature.test.ts` |
-| Stellar Eligibility | `lib/stellar/eligibility.test.ts` |
+## 8. Verification commands
 
-### Security Properties Verified
+Run from `frontend/`:
 
-- Cross-origin request rejection (ORIGIN_MISMATCH)
-- Replay prevention (CHALLENGE_SPENT)
-- Proof expiry enforcement (PROOF_EXPIRED)
-- Credential revocation (CREDENTIAL_REVOKED)
-- Body size limit enforcement (4 KB max)
-- Stack trace tidak bocor ke response publik
-- Cache-Control: no-store pada semua endpoint auth
-
-### Menjalankan Test
-
-```bash
-pnpm test           # watch mode
-pnpm test:run       # single run
-pnpm test:coverage  # dengan coverage report HTML
+```powershell
+npm ci
+npm run lint
+npm run typecheck
+npm run docs:check
+npm run test:coverage
+npm run test:coverage:all
+npm run contract:test
+npm run proof:check
+npm run pack:check
+npm run build
+npm run test:e2e
+npm run test:a11y
+npm run production:acceptance
 ```
 
----
+`test:coverage` measures the curated core. `test:coverage:all` is the whole executable JavaScript/TypeScript inventory gate; Rust contract tests and Noir circuit/proof checks run through their native toolchains and do not contribute a V8 percentage. Always cite the current command output and commit; dated values in `test-report.md` are snapshots, not a permanent guarantee.
 
-## Troubleshooting Umum
+## 9. Known product boundaries
 
-| Masalah | Solusi |
-|---|---|
-| Popup diblokir browser | Izinkan popup untuk localhost:3000 di browser settings |
-| WASM memory error | Refresh halaman — SharedArrayBuffer butuh COOP/COEP headers |
-| Freighter tidak merespons | Pastikan Freighter unlocked dan di network TESTNET |
-| SERVICE_UNAVAILABLE dari /api/verify | Cek DATABASE_URL di .env.local |
-| Enrollment gagal | Pastikan wallet punya >= 1 XLM di Testnet |
-| ORIGIN_MISMATCH | VEILPASS_HOST_ORIGIN di env harus sama persis dengan origin browser |
+- This release and Soroban deployment target Stellar Testnet. SOW scope excludes mainnet deployment, an independent production security audit, recovery, blind issuance, and general-purpose credential markets.
+- The issuer can associate enrollment with a wallet address. Host dApps do not receive that address as part of login verification, but they receive proof/public-input data that must be protected.
+- VeilPass does not hide IP addresses, network timing, browser/device fingerprints, issuer knowledge, or later public chain activity.
+- VeilPass provides protocol primitives and hosted login. A third-party host must still implement secure, durable, atomic and correctly configured server adapters before enabling real users.

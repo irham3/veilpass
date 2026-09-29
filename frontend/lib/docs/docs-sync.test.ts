@@ -94,6 +94,11 @@ describe("published and hosted docs stay aligned with the implementation", () =>
     expect(read("packages/shared/README.md")).toContain("verifyResultSchema");
     expect(read("packages/contract-bindings/README.md")).not.toContain("INSERT_RPC_URL_HERE");
     expect(hostedDocs).toContain("https://www.npmjs.com/package/@veilpass/sdk");
+    expect(hostedDocs).toContain("Two-origin host example");
+    expect(read("examples/two-origin-dapp/README.md")).toContain("@veilpass/sdk");
+    expect(read("examples/two-origin-dapp/README.md")).toContain("/api/challenges");
+    expect(read("examples/two-origin-dapp/README.md")).toContain("/api/verify");
+    expect(read("packages/sdk/README.md")).toContain("frontend/examples/two-origin-dapp");
     expect(llmsText).toContain("https://www.npmjs.com/package/@veilpass/server");
     expect(changelog).toContain("## [0.2.1]");
   });

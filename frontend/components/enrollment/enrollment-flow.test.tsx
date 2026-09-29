@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { isConnected, requestAccess, getNetworkDetails, signMessage, signTransaction, changeTrust, saveCredential, createCredentialSecrets, replace, server, builder, mockTransactionBuilder } = vi.hoisted(() => {
@@ -61,8 +61,11 @@ describe("Freighter enrollment recovery", () => {
   it("turns enrollment API failures into actionable, non-alarming guidance", () => {
     expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE", "req-123")).toContain("no funds were moved");
     expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE", "req-123")).toContain("req-123");
+    expect(enrollmentIssueMessage("SERVICE_UNAVAILABLE")).not.toContain("Support reference:");
     expect(enrollmentIssueMessage("CHALLENGE_SPENT")).toContain("fresh request");
     expect(enrollmentIssueMessage("PROOF_INVALID")).toContain("selected Freighter account");
+    expect(enrollmentIssueMessage("ORIGIN_MISMATCH")).toContain("untrusted origin");
+    expect(enrollmentIssueMessage("UNKNOWN")).toContain("fresh request");
   });
 
   it("explains why the enrollment button cannot be clicked and what happens while it runs", () => {
@@ -70,6 +73,9 @@ describe("Freighter enrollment recovery", () => {
     expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "connecting", usesNativeXlm: true })).toBe("Waiting for Freighter…");
     expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "signing", usesNativeXlm: true })).toBe("Approve the message in Freighter…");
     expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "issuing", usesNativeXlm: true })).toBe("Finishing enrollment…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "saving", usesNativeXlm: false })).toBe("Finishing enrollment…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: true, phase: "checking", usesNativeXlm: true })).toBe("Checking wallet…");
+    expect(enrollmentButtonLabel({ disclosed: true, complete: false, busy: false, phase: "ready", usesNativeXlm: false })).toBe("Enroll this wallet");
     expect(enrollmentButtonLabel({ disclosed: true, complete: true, busy: false, phase: "complete", usesNativeXlm: true })).toBe("Credential enrolled");
   });
 });
@@ -137,6 +143,25 @@ describe("enrollment interaction", () => {
     expect(await screen.findByText("Enrollment could not continue")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Install or download Freighter/ })).toHaveAttribute("href", FREIGHTER_INSTALL_URL);
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("times out when Freighter never completes account access", async () => {
+    vi.useFakeTimers();
+    try {
+      requestAccess.mockReturnValue(new Promise(() => {}));
+      render(<EnrollmentFlow assetRule={nativeRule} />);
+      approveDisclosure();
+      fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(requestAccess).toHaveBeenCalledOnce();
+      await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+      expect(screen.getByText(/Freighter did not return an account/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("recovers from unavailable Freighter, rejected account access, and network lookup errors", async () => {
@@ -232,6 +257,19 @@ describe("enrollment interaction", () => {
     expect(screen.getAllByText("Credential enrolled").length).toBeGreaterThan(0);
   });
 
+  it("returns to the requested host after a successful enrollment", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "return-challenge", message: "sign me", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential }));
+    render(<EnrollmentFlow assetRule={nativeRule} returnTo="/login?state=state-1" />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText("Credential stored. Returning to private login…")).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 550));
+    expect(replace).toHaveBeenCalledWith("/login?state=state-1");
+  });
+
   it("shows the balance recovery guidance before requesting a challenge", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ eligible: false }) });
     vi.stubGlobal("fetch", fetchMock);
@@ -272,6 +310,89 @@ describe("enrollment interaction", () => {
     fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
     expect(await screen.findByText(/active Freighter account needs at least 1 XLM/)).toBeInTheDocument();
     expect(signMessage).not.toHaveBeenCalled();
+  });
+
+  it("handles malformed eligibility and challenge responses without attempting signatures", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => { throw new Error("invalid json"); } });
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/could not check this Testnet wallet/)).toBeInTheDocument();
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => { throw new Error("invalid json"); } });
+    const second = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/issuer is not configured/)).toBeInTheDocument();
+    expect(signMessage).not.toHaveBeenCalled();
+    second.unmount();
+  });
+
+  it("shows native eligibility recovery and contains non-Error wallet failures", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ eligible: false }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const { unmount } = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText(/This wallet needs at least 1 XLM on Stellar Testnet/)).toBeInTheDocument();
+    unmount();
+
+    requestAccess.mockRejectedValueOnce("wallet disconnected");
+    render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText("Enrollment failed.")).toBeInTheDocument();
+  });
+
+  it("uses the custom-asset eligibility and enrollment recovery messages", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "NOT_ELIGIBLE" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Enroll this wallet" }));
+    expect(await screen.findByText(/This wallet does not yet have 1 VPT/)).toBeInTheDocument();
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "NOT_ELIGIBLE" }) });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Enroll this wallet" }));
+    expect(await screen.findByText(/active Freighter account needs at least 1 VPT/)).toBeInTheDocument();
+  });
+
+  it("recovers from a rejected enrollment signature and a local credential-store failure", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "challenge-4", message: "sign me", gateId: "premium-holder" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    signMessage.mockResolvedValueOnce({ error: "rejected" });
+    const first = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText("Enrollment message signing was rejected.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "challenge-5", message: "sign me", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    saveCredential.mockRejectedValueOnce(new Error("IndexedDB quota exceeded"));
+    const second = render(<EnrollmentFlow assetRule={nativeRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Connect Freighter and enroll" }));
+    expect(await screen.findByText("IndexedDB quota exceeded")).toBeInTheDocument();
+    expect(screen.queryByText("Credential stored in this browser")).not.toBeInTheDocument();
+    second.unmount();
   });
 
   it("copies custom asset details and keeps the control usable when clipboard access fails", async () => {
@@ -325,6 +446,159 @@ describe("enrollment interaction", () => {
     ]);
     expect(saveCredential).not.toHaveBeenCalled();
   });
+
+  it("continues enrollment after a concurrent asset claim and safely reports generic issue failures", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "claim-race", message: "wallet claim" }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "ASSET_CLAIMED" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "enroll-after-claim", message: "sign me", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(saveCredential).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+  });
+
+  it("continues after a concurrent claim when the balance appears before the retry", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "ASSET_CLAIMED" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "race-enrollment", message: "sign me", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
+
+  it("handles generic claim challenge errors and incomplete signed-message results", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "SERVICE_UNAVAILABLE" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("The demo asset service is temporarily unavailable. Try again in a moment.")).toBeInTheDocument();
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "incomplete-signature", message: "sign me" }) });
+    signMessage.mockResolvedValueOnce({ signedMessage: "", signerAddress: address });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Demo asset claim signing was rejected.")).toBeInTheDocument();
+  });
+
+  it("uses the Buffer signature path and finishes a claim won by another request", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "claim-race", message: "wallet claim" }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "ASSET_CLAIMED" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: true, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "after-race", message: "sign me", gateId: "premium-holder" }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => issuedCredential });
+    vi.stubGlobal("fetch", fetchMock);
+    signMessage.mockResolvedValueOnce({ signedMessage: Buffer.from("wallet claim"), signerAddress: address });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Enrollment is complete. Continue to either host app; each app receives its own private ID and never receives this wallet address.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith("/api/demo-asset/issue", expect.objectContaining({ body: expect.stringContaining(Buffer.from("wallet claim").toString("base64")) }));
+  });
+
+  it("reports a generic unsafe issuance response without claiming enrollment", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "claim-generic", message: "wallet claim" }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "SERVICE_UNAVAILABLE" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("The demo asset could not be issued safely. Wait a moment and check the wallet again before retrying.")).toBeInTheDocument();
+    expect(saveCredential).not.toHaveBeenCalled();
+  });
+
+  it("contains non-Error failures from demo wallet services", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue("transport failed"));
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Demo wallet setup failed.")).toBeInTheDocument();
+  });
+
+  it("keeps the wallet out of enrollment until the newly issued balance is indexed", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = vi.fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ challengeId: "indexing-claim", message: "wallet claim" }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) })
+        .mockResolvedValue({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) });
+      vi.stubGlobal("fetch", fetchMock);
+      render(<EnrollmentFlow assetRule={creditRule} />);
+      approveDisclosure();
+      fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+      await act(async () => { await vi.runAllTimersAsync(); });
+      expect(screen.getByText(/The demo balance was sent but Testnet has not indexed it yet/)).toBeInTheDocument();
+      expect(saveCredential).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("requires an approved trustline and reports a still-unindexed balance", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: false }) });
+    vi.stubGlobal("fetch", fetchMock);
+    signTransaction.mockResolvedValueOnce({ error: "rejected" });
+    const first = render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText("Trustline approval was rejected.")).toBeInTheDocument();
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: false }) })
+      .mockResolvedValue({ ok: true, json: async () => ({ eligible: false, hasTrustline: false }) });
+    signTransaction.mockResolvedValue({ signedTxXdr: "signed-xdr" });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText(/trustline is still being indexed/, {}, { timeout: 15_000 })).toBeInTheDocument();
+  }, 20_000);
+
+  it("stops when the demo claim challenge is spent or still needs an indexed trustline", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "ASSET_TRUSTLINE_REQUIRED" }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const first = render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText(/did not publish the VPT trustline yet/)).toBeInTheDocument();
+    first.unmount();
+
+    fetchMock.mockReset()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "ASSET_CLAIMED" }) })
+      .mockResolvedValue({ ok: true, json: async () => ({ eligible: false, hasTrustline: true }) });
+    render(<EnrollmentFlow assetRule={creditRule} />);
+    approveDisclosure();
+    fireEvent.click(screen.getByRole("button", { name: "Prepare demo wallet" }));
+    expect(await screen.findByText(/already used its one-time VPT Testnet setup/, {}, { timeout: 15_000 })).toBeInTheDocument();
+  }, 20_000);
 
   it("creates the configured custom-asset trustline before issuing a demo claim", async () => {
     const fetchMock = vi.fn()

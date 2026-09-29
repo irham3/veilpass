@@ -10,6 +10,15 @@ describe("Testnet demo asset issuer", () => {
     vi.stubEnv("VEILPASS_ASSET_TYPE", "native");
     vi.stubEnv("VEILPASS_ASSET_ISSUER", "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF");
     expect(getDemoAssetConfig()).toBeNull();
+    vi.unstubAllEnvs();
+    expect(getDemoAssetConfig()).toBeNull();
+
+    const issuer = Keypair.random();
+    vi.stubEnv("VEILPASS_ASSET_ISSUER", issuer.publicKey());
+    vi.stubEnv("VEILPASS_ASSET_CODE", "VPT");
+    vi.stubEnv("VEILPASS_MIN_BALANCE", "1");
+    vi.stubEnv("VEILPASS_ISSUER_SECRET", issuer.secret());
+    expect(getDemoAssetConfig()).toMatchObject({ assetCode: "VPT", assetIssuer: issuer.publicKey() });
   });
 
   it("accepts only a positive, well-formed credit rule whose signer matches its issuer", () => {
@@ -20,6 +29,10 @@ describe("Testnet demo asset issuer", () => {
     vi.stubEnv("VEILPASS_MIN_BALANCE", "1.25");
     vi.stubEnv("VEILPASS_ISSUER_SECRET", issuer.secret());
     expect(getDemoAssetConfig()).toEqual({ assetCode: "VPT", assetIssuer: issuer.publicKey(), amount: "1.25", issuerSecret: issuer.secret() });
+
+    vi.stubEnv("VEILPASS_ISSUER_SECRET", "invalid-secret");
+    expect(getDemoAssetConfig()).toBeNull();
+    vi.stubEnv("VEILPASS_ISSUER_SECRET", issuer.secret());
 
     vi.stubEnv("VEILPASS_MIN_BALANCE", "0");
     expect(getDemoAssetConfig()).toBeNull();

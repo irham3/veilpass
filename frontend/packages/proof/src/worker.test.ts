@@ -21,5 +21,9 @@ describe("proof worker message boundary", () => {
     proveMembership.mockRejectedValueOnce(new Error("proof generation failed"));
     self.onmessage?.({ data: { id: "failed", challenge: {} as never, credential: {} as never } } as MessageEvent);
     await vi.waitFor(() => expect(post).toHaveBeenLastCalledWith({ id: "failed", ok: false, error: "PROOF_INVALID", message: "proof generation failed" }));
+
+    proveMembership.mockRejectedValueOnce("proof generation failed");
+    self.onmessage?.({ data: { id: "unknown-error", challenge: {} as never, credential: {} as never } } as MessageEvent);
+    await vi.waitFor(() => expect(post).toHaveBeenLastCalledWith({ id: "unknown-error", ok: false, error: "PROOF_INVALID", message: "Local proof generation failed" }));
   });
 });

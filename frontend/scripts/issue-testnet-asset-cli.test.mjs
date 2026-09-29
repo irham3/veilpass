@@ -100,4 +100,36 @@ describe("asset:issue command orchestration", () => {
     expect(summary).toContain("Transaction: issued-transaction");
     expect(summary).not.toContain("do-not-print-this-secret");
   });
+
+  it("executes CLI output and safely formats Error and non-Error failures", async () => {
+    const originalArgv = process.argv;
+    const originalExitCode = process.exitCode;
+    const output = vi.spyOn(console, "log").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mockReadFile = vi.fn(async () => env);
+    vi.doMock("node:fs/promises", async (importOriginal) => ({ ...(await importOriginal()), readFile: mockReadFile }));
+    process.argv = [process.execPath, path.resolve("scripts/issue-testnet-asset.mjs"), "GDESTINATION"];
+    try {
+      vi.resetModules();
+      await import("./issue-testnet-asset.mjs");
+      await vi.waitFor(() => expect(output).toHaveBeenCalledWith(expect.stringContaining("Issued 2.5 VPT to GDESTINATION")));
+
+      for (const failure of ["disk unavailable", new Error("disk error")]) {
+        error.mockClear();
+        process.exitCode = originalExitCode;
+        vi.resetModules();
+        mockReadFile.mockRejectedValueOnce(failure);
+        await import("./issue-testnet-asset.mjs");
+        await vi.waitFor(() => expect(error).toHaveBeenCalledWith(failure instanceof Error ? failure.message : failure));
+        expect(process.exitCode).toBe(1);
+      }
+    } finally {
+      process.argv = originalArgv;
+      process.exitCode = originalExitCode;
+      vi.doUnmock("node:fs/promises");
+      vi.resetModules();
+      output.mockRestore();
+      error.mockRestore();
+    }
+  });
 });

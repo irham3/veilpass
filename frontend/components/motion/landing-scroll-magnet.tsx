@@ -25,11 +25,8 @@ export function LandingScrollMagnet({ children }: LandingScrollMagnetProps) {
 
   useGSAP(
     () => {
-      const rootElement = root.current;
-
-      if (!rootElement) {
-        return;
-      }
+      // useGSAP runs this callback after commit, when the scoped root ref is attached.
+      const rootElement = root.current!;
 
       const media = gsap.matchMedia();
       let refreshFrame: number | undefined;

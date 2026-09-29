@@ -41,10 +41,9 @@ export function DemoBench() {
   const latest = events[0]?.result;
 
   function selectApp(value: string) {
-    if (value === "app-a" || value === "app-b") {
-      setApp(value);
-      setStandard(false);
-    }
+    // Radix only reports values declared by this component's two TabsTrigger children.
+    setApp(value as DemoApp);
+    setStandard(false);
   }
 
   function login(activeApp: DemoApp, replay = false) {

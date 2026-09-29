@@ -86,6 +86,12 @@ describe("findMatchingOffer", () => {
 
   it("returns undefined when the issuer has no matching offer", () => {
     expect(findMatchingOffer([], "VPT", "GISSUER")).toBeUndefined();
+    expect(findMatchingOffer([
+      {},
+      { selling: { asset_code: "OTHER", asset_issuer: "GISSUER" }, buying: { asset_type: "native" } },
+      { selling: { asset_code: "VPT", asset_issuer: "GOTHER" }, buying: { asset_type: "native" } },
+      { selling: { asset_code: "VPT", asset_issuer: "GISSUER" }, buying: { asset_code: "XLM" } },
+    ], "VPT", "GISSUER")).toBeUndefined();
   });
 
   it("rejects native XLM and incomplete configuration before contacting Horizon", async () => {
@@ -93,6 +99,10 @@ describe("findMatchingOffer", () => {
     await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("native XLM eligibility needs no issuer liquidity");
     await writeFile(path.join(directory, ".env.local"), "VEILPASS_ASSET_CODE=VPT\n");
     await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("Missing VEILPASS_ASSET_ISSUER");
+    await writeFile(path.join(directory, ".env.local"), "VEILPASS_ASSET_CODE=VPT\nVEILPASS_ASSET_ISSUER=GISSUER\n");
+    await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("Missing VEILPASS_ISSUER_SECRET");
+    await writeFile(path.join(directory, ".env.local"), "VEILPASS_ASSET_ISSUER=GISSUER\nVEILPASS_ISSUER_SECRET=test-secret\n");
+    await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("Missing VEILPASS_ASSET_CODE");
     expect(fetchMock).not.toHaveBeenCalled();
     expect(stellar.Server).not.toHaveBeenCalled();
   });
@@ -101,6 +111,10 @@ describe("findMatchingOffer", () => {
     fetchMock.mockResolvedValue({ ok: false, status: 503 });
     await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("Could not read issuer offers (503)");
     expect(stellar.Server).not.toHaveBeenCalled();
+
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const summary = await runEnsureTestnetLiquidity(directory);
+    expect(summary).toContain("Created VPT/XLM Testnet offer");
   });
 
   it("creates a native-XLM offer with safe defaults and redacted output", async () => {
@@ -132,6 +146,43 @@ describe("findMatchingOffer", () => {
     stellar.fromSecret.mockReturnValue({ publicKey: () => "GOTHER" });
     await expect(runEnsureTestnetLiquidity(directory)).rejects.toThrow("does not match VEILPASS_ASSET_ISSUER");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("runs its CLI success and non-Error failure handlers without reading a real env file", async () => {
+    const originalArg = process.argv[1];
+    const originalExitCode = process.exitCode;
+    const output = vi.spyOn(console, "log").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mockReadFile = vi.fn(async () => env);
+    vi.doMock("node:fs/promises", async (importOriginal) => ({ ...(await importOriginal()), readFile: mockReadFile }));
+    process.argv[1] = path.resolve("scripts/ensure-testnet-liquidity.mjs");
+    try {
+      vi.resetModules();
+      await import("./ensure-testnet-liquidity.mjs");
+      await vi.waitFor(() => expect(output).toHaveBeenCalledWith(expect.stringContaining("Created VPT/XLM Testnet offer")));
+
+      output.mockClear();
+      vi.resetModules();
+      mockReadFile.mockRejectedValueOnce("disk unavailable");
+      vi.stubGlobal("fetch", fetchMock);
+      await import("./ensure-testnet-liquidity.mjs");
+      await vi.waitFor(() => expect(error).toHaveBeenCalledWith("disk unavailable"));
+      expect(process.exitCode).toBe(1);
+
+      error.mockClear();
+      process.exitCode = originalExitCode;
+      vi.resetModules();
+      mockReadFile.mockRejectedValueOnce(new Error("disk error"));
+      await import("./ensure-testnet-liquidity.mjs");
+      await vi.waitFor(() => expect(error).toHaveBeenCalledWith("disk error"));
+    } finally {
+      process.argv[1] = originalArg;
+      process.exitCode = originalExitCode;
+      vi.doUnmock("node:fs/promises");
+      vi.resetModules();
+      output.mockRestore();
+      error.mockRestore();
+    }
   });
 
 });

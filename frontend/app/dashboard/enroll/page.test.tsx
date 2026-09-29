@@ -24,4 +24,18 @@ describe("operator enrollment page", () => {
     const page = await EnrollPage({ searchParams: Promise.resolve({}) });
     expect(renderToStaticMarkup(page)).toContain("credit:VPT:1:none");
   });
+
+  it("rejects array return paths and falls back from unknown asset types", async () => {
+    vi.stubEnv("VEILPASS_ASSET_TYPE", "unknown");
+    vi.stubEnv("VEILPASS_MIN_BALANCE", "2.5");
+    const page = await EnrollPage({ searchParams: Promise.resolve({ returnTo: ["/login?state=x"] }) });
+    expect(renderToStaticMarkup(page)).toContain("native:XLM:2.5:none");
+  });
+
+  it("uses the native defaults when optional minimum and credit code are absent", async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv("VEILPASS_ASSET_TYPE", "credit");
+    const page = await EnrollPage({ searchParams: Promise.resolve({}) });
+    expect(renderToStaticMarkup(page)).toContain("credit:USDC:1:none");
+  });
 });

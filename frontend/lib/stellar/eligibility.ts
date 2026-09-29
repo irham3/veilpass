@@ -12,7 +12,6 @@ export function accountMeetsAssetRule(account: HorizonAccount, rule: AssetRule):
 }
 
 export function accountHasAssetTrustline(account: HorizonAccount, rule: Pick<AssetRule, "type" | "code"> & Partial<Pick<Extract<AssetRule, { type: "credit" }>, "issuer">>): boolean {
-  /* c8 ignore next -- optional chaining is a defensive nullability guard. */
   return Boolean(account.balances?.some((balance) => rule.type === "native"
     ? balance.asset_type === "native"
     : balance.asset_type !== "native" && balance.asset_code === rule.code && balance.asset_issuer === rule.issuer));

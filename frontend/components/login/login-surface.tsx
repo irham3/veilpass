@@ -3,7 +3,7 @@
 import { CircleNotchIcon } from "@phosphor-icons/react/CircleNotch";
 import { EyeSlashIcon } from "@phosphor-icons/react/EyeSlash";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
   const [channelIssue, setChannelIssue] = useState<string | null>(null);
   const [credentialNeedsEnrollment, setCredentialNeedsEnrollment] = useState(false);
   const [status, setStatus] = useState("Connecting securely to the host app");
+  const provingRef = useRef(false);
 
   useEffect(() => {
     const opener = window.opener;
@@ -90,7 +91,8 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
   }
 
   async function prove() {
-    if (!challenge || !credential || !window.opener || isProving) return;
+    if (!challenge || !credential || !window.opener || provingRef.current) return;
+    provingRef.current = true;
     setIsProving(true);
     try {
       setStatus("Refreshing the credential witness");
@@ -133,6 +135,7 @@ export function LoginSurface({ gateId, state, hostOrigin }: { gateId: string; st
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Local proof generation failed");
     } finally {
+      provingRef.current = false;
       setIsProving(false);
     }
   }

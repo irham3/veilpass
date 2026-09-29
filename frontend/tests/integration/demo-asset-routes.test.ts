@@ -102,6 +102,7 @@ describe("demo asset enrollment routes", () => {
     mocks.durable.value = false;
     expect((await challengeRoute(request("challenge", { address }))).status).toBe(503);
     expect((await issueRoute(request("issue", claim))).status).toBe(503);
+    expect(mocks.consumeAndReserve).not.toHaveBeenCalled();
   });
 
   it("rejects malformed claims and stops before reservation when configuration or signature is invalid", async () => {
@@ -112,6 +113,19 @@ describe("demo asset enrollment routes", () => {
     expect((await issueRoute(request("issue", { ...claim, address: "invalid" }))).status).toBe(400);
     mocks.getDemoAssetConfig.mockReturnValueOnce(null);
     expect((await issueRoute(request("issue", claim))).status).toBe(503);
+    expect(mocks.consumeAndReserve).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed issue JSON before reservation", async () => {
+    const malformed = new NextRequest(origin + "/api/demo-asset/issue", {
+      method: "POST", headers: { origin, "content-type": "application/json" }, body: "{",
+    });
+    expect((await issueRoute(malformed)).status).toBe(400);
+    expect(mocks.consumeAndReserve).not.toHaveBeenCalled();
+  });
+
+  it("rejects a cross-origin claim before parsing or reserving it", async () => {
+    expect((await issueRoute(request("issue", claim, "https://evil.example"))).status).toBe(403);
     expect(mocks.consumeAndReserve).not.toHaveBeenCalled();
   });
 

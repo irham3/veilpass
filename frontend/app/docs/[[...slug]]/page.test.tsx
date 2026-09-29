@@ -30,4 +30,10 @@ describe("documentation article route", () => {
     await expect(DocsPage({ params: Promise.resolve({ slug: ["client", "extra"] }) })).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
     await expect(DocsPage({ params: Promise.resolve({ slug: ["missing-topic"] }) })).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
   });
+
+  it("creates overview metadata when the optional catch-all slug is absent", async () => {
+    const metadata = await generateMetadata({ params: Promise.resolve({}) });
+    expect(metadata.title).toBeTruthy();
+    expect(metadata.alternates?.canonical).toBe("/docs");
+  });
 });

@@ -1,10 +1,11 @@
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { checkFullSourceCoverage, inspectSourceCoverage } from "./check-full-coverage.mjs";
+import { checkFullSourceCoverage, inspectSourceCoverage, isDirectExecution } from "./check-full-coverage.mjs";
 
 const temporaryPaths = [];
 afterEach(async () => {
@@ -13,6 +14,13 @@ afterEach(async () => {
 });
 
 describe("full-source coverage inventory gate", () => {
+  it("recognizes only the exact direct CLI entry path", () => {
+    const script = join(process.cwd(), "scripts", "check-full-coverage.mjs");
+    expect(isDirectExecution(pathToFileURL(script).href, script)).toBe(true);
+    expect(isDirectExecution("file:///different-entry.mjs", script)).toBe(false);
+    expect(isDirectExecution("file:///different-entry.mjs", undefined)).toBe(false);
+  });
+
   it("counts executable modules and statement hits while ignoring type-only files", () => {
     expect(inspectSourceCoverage({
       "app/page.tsx": { s: { 0: 1, 1: 4 } },
@@ -27,6 +35,8 @@ describe("full-source coverage inventory gate", () => {
 
   it("fails when the coverage report has no executable sources", () => {
     expect(() => inspectSourceCoverage({ "lib/types.ts": { s: {} } }))
+      .toThrow("Coverage report contains no executable source modules");
+    expect(() => inspectSourceCoverage({ "lib/missing-coverage-map.ts": {} }))
       .toThrow("Coverage report contains no executable source modules");
   });
 
@@ -73,6 +83,38 @@ describe("full-source coverage inventory gate", () => {
       else await writeFile(reportPath, originalReport);
       process.argv[1] = originalArg;
       process.exitCode = originalExitCode;
+    }
+  });
+
+  it("stays inert if argv has no script path", async () => {
+    const originalArg = process.argv[1];
+    try {
+      process.argv[1] = undefined;
+      vi.resetModules();
+      await import("./check-full-coverage.mjs?argv-missing");
+      expect(process.exitCode).not.toBe(1);
+    } finally {
+      process.argv[1] = originalArg;
+    }
+  });
+
+  it("formats non-Error CLI failures safely", async () => {
+    const originalArg = process.argv[1];
+    const originalExitCode = process.exitCode;
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const mockReadFile = vi.fn().mockRejectedValue("report unavailable");
+    vi.doMock("node:fs/promises", async (importOriginal) => ({ ...(await importOriginal()), readFile: mockReadFile }));
+    try {
+      process.argv[1] = join(process.cwd(), "scripts", "check-full-coverage.mjs");
+      vi.resetModules();
+      await import("./check-full-coverage.mjs");
+      await vi.waitFor(() => expect(error).toHaveBeenCalledWith("report unavailable"));
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.argv[1] = originalArg;
+      process.exitCode = originalExitCode;
+      vi.doUnmock("node:fs/promises");
+      vi.resetModules();
     }
   });
 });

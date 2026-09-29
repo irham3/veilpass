@@ -45,6 +45,11 @@ describe("POST /api/proof/simulate", () => {
     const invalid = await POST(request({ challenge: {}, credential: {}, derived: {}, unexpected: true }));
     expect(invalid.status).toBe(400);
     await expect(invalid.json()).resolves.toMatchObject({ error: "PROOF_INVALID" });
+
+    const malformed = new NextRequest(`${origin}/api/proof/simulate`, {
+      method: "POST", headers: { origin, "content-type": "application/json" }, body: "{",
+    });
+    expect((await POST(malformed)).status).toBe(400);
   });
 
   function validPayload(overrides: { challenge?: Record<string, unknown>; credential?: Record<string, unknown> } = {}) {
@@ -94,7 +99,6 @@ describe("POST /api/proof/simulate", () => {
 
   it("fails closed in production when the simulator key is absent", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("VEILPASS_SIMULATOR_KEY", "");
     const response = await POST(request(validPayload()));
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toMatchObject({ error: "SERVICE_UNAVAILABLE" });
@@ -135,6 +139,7 @@ describe("POST /api/proof/simulate", () => {
   });
 
   it("returns a no-store proof binding the signed credential to the challenge and origin", async () => {
+    vi.stubEnv("VEILPASS_SIMULATOR_KEY", "configured-simulator-key");
     const payload = validPayload();
     const response = await POST(request(payload));
     expect(response.status).toBe(200);
@@ -143,7 +148,7 @@ describe("POST /api/proof/simulate", () => {
     expect(result).toMatchObject({ challengeId: "challenge-1", proof: "simulated-v1.fixture" });
     expect(createSimulatedProof).toHaveBeenCalledWith(expect.objectContaining({
       challengeId: "challenge-1",
-      key: "veilpass-local-simulator-only",
+      key: "configured-simulator-key",
       publicInputs: expect.objectContaining({
         origin,
         gateId: "premium-holder",

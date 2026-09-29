@@ -19,7 +19,7 @@ A host dApp can learn that a user passed a policy, such as meeting a configured 
 > [!IMPORTANT]
 > VeilPass is **not an anonymity system**. The MVP does not hide IP address, browser fingerprint, timing, device state, issuer-side enrollment knowledge, or future on-chain activity. It only enforces the explicit privacy boundary documented in this repo: host apps do not receive the wallet address during verification.
 
-[Live Demo](https://veilpass.dev) · [Developer docs](https://veilpass.dev/docs) · [Quickstart](https://veilpass.dev/docs/quickstart) · [API reference](https://veilpass.dev/docs/api) · [Changelog](CHANGELOG.md) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md)
+[Live Demo](https://veilpass.dev) · [Developer docs](https://veilpass.dev/docs) · [Quickstart](https://veilpass.dev/docs/quickstart) · [Two-origin developer example](frontend/examples/two-origin-dapp/README.md) · [API reference](https://veilpass.dev/docs/api) · [Changelog](CHANGELOG.md) · [Test Report](frontend/docs/evidence/test-report.md) · [Contract Evidence](frontend/docs/evidence/contract.md) · [Proof Boundary](frontend/docs/evidence/proof.md) · [Delivery Status](frontend/docs/evidence/delivery-status.md)
 
 ---
 
@@ -432,6 +432,7 @@ Tracked evidence lives under `frontend/docs/evidence/`.
 | Live-acceptance operator runbook | [operator-acceptance-runbook-2026-09-10.md](frontend/docs/evidence/operator-acceptance-runbook-2026-09-10.md) |
 | Landing screenshot | [landing-desktop.png](frontend/docs/evidence/landing-desktop.png) |
 | Demo screenshot | [demo-desktop.png](frontend/docs/evidence/demo-desktop.png) |
+| Silent UI review tour | [veilpass-ui-review-tour.webm](frontend/docs/evidence/veilpass-ui-review-tour.webm) |
 
 ---
 

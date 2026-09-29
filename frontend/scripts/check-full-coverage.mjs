@@ -32,7 +32,11 @@ export async function checkFullSourceCoverage(reportPath = path.resolve("coverag
   return summary;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+export function isDirectExecution(moduleUrl, scriptPath) {
+  return Boolean(scriptPath && moduleUrl === pathToFileURL(scriptPath).href);
+}
+
+if (isDirectExecution(import.meta.url, process.argv[1])) {
   checkFullSourceCoverage().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

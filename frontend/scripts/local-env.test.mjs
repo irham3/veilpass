@@ -42,5 +42,13 @@ describe("local environment setup", () => {
     expect(summary).not.toContain("issuer-secret");
     expect(summary).not.toContain("simulator-secret");
     expect(summary).not.toContain("fixture-secret");
+
+    const creditSummary = buildSetupSummary({
+      envPath: ".env.local",
+      funded: false,
+      values: { ...values, assetType: "credit", assetCode: "VPT", assetIssuer: "GISSUER" },
+    });
+    expect(creditSummary).toContain("Eligibility: VPT:GISSUER");
+    expect(creditSummary).toContain("Credential signer funded: skipped");
   });
 });

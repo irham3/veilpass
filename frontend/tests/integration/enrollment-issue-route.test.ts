@@ -112,9 +112,11 @@ describe("POST /api/enrollment/issue Freighter boundary", () => {
 
   it("fails closed when durable issuance dependencies are absent in production", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    config.tree = false;
-    const response = await POST(request({}));
-    expect(response.status).toBe(503);
+    for (const dependency of ["enrollment", "tree", "publisher"] as const) {
+      config[dependency] = false;
+      expect((await POST(request({}))).status).toBe(503);
+      config[dependency] = true;
+    }
     expect(consume).not.toHaveBeenCalled();
   });
 
@@ -129,6 +131,16 @@ describe("POST /api/enrollment/issue Freighter boundary", () => {
     consume.mockResolvedValueOnce(false);
     expect((await POST(request(payload(wallet, wallet.signMessage(message))))).status).toBe(400);
     expect(issueCredential).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed JSON before attempting wallet verification", async () => {
+    const malformed = new NextRequest("http://localhost:3000/api/enrollment/issue", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "http://localhost:3000" },
+      body: "{",
+    });
+    expect((await POST(malformed)).status).toBe(400);
+    expect(consume).not.toHaveBeenCalled();
   });
 
   it("requires an issuer secret and valid gate policy before publishing a credential root", async () => {

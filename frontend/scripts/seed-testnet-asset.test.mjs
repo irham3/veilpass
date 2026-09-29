@@ -91,6 +91,14 @@ describe("legacy issued-asset fixture seeder", () => {
     expect(mocks.HorizonServer).not.toHaveBeenCalled();
   });
 
+  it("ignores malformed dotenv lines and reports non-Error failures safely", async () => {
+    readFile.mockResolvedValueOnce(`MALFORMED\n${assetEnv}`);
+    mocks.server.submitTransaction.mockRejectedValueOnce("rpc failed");
+    const { error } = await runMain("seed", { ok: true, json: async () => ({ _embedded: { records: [] } }) });
+    expect(error.mock.calls.at(-1)?.[0]).toContain("rpc failed");
+    expect(mocks.HorizonServer).toHaveBeenCalledOnce();
+  });
+
   it("stops when Horizon reports an error or the asset is already discoverable", async () => {
     readFile.mockResolvedValueOnce(assetEnv);
     const failed = await runMain("horizon-error", { ok: false, status: 502 });

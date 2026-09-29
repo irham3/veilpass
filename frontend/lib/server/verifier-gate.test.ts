@@ -9,12 +9,38 @@ afterEach(() => {
 });
 
 describe("verifier concurrency gate", () => {
+  it("does not persist its singleton in production serverless processes", async () => {
+    const previousGate = globalThis.veilPassVerifierGate;
+    try {
+      delete globalThis.veilPassVerifierGate;
+      vi.stubEnv("NODE_ENV", "production");
+      vi.resetModules();
+      const productionModulePath = "./verifier-gate?production-init";
+      const productionModule = await import(productionModulePath);
+      expect(productionModule.verifierGate).toBeInstanceOf(productionModule.VerifierGate);
+      expect(globalThis.veilPassVerifierGate).toBeUndefined();
+    } finally {
+      if (previousGate) globalThis.veilPassVerifierGate = previousGate;
+      else delete globalThis.veilPassVerifierGate;
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it("turns a rejected chain lookup into an unavailable result and releases capacity", async () => {
     vi.stubEnv("VERIFIER_MAX_CONCURRENCY", "1");
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const gate = new VerifierGate();
 
     await expect(gate.run(async () => { throw new Error("RPC unavailable"); })).resolves.toBeNull();
+    await expect(gate.run(async () => { throw "RPC unavailable"; })).resolves.toBeNull();
+    await expect(gate.run(async () => "verified")).resolves.toBe("verified");
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('"reason":"unknown"'));
+  });
+
+  it("uses the defaults when no verifier limits are configured", async () => {
+    vi.unstubAllEnvs();
+    const gate = new VerifierGate();
     await expect(gate.run(async () => "verified")).resolves.toBe("verified");
   });
 

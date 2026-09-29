@@ -2,7 +2,7 @@
 
 Browser SDK for starting an origin-scoped VeilPass login through a popup. It opens the configured hosted login page, checks the popup's exact origin/source/state, posts a one-time challenge to the integrating host's backend, and submits the returned proof to that backend for server-side verification.
 
-> **Product and release status (26 September 2026):** VeilPass is a Stellar **Testnet MVP**, not a mainnet product or a network-anonymity service. This checkout prepares version `0.2.1`; npm currently serves `0.2.0`, whose published README may lag this source until the reviewed `v0.2.1` release workflow completes. Check the [npm version history](https://www.npmjs.com/package/@veilpass/sdk?activeTab=versions) and [GitHub releases](https://github.com/irham3/veilpass/releases) before pinning a version. Review the [live integration docs](https://veilpass.dev/docs/quickstart) before adopting it.
+> **Release status (29 September 2026):** `@veilpass/sdk` `0.2.1` is published on npm with provenance. This version targets VeilPass's Stellar Testnet deployment and is not a mainnet security certification or a network-anonymity service. Check the [npm version history](https://www.npmjs.com/package/@veilpass/sdk?activeTab=versions) for later releases and review the [quickstart](https://veilpass.dev/docs/quickstart) before integrating.
 
 ## What this SDK does—and what the host must do
 
@@ -124,6 +124,8 @@ The host does not receive the wallet address in the verification payload or succ
 Only the documented constructor and method are public. The current `0.2.x` SDK uses fixed same-origin paths `/api/challenges` and `/api/verify`; custom endpoint paths are not configurable. Confirm this fits your app before integrating. The protocol and schema are versioned separately from your application; deploy server routes and hosted login changes with compatibility tests.
 
 Read the [identity semantics](https://veilpass.dev/docs/identity), [error reference](https://veilpass.dev/docs/errors), and [threat model](https://veilpass.dev/docs/threat-model). Open implementation issues at [GitHub](https://github.com/irham3/veilpass/issues); report vulnerabilities privately to the repository owner.
+
+For a complete two-origin reference integration, including the browser call, host routes, proof verification, and cookie-session boundary, see the [VeilPass example project](https://github.com/irham3/veilpass/tree/master/frontend/examples/two-origin-dapp) and the hosted [Examples guide](https://veilpass.dev/docs/examples). The example runs within the VeilPass repository because its backend adapters are application-specific; it does not imply that installing this SDK provisions those adapters in your application.
 
 ## Development and license
 

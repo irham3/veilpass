@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { CredentialTreeIssueError, credentialLeaf, merkleWitnessForLeaf, InMemoryCredentialTreeStore } from "./credential-tree";
+import { CREDENTIAL_TREE_DEPTH, CredentialTreeIssueError, chooseCredentialLeafIndex, credentialLeaf, merkleWitnessForLeaf, InMemoryCredentialTreeStore } from "./credential-tree";
 
 const zero = "00".repeat(32);
 const expiry = "2027-01-01T00:00:00.000Z";
 
 describe("credential Merkle tree", () => {
+  it("uses a fresh random slot, scans after repeated collisions, and reports a full tree", () => {
+    expect(chooseCredentialLeafIndex(new Map(), () => 42)).toBe(42);
+    const occupied = new Map(Array.from({ length: 65 }, (_, index) => [`0:${index}`, zero]));
+    expect(chooseCredentialLeafIndex(occupied, () => 0)).toBe(65);
+    const full = new Map(Array.from({ length: 2 ** CREDENTIAL_TREE_DEPTH }, (_, index) => [`0:${index}`, zero]));
+    expect(() => chooseCredentialLeafIndex(full, () => 0)).toThrow("Credential tree is full");
+  });
+
   it("marks durable issuance failures with a safe operational stage", () => {
     const error = new CredentialTreeIssueError("persist_tree", "database write failed");
     expect(error).toBeInstanceOf(Error);

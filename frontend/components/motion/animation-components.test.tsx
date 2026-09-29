@@ -26,6 +26,9 @@ class FakeObserver {
   enter(isIntersecting: boolean) {
     this.callback([{ isIntersecting } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
   }
+  notifyEmpty() {
+    this.callback([], this as unknown as IntersectionObserver);
+  }
 }
 
 vi.mock("@gsap/react", async () => {
@@ -81,6 +84,7 @@ describe("Reveal", () => {
     expect(content).toHaveClass("reveal-motion", "custom-reveal");
     expect(animation.set).toHaveBeenCalledWith(content, { y: 18 });
     expect(animation.lastObserver?.observe).toHaveBeenCalledWith(content);
+    animation.lastObserver?.notifyEmpty();
     animation.lastObserver?.enter(false);
     expect(animation.to).not.toHaveBeenCalled();
     animation.lastObserver?.enter(true);
@@ -125,6 +129,16 @@ describe("LandingScrollMagnet", () => {
     expect(config.snap.snapTo(0.35)).toBeCloseTo(0.32);
     unmount();
     expect(animation.revert).toHaveBeenCalledOnce();
+  });
+
+  it("leaves native scrolling unchanged when the landing content has no scroll range", () => {
+    vi.stubGlobal("requestAnimationFrame", vi.fn(() => 9));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const { container } = render(<LandingScrollMagnet><section data-scroll-magnet /></LandingScrollMagnet>);
+    const root = container.firstElementChild as HTMLDivElement;
+    Object.defineProperty(root, "offsetHeight", { configurable: true, value: window.innerHeight });
+    const config = animation.create.mock.calls[0][0] as { snap: { snapTo: (progress: number) => number } };
+    expect(config.snap.snapTo(0.37)).toBe(0.37);
   });
 
   it("skips desktop snapping for reduced motion and when no sections are marked", () => {

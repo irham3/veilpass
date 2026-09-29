@@ -7,6 +7,39 @@ const input = { address: "GTESTADDRESS", gateId: "premium-holder", origin: "http
 afterEach(() => vi.useRealTimers());
 
 describe("in-memory enrollment challenges", () => {
+  it("selects memory or durable storage correctly during production startup", async () => {
+    const previousStore = globalThis.veilPassEnrollmentStore;
+    const sql = { begin: vi.fn(), unsafe: vi.fn() };
+    const postgresFactory = vi.fn(() => sql);
+    try {
+      delete globalThis.veilPassEnrollmentStore;
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("DATABASE_URL", "");
+      vi.resetModules();
+      const memoryModulePath = "./enrollment-store?production-memory";
+      const memoryModule = await import(memoryModulePath);
+      expect(memoryModule.durableEnrollmentStoreConfigured).toBe(false);
+      expect(memoryModule.enrollmentStore).toBeInstanceOf(memoryModule.EnrollmentStore);
+      expect(globalThis.veilPassEnrollmentStore).toBeUndefined();
+
+      vi.doMock("postgres", () => ({ default: postgresFactory }));
+      vi.stubEnv("DATABASE_URL", "postgres://veilpass:test@localhost/veilpass");
+      vi.resetModules();
+      const postgresModulePath = "./enrollment-store?production-postgres";
+      const postgresModule = await import(postgresModulePath);
+      expect(postgresModule.durableEnrollmentStoreConfigured).toBe(true);
+      expect(postgresModule.enrollmentStore).toBeInstanceOf(postgresModule.PostgresEnrollmentStore);
+      expect(postgresFactory).toHaveBeenCalledWith("postgres://veilpass:test@localhost/veilpass", expect.any(Object));
+      expect(globalThis.veilPassEnrollmentStore).toBeUndefined();
+    } finally {
+      if (previousStore) globalThis.veilPassEnrollmentStore = previousStore;
+      else delete globalThis.veilPassEnrollmentStore;
+      vi.doUnmock("postgres");
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
   it("binds a fresh five-minute message to the login origin and gate and consumes it once", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-25T10:00:00.000Z"));

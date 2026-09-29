@@ -18,7 +18,6 @@ export function ContractActions({ contractId, rpcUrl, configured }: { contractId
   const [hash, setHash] = useState("00".repeat(32));
 
   async function submit(kind: "create" | "update" | "rotate" | "revoke") {
-    if (!configured) return;
     if (!gateId.trim() || gateId.length > 128) { setStatus("Enter a valid gate ID (1–128 characters)"); return; }
     if (!/^[a-f0-9]{64}$/i.test(hash)) { setStatus("Enter exactly 32 bytes as hexadecimal"); return; }
     if (!/^[1-9]\d*$/.test(epoch) || !Number.isSafeInteger(Number(epoch))) { setStatus("Enter the gate's current epoch as a positive integer"); return; }

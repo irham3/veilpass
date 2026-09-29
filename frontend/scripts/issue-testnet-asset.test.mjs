@@ -10,6 +10,21 @@ const envText = [
 ].join("\n");
 
 describe("testnet asset issuer", () => {
+  test("ignores blank, commented, and malformed lines while unquoting values", () => {
+    expect(parseEnvText("\n# comment\nMALFORMED\nQUOTED=\" value \"\nSINGLE='secret'\n")).toEqual({
+      QUOTED: " value ",
+      SINGLE: "secret",
+    });
+  });
+
+  test("preserves unquoted values including embedded equals signs", () => {
+    expect(parseEnvText("VEILPASS_TOKEN=a=b=c")).toEqual({ VEILPASS_TOKEN: "a=b=c" });
+  });
+
+  test("preserves unquoted values including embedded equals signs", () => {
+    expect(parseEnvText("VEILPASS_TOKEN=a=b=c")).toEqual({ VEILPASS_TOKEN: "a=b=c" });
+  });
+
   test("loads only the values required to issue the configured asset", () => {
     const config = requireIssueConfig(parseEnvText(envText));
 

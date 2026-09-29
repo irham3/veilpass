@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { verifyVeilPassProof } from "./index";
 
-describe("server package public entry point", () => {
-  it("exports the verifier from the documented package root", () => {
+describe("server package entry point", () => {
+  it("exposes the documented proof verifier through the package root", () => {
     expect(verifyVeilPassProof).toBeTypeOf("function");
   });
 });

@@ -21,4 +21,9 @@ describe("hosted login route", () => {
     await expect(LoginPage({ searchParams: Promise.resolve({ hostOrigin: "https://app.example" }) })).rejects.toThrow("NEXT_NOT_FOUND");
     expect(notFound).toHaveBeenCalledTimes(2);
   });
+
+  it("does not accept repeated hostOrigin parameters", async () => {
+    await expect(LoginPage({ searchParams: Promise.resolve({ gateId: "gate", state: "state", hostOrigin: ["https://app.example", "https://evil.example"] }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(notFound).toHaveBeenCalledOnce();
+  });
 });

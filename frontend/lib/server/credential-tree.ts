@@ -122,16 +122,13 @@ function expirySeconds(expiresAt: string): number {
   return Math.floor(milliseconds / 1_000);
 }
 
-function chooseIndex(nodes: NodeMap): number {
-  /* c8 ignore start -- random collision and complete-tree fallback are stochastic/operational paths. */
+export function chooseCredentialLeafIndex(nodes: ReadonlyMap<string, string>, randomIndex = () => randomBytes(2).readUInt16BE(0)): number {
   for (let attempt = 0; attempt < 64; attempt += 1) {
-    const index = randomBytes(2).readUInt16BE(0);
+    const index = randomIndex();
     if (!nodes.has(nodeKey(0, index))) return index;
   }
-  /* c8 ignore start -- the 2^16-leaf exhaustion path is only reachable after a full production tree. */
   for (let index = 0; index < 2 ** CREDENTIAL_TREE_DEPTH; index += 1) if (!nodes.has(nodeKey(0, index))) return index;
   throw new Error("Credential tree is full");
-  /* c8 ignore stop */
 }
 
 export class InMemoryCredentialTreeStore implements CredentialTreeStoreLike {
@@ -144,7 +141,7 @@ export class InMemoryCredentialTreeStore implements CredentialTreeStoreLike {
       const nodes = this.nodesByGate.get(input.gateId) ?? new Map<string, string>();
       const currentRoot = nodeValue(nodes, CREDENTIAL_TREE_DEPTH, 0);
       if (currentRoot !== canonicalFieldHex(input.expectedRoot)) throw new Error("Credential tree is out of sync with the contract root");
-      const leafIndex = chooseIndex(nodes);
+      const leafIndex = chooseCredentialLeafIndex(nodes);
       const leafNonce = randomFieldHex(randomBytes(32));
       const revocationHash = randomFieldHex(randomBytes(32));
       const leaf = await credentialLeaf({
@@ -177,14 +174,13 @@ export class InMemoryCredentialTreeStore implements CredentialTreeStoreLike {
 
   private async atomic<T>(operation: () => Promise<T>): Promise<T> {
     const before = this.queue;
-    let release = () => {};
+    let release!: () => void;
     this.queue = new Promise<void>((resolve) => { release = resolve; });
     await before;
     try { return await operation(); } finally { release(); }
   }
 }
 
-/* c8 ignore start -- exercised by the production PostgreSQL integration deployment. */
 export class PostgresCredentialTreeStore implements CredentialTreeStoreLike {
   private readonly sql: ReturnType<typeof postgres>;
 
@@ -207,7 +203,7 @@ export class PostgresCredentialTreeStore implements CredentialTreeStoreLike {
       const nodes = await loadNodes(connection, input.gateId);
       if (nodeValue(nodes, CREDENTIAL_TREE_DEPTH, 0) !== canonicalFieldHex(input.expectedRoot)) throw new Error("Credential tree is out of sync with the contract root");
       stage = "build_witness";
-      const leafIndex = chooseIndex(nodes);
+      const leafIndex = chooseCredentialLeafIndex(nodes);
       const leafNonce = randomFieldHex(randomBytes(32));
       const revocationHash = randomFieldHex(randomBytes(32));
       const leaf = await credentialLeaf({ credentialCommitment: input.credentialCommitment, gateIdHash: await deterministicGateIdHash(input.gateId), epoch: input.epoch, credentialExpirySeconds: expirySeconds(input.expiresAt), leafNonce, revocationHash });
@@ -283,7 +279,6 @@ async function saveNodes(sql: { unsafe: ReturnType<typeof postgres>["unsafe"] },
     );
   }
 }
-/* c8 ignore stop */
 
 async function deterministicGateIdHash(gateId: string): Promise<string> {
   const { createHash } = await import("node:crypto");
@@ -295,8 +290,5 @@ async function deterministicGateIdHash(gateId: string): Promise<string> {
 export const durableCredentialTreeStoreConfigured = Boolean(process.env.DATABASE_URL);
 declare global { var veilPassCredentialTreeStore: InMemoryCredentialTreeStore | undefined; }
 const memoryStore = globalThis.veilPassCredentialTreeStore ?? new InMemoryCredentialTreeStore();
-/* c8 ignore start -- environment bootstrap branch is selected by the Next.js runtime. */
 if (process.env.NODE_ENV !== "production") globalThis.veilPassCredentialTreeStore = memoryStore;
-/* c8 ignore stop */
-/* c8 ignore next -- production selects the durable adapter when DATABASE_URL is configured. */
 export const credentialTreeStore: CredentialTreeStoreLike = process.env.DATABASE_URL ? new PostgresCredentialTreeStore(process.env.DATABASE_URL) : memoryStore;

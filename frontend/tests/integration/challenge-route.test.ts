@@ -105,6 +105,8 @@ describe("POST /api/challenges integration boundary", () => {
     const response = await POST(request({ gateId: "premium-holder" }));
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toMatchObject({ error: "SERVICE_UNAVAILABLE" });
-    expect(error).toHaveBeenCalledOnce();
+    issue.mockRejectedValueOnce("database unavailable");
+    expect((await POST(request({ gateId: "premium-holder" }))).status).toBe(503);
+    expect(error).toHaveBeenCalledTimes(2);
   });
 });
