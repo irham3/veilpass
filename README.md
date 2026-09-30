@@ -432,7 +432,9 @@ Tracked evidence lives under `frontend/docs/evidence/`.
 | Live-acceptance operator runbook | [operator-acceptance-runbook-2026-09-10.md](frontend/docs/evidence/operator-acceptance-runbook-2026-09-10.md) |
 | Landing screenshot | [landing-desktop.png](frontend/docs/evidence/landing-desktop.png) |
 | Demo screenshot | [demo-desktop.png](frontend/docs/evidence/demo-desktop.png) |
-| Silent UI review tour | [veilpass-ui-review-tour.webm](frontend/docs/evidence/veilpass-ui-review-tour.webm) |
+| Developer explainer video | [VeilPass_Developer_Explainer_EN_2026-09-30.mp4](frontend/docs/evidence/VeilPass_Developer_Explainer_EN_2026-09-30.mp4) |
+| English captions | [VeilPass_Developer_Explainer_EN_2026-09-30.srt](frontend/docs/evidence/VeilPass_Developer_Explainer_EN_2026-09-30.srt) |
+| Final project report | [VeilPass_Final_Report_2026-09-30.docx](frontend/docs/evidence/VeilPass_Final_Report_2026-09-30.docx) |
 
 ---
 

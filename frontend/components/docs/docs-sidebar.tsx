@@ -55,7 +55,6 @@ export function DocsSidebar() {
         </details>
         <div className="hidden lg:block">
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-paper-200">Documentation</p>
-          <p className="mt-2 text-sm leading-6 text-paper-200">Choose a topic. The sidebar stays in place while only the article changes.</p>
           {navigation(false)}
         </div>
       </div>
