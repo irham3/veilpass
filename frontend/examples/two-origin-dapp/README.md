@@ -51,6 +51,6 @@ npm run pack:check
 npm run production:acceptance
 ```
 
-The silent local [UI review tour](../../docs/evidence/veilpass-ui-review-tour.webm) covers the landing page, the clearly labeled simulation, developer docs, and both host pages. It does not contain a wallet approval or live proof and must not be presented as the Testnet acceptance recording.
+The English [developer explainer](../../docs/evidence/VeilPass_Developer_Explainer_EN_2026-09-30.mp4) introduces the address-correlation problem, VeilPass integration, and server verification responsibilities. It is a product explainer and does not claim to show a live wallet approval or proof transaction.
 
 `test:system` uses controlled test fixtures for repeatable browser coverage; `production:acceptance` checks the public endpoints and origin binding but does not approve a wallet prompt. Only a holder-controlled live run demonstrates current wallet enrollment and proof issuance. See [the detailed demo walkthrough](../../docs/demo-guide.md), [the privacy model](https://veilpass.dev/docs/privacy), [the server integration guide](https://veilpass.dev/docs/server), and [dated live evidence](../../docs/evidence/live-acceptance-checklist.md).

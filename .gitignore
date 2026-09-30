@@ -37,6 +37,13 @@
 .DS_Store
 *.pem
 /.veilpass-handoff/
+/.local-archive/
+
+# Local-only planning and AI-agent instruction files
+**/AGENTS.md
+**/CLAUDE.md
+**/PRD*.md
+**/*prompt*.md
 
 # debug
 npm-debug.log*
