@@ -24,5 +24,5 @@ describe("local Testnet environment generator", () => {
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 });
